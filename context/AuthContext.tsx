@@ -1,9 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged, User, signInWithPopup } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import { auth, db, googleProvider } from "@/lib/firebase";
 import { UserProfile } from "@/types";
 
 interface AuthContextType {
@@ -11,6 +11,7 @@ interface AuthContextType {
     profile: UserProfile | null;
     loading: boolean;
     logout: () => Promise<void>;
+    signInWithGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,8 +43,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await auth.signOut();
     };
 
+    const signInWithGoogle = async () => {
+        await signInWithPopup(auth, googleProvider);
+    };
+
     return (
-        <AuthContext.Provider value={{ user, profile, loading, logout }}>
+        <AuthContext.Provider value={{ user, profile, loading, logout, signInWithGoogle }}>
             {children}
         </AuthContext.Provider>
     );

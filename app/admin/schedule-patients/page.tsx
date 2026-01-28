@@ -13,12 +13,12 @@ import {
 import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { UserProfile } from "@/types";
+import { UserProfile, DoctorProfile } from "@/types";
 import { Calendar, User, Stethoscope } from "lucide-react";
 
 export default function SchedulePatientsPage() {
     const [patients, setPatients] = useState<any[]>([]);
-    const [doctors, setDoctors] = useState<UserProfile[]>([]);
+    const [doctors, setDoctors] = useState<DoctorProfile[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
     const [scheduleData, setScheduleData] = useState({
@@ -50,7 +50,7 @@ export default function SchedulePatientsPage() {
                 where("approved", "==", true)
             );
             const doctorsSnapshot = await getDocs(doctorsQ);
-            setDoctors(doctorsSnapshot.docs.map(doc => ({ ...doc.data() as UserProfile, uid: doc.id })));
+            setDoctors(doctorsSnapshot.docs.map(doc => ({ ...doc.data() as DoctorProfile, uid: doc.id })));
         } catch (error) {
             console.error("Error fetching data:", error);
         } finally {

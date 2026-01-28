@@ -8,6 +8,8 @@ import { auth, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { UserRole } from "@/types";
+import { useAuth } from "@/context/AuthContext";
+import { AuthButton } from "@/components/ui/AuthButton";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -15,9 +17,10 @@ export default function LoginPage() {
     const [role, setRole] = useState<UserRole>("PATIENT");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const { signInWithGoogle } = useAuth();
     const router = useRouter();
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleEmailLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError("");
@@ -50,65 +53,106 @@ export default function LoginPage() {
         }
     };
 
+    const handleGoogleLogin = async () => {
+        setLoading(true);
+        setError("");
+        try {
+            await signInWithGoogle();
+            const user = auth.currentUser;
+            if (user) {
+                const docRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const userData = docSnap.data();
+                    router.push(`/${userData.role.toLowerCase()}/dashboard`);
+                } else {
+                    // Redirect to registration if profile missing
+                    router.push(`/patient/register`);
+                }
+            }
+        } catch (err: any) {
+            setError(err.message || "Failed to login with Google");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
             <div className="w-full max-w-md space-y-8 bg-white p-10 rounded-xl shadow-lg">
                 <div>
-                    <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+                    <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 font-premium">
                         Sign in to E-Health
                     </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
-                        Select your role and enter your credentials
+                    <p className="mt-2 text-center text-sm text-gray-600 font-medium">
+                        Access your healthcare platform securely
                     </p>
                 </div>
-                <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-                    <div className="space-y-4 rounded-md shadow-sm">
-                        <div>
-                            <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                                User Type
-                            </label>
-                            <select
-                                id="role"
-                                value={role}
-                                onChange={(e) => setRole(e.target.value as UserRole)}
-                                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            >
-                                <option value="ADMIN">Administrator</option>
-                                <option value="PATIENT">Patient</option>
-                                <option value="DOCTOR">Doctor</option>
-                                <option value="PHARMACY">Pharmacy</option>
-                            </select>
+
+                <div className="mt-8 space-y-6">
+                    <AuthButton onClick={handleGoogleLogin} disabled={loading} />
+
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-gray-200" />
                         </div>
-                        <div>
-                            <Input
-                                id="email-address"
-                                name="email"
-                                type="email"
-                                required
-                                placeholder="Email address"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <Input
-                                id="password"
-                                name="password"
-                                type="password"
-                                required
-                                placeholder="Password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
+                        <div className="relative flex justify-center text-sm">
+                            <span className="bg-white px-2 text-gray-500 font-medium uppercase tracking-widest text-[10px]">Or continue with email</span>
                         </div>
                     </div>
 
-                    {error && <p className="text-sm text-red-600">{error}</p>}
+                    <form className="space-y-6" onSubmit={handleEmailLogin}>
+                        <div className="space-y-4">
+                            <div>
+                                <label htmlFor="role" className="block text-sm font-bold text-gray-700 mb-1">
+                                    I am a
+                                </label>
+                                <select
+                                    id="role"
+                                    value={role}
+                                    onChange={(e) => setRole(e.target.value as UserRole)}
+                                    className="block w-full rounded-xl border-2 border-gray-100 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700 focus:border-blue-500 focus:ring-blue-500 transition-all outline-none"
+                                >
+                                    <option value="ADMIN">Administrator</option>
+                                    <option value="PATIENT">Patient</option>
+                                    <option value="DOCTOR">Doctor</option>
+                                    <option value="PHARMACY">Pharmacy</option>
+                                </select>
+                            </div>
+                            <div>
+                                <Input
+                                    id="email-address"
+                                    name="email"
+                                    type="email"
+                                    required
+                                    placeholder="Email address"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="rounded-xl border-2 border-gray-100 bg-gray-50"
+                                />
+                            </div>
+                            <div>
+                                <Input
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    required
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="rounded-xl border-2 border-gray-100 bg-gray-50"
+                                />
+                            </div>
+                        </div>
 
-                    <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? "Signing in..." : "Sign in"}
-                    </Button>
-                </form>
+                        {error && <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-100">{error}</p>}
+
+                        <Button type="submit" className="w-full h-12 rounded-xl shadow-lg shadow-blue-100 text-lg" disabled={loading}>
+                            {loading ? "Signing in..." : "Sign in"}
+                        </Button>
+                    </form>
+                </div>
             </div>
         </div>
     );
