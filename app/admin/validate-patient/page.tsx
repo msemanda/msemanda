@@ -132,7 +132,7 @@ export default function ValidatePatientPage() {
                                             <div className="space-y-2">
                                                 <label className="text-sm font-medium">Category</label>
                                                 <select
-                                                    className="w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full h-11 rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2 text-sm transition-all focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none"
                                                     value={validationData.category}
                                                     onChange={(e) => setValidationData({ ...validationData, category: e.target.value })}
                                                 >

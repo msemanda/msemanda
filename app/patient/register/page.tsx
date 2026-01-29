@@ -81,7 +81,12 @@ export default function PatientRegistrationPage() {
 
             setSuccess(true);
         } catch (err: any) {
-            setError(err.message || "Failed to register patient");
+            console.error("Registration error:", err);
+            if (err.code === 'permission-denied') {
+                setError("Firebase Permission Error: Please ensure your Firestore Security Rules allow document creation in the 'users' collection.");
+            } else {
+                setError(err.message || "Failed to register patient");
+            }
         } finally {
             setLoading(false);
         }
@@ -151,7 +156,7 @@ export default function PatientRegistrationPage() {
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-700">Problem / Symptoms</label>
                             <textarea
-                                className="w-full rounded-md border border-gray-300 p-2 text-sm"
+                                className="w-full h-32 rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm transition-all placeholder:text-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none"
                                 rows={4}
                                 required
                                 value={formData.problem}
@@ -161,7 +166,7 @@ export default function PatientRegistrationPage() {
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-700">Resident Address</label>
                             <textarea
-                                className="w-full rounded-md border border-gray-300 p-2 text-sm"
+                                className="w-full h-24 rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm transition-all placeholder:text-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none"
                                 rows={3}
                                 required
                                 value={formData.address}

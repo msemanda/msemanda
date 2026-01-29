@@ -4,14 +4,16 @@ import React, { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { UserProfile } from "@/types";
 
 export default function AdminRegistrationPage() {
+    const { user: authUser } = useAuth();
     const [formData, setFormData] = useState({
-        name: "",
-        email: "",
+        name: authUser?.displayName || "",
+        email: authUser?.email || "",
         password: "",
         confirmPassword: "",
         address: "",
@@ -19,26 +21,46 @@ export default function AdminRegistrationPage() {
         gender: "",
         role: "ADMIN",
     });
+
+    // Update form if user becomes available
+    React.useEffect(() => {
+        if (authUser) {
+            setFormData(prev => ({
+                ...prev,
+                name: prev.name || authUser.displayName || "",
+                email: prev.email || authUser.email || "",
+            }));
+        }
+    }, [authUser]);
+
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (formData.password !== formData.confirmPassword) {
+
+        if (!authUser && formData.password !== formData.confirmPassword) {
             return setError("Passwords do not match");
+        }
+        if (!authUser && !formData.password) {
+            return setError("Password is required");
         }
 
         setLoading(true);
         setError("");
 
         try {
-            const userCredential = await createUserWithEmailAndPassword(
-                auth,
-                formData.email,
-                formData.password
-            );
-            const user = userCredential.user;
+            let user = authUser;
+
+            if (!user) {
+                const userCredential = await createUserWithEmailAndPassword(
+                    auth,
+                    formData.email,
+                    formData.password
+                );
+                user = userCredential.user;
+            }
 
             const profile: UserProfile = {
                 uid: user.uid,
@@ -54,7 +76,12 @@ export default function AdminRegistrationPage() {
             await setDoc(doc(db, "users", user.uid), profile);
             setSuccess(true);
         } catch (err: any) {
-            setError(err.message || "Failed to register admin");
+            console.error("Registration error:", err);
+            if (err.code === 'permission-denied') {
+                setError("Firebase Permission Error: Please ensure your Firestore Security Rules allow document creation in the 'users' collection.");
+            } else {
+                setError(err.message || "Failed to register admin");
+            }
         } finally {
             setLoading(false);
         }
@@ -93,24 +120,28 @@ export default function AdminRegistrationPage() {
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         />
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Password</label>
-                        <Input
-                            type="password"
-                            required
-                            value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Confirm Password</label>
-                        <Input
-                            type="password"
-                            required
-                            value={formData.confirmPassword}
-                            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                        />
-                    </div>
+                    {!authUser && (
+                        <>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Password</label>
+                                <Input
+                                    type="password"
+                                    required
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Confirm Password</label>
+                                <Input
+                                    type="password"
+                                    required
+                                    value={formData.confirmPassword}
+                                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                />
+                            </div>
+                        </>
+                    )}
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Date of Birth</label>
                         <Input
@@ -130,7 +161,7 @@ export default function AdminRegistrationPage() {
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Address</label>
                     <textarea
-                        className="w-full rounded-md border border-gray-300 p-2 text-sm"
+                        className="w-full h-24 rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm transition-all placeholder:text-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none"
                         rows={3}
                         value={formData.address}
                         onChange={(e) => setFormData({ ...formData, address: e.target.value })}

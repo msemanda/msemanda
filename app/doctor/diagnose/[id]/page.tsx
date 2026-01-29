@@ -117,7 +117,7 @@ export default function DiagnosisEntryPage() {
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Medical Predictions</label>
                                     <textarea
-                                        className="w-full rounded-2xl border-gray-100 bg-gray-50 p-4 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+                                        className="w-full h-32 rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm transition-all placeholder:text-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none"
                                         rows={4}
                                         required
                                         placeholder="Enter observations and likely conditions..."
@@ -128,7 +128,7 @@ export default function DiagnosisEntryPage() {
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Usage Directions</label>
                                     <textarea
-                                        className="w-full rounded-2xl border-gray-100 bg-gray-50 p-4 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+                                        className="w-full h-24 rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm transition-all placeholder:text-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none"
                                         rows={3}
                                         required
                                         placeholder="Specific instructions for the patient..."
@@ -185,7 +185,7 @@ export default function DiagnosisEntryPage() {
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Assign Pharmacy</label>
                                     <select
-                                        className="w-full rounded-2xl border-gray-100 bg-gray-50 p-3 text-sm focus:ring-2 focus:ring-blue-500"
+                                        className="w-full h-11 rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2 text-sm transition-all focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none"
                                         required
                                         value={formData.pharmacyId}
                                         onChange={(e) => setFormData({ ...formData, pharmacyId: e.target.value })}

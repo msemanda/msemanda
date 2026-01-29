@@ -82,7 +82,12 @@ export default function DoctorRegistrationPage() {
 
             setSuccess(true);
         } catch (err: any) {
-            setError(err.message || "Failed to register doctor");
+            console.error("Registration error:", err);
+            if (err.code === 'permission-denied') {
+                setError("Firebase Permission Error: Please ensure your Firestore Security Rules allow document creation in the 'users' collection.");
+            } else {
+                setError(err.message || "Failed to register doctor");
+            }
         } finally {
             setLoading(false);
         }

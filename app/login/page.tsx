@@ -122,7 +122,7 @@ export default function LoginPage() {
                                     id="role"
                                     value={role}
                                     onChange={(e) => setRole(e.target.value as UserRole)}
-                                    className="block w-full rounded-xl border-2 border-gray-100 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700 focus:border-blue-500 focus:ring-blue-500 transition-all outline-none"
+                                    className="block w-full h-11 rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2 text-sm transition-all focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none"
                                 >
                                     <option value="ADMIN">Administrator</option>
                                     <option value="PATIENT">Patient</option>
@@ -139,7 +139,6 @@ export default function LoginPage() {
                                     placeholder="Email address"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="rounded-xl border-2 border-gray-100 bg-gray-50"
                                 />
                             </div>
                             <div>
@@ -151,7 +150,6 @@ export default function LoginPage() {
                                     placeholder="Password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="rounded-xl border-2 border-gray-100 bg-gray-50"
                                 />
                             </div>
                         </div>

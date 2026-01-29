@@ -4,13 +4,15 @@ import React, { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
 export default function PharmacyRegistrationPage() {
+    const { user: authUser } = useAuth();
     const [formData, setFormData] = useState({
-        name: "",
-        email: "",
+        name: authUser?.displayName || "",
+        email: authUser?.email || "",
         password: "",
         confirmPassword: "",
         address: "",
@@ -20,22 +22,41 @@ export default function PharmacyRegistrationPage() {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
 
+    // Update form if user becomes available
+    React.useEffect(() => {
+        if (authUser) {
+            setFormData(prev => ({
+                ...prev,
+                name: prev.name || authUser.displayName || "",
+                email: prev.email || authUser.email || "",
+            }));
+        }
+    }, [authUser]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (formData.password !== formData.confirmPassword) {
+
+        if (!authUser && formData.password !== formData.confirmPassword) {
             return setError("Passwords do not match");
+        }
+        if (!authUser && !formData.password) {
+            return setError("Password is required");
         }
 
         setLoading(true);
         setError("");
 
         try {
-            const userCredential = await createUserWithEmailAndPassword(
-                auth,
-                formData.email,
-                formData.password
-            );
-            const user = userCredential.user;
+            let user = authUser;
+
+            if (!user) {
+                const userCredential = await createUserWithEmailAndPassword(
+                    auth,
+                    formData.email,
+                    formData.password
+                );
+                user = userCredential.user;
+            }
 
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
@@ -49,7 +70,12 @@ export default function PharmacyRegistrationPage() {
 
             setSuccess(true);
         } catch (err: any) {
-            setError(err.message || "Failed to register pharmacy");
+            console.error("Registration error:", err);
+            if (err.code === 'permission-denied') {
+                setError("Firebase Permission Error: Please ensure your Firestore Security Rules allow document creation in the 'users' collection.");
+            } else {
+                setError(err.message || "Failed to register pharmacy");
+            }
         } finally {
             setLoading(false);
         }
@@ -127,26 +153,28 @@ export default function PharmacyRegistrationPage() {
                                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest text-[10px]">Password</label>
-                                <Input
-                                    type="password"
-                                    required
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                />
+                        {!authUser && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest text-[10px]">Password</label>
+                                    <Input
+                                        type="password"
+                                        required
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest text-[10px]">Confirm</label>
+                                    <Input
+                                        type="password"
+                                        required
+                                        value={formData.confirmPassword}
+                                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                    />
+                                </div>
                             </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest text-[10px]">Confirm</label>
-                                <Input
-                                    type="password"
-                                    required
-                                    value={formData.confirmPassword}
-                                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                />
-                            </div>
-                        </div>
+                        )}
                     </div>
 
                     {error && <p className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-100">{error}</p>}

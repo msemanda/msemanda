@@ -33,8 +33,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     } else {
                         setProfile(null);
                     }
-                } catch (error) {
-                    console.error("Error fetching user profile:", error);
+                } catch (error: any) {
+                    if (error.code === 'permission-denied') {
+                        console.error("Firestore Permission denied when fetching user profile. Please check your security rules.", error);
+                    } else {
+                        console.error("Error fetching user profile:", error);
+                    }
                     setProfile(null);
                     // Silently fail here to allow onAuthStateChanged to complete
                 }
