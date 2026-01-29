@@ -14,7 +14,9 @@ import {
     Calendar,
     Clock,
     ChevronRight,
-    ClipboardList
+    ClipboardList,
+    FileText,
+    Activity
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";

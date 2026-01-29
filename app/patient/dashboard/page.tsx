@@ -9,11 +9,13 @@ import {
     HeartPulse,
     Activity
 } from "lucide-react";
+import { PatientProfile } from "@/types";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 
 export default function PatientDashboard() {
-    const { profile } = useAuth();
+    const { profile: userProfile } = useAuth();
+    const profile = userProfile as PatientProfile;
 
     // In a real app, we'd fetch these from Firestore
     // Mocking the data based on legacy plog.jsp logic

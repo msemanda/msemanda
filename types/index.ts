@@ -18,11 +18,16 @@ export interface DoctorProfile extends UserProfile {
 }
 
 export interface PatientProfile extends UserProfile {
-    // Add patient specific fields if any
+    visitDate?: string;
+    assignedDoctorId?: string;
+    problem?: string;
+    status?: string;
+    fatherName?: string;
+    age?: number;
 }
 
 export interface PharmacyProfile extends UserProfile {
-    // Add pharmacy specific fields if any
+    pharmacistName?: string;
 }
 
 export interface Appointment {

@@ -19,9 +19,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { PharmacyProfile } from "@/types";
 
 export default function PharmacyDashboard() {
-    const { profile } = useAuth();
+    const { profile: userProfile } = useAuth();
+    const profile = userProfile as PharmacyProfile;
     const [diagnostics, setDiagnostics] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
