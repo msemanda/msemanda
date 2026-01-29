@@ -4,14 +4,16 @@ import React, { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { UserProfile, DoctorProfile } from "@/types";
 
 export default function DoctorRegistrationPage() {
+    const { user: authUser } = useAuth();
     const [formData, setFormData] = useState({
-        name: "",
-        email: "",
+        name: authUser?.displayName || "",
+        email: authUser?.email || "",
         password: "",
         confirmPassword: "",
         address: "",
@@ -23,22 +25,41 @@ export default function DoctorRegistrationPage() {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
 
+    // Update form if user becomes available
+    React.useEffect(() => {
+        if (authUser) {
+            setFormData(prev => ({
+                ...prev,
+                name: prev.name || authUser.displayName || "",
+                email: prev.email || authUser.email || "",
+            }));
+        }
+    }, [authUser]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (formData.password !== formData.confirmPassword) {
+
+        if (!authUser && formData.password !== formData.confirmPassword) {
             return setError("Passwords do not match");
+        }
+        if (!authUser && !formData.password) {
+            return setError("Password is required");
         }
 
         setLoading(true);
         setError("");
 
         try {
-            const userCredential = await createUserWithEmailAndPassword(
-                auth,
-                formData.email,
-                formData.password
-            );
-            const user = userCredential.user;
+            let user = authUser;
+
+            if (!user) {
+                const userCredential = await createUserWithEmailAndPassword(
+                    auth,
+                    formData.email,
+                    formData.password
+                );
+                user = userCredential.user;
+            }
 
             const profile: DoctorProfile = {
                 uid: user.uid,
@@ -151,29 +172,31 @@ export default function DoctorRegistrationPage() {
                     </section>
                 </div>
 
-                <section className="space-y-4 pt-4 border-t">
-                    <h3 className="text-lg font-semibold">Secure Your Account</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">Password</label>
-                            <Input
-                                type="password"
-                                required
-                                value={formData.password}
-                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                            />
+                {!authUser && (
+                    <section className="space-y-4 pt-4 border-t">
+                        <h3 className="text-lg font-semibold">Secure Your Account</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">Password</label>
+                                <Input
+                                    type="password"
+                                    required
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">Confirm Password</label>
+                                <Input
+                                    type="password"
+                                    required
+                                    value={formData.confirmPassword}
+                                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                />
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">Confirm Password</label>
-                            <Input
-                                type="password"
-                                required
-                                value={formData.confirmPassword}
-                                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                            />
-                        </div>
-                    </div>
-                </section>
+                    </section>
+                )}
 
                 {error && <p className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-100">{error}</p>}
 

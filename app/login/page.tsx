@@ -60,15 +60,25 @@ export default function LoginPage() {
             await signInWithGoogle();
             const user = auth.currentUser;
             if (user) {
-                const docRef = doc(db, "users", user.uid);
-                const docSnap = await getDoc(docRef);
+                try {
+                    const docRef = doc(db, "users", user.uid);
+                    const docSnap = await getDoc(docRef);
 
-                if (docSnap.exists()) {
-                    const userData = docSnap.data();
-                    router.push(`/${userData.role.toLowerCase()}/dashboard`);
-                } else {
-                    // Redirect to registration if profile missing
-                    router.push(`/patient/register`);
+                    if (docSnap.exists()) {
+                        const userData = docSnap.data();
+                        router.push(`/${userData.role.toLowerCase()}/dashboard`);
+                    } else {
+                        // Redirect to registration if profile missing
+                        router.push(`/patient/register`);
+                    }
+                } catch (firestoreErr: any) {
+                    if (firestoreErr.code === 'permission-denied') {
+                        // If we can't read the profile, assume it doesn't exist or rules are blocking new users
+                        // Redirect to register anyway
+                        router.push(`/patient/register`);
+                    } else {
+                        throw firestoreErr;
+                    }
                 }
             }
         } catch (err: any) {
