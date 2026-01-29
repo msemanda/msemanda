@@ -34,7 +34,7 @@ export function Sidebar() {
     const { logout, profile } = useAuth();
 
     return (
-        <div className="flex h-screen w-72 flex-col border-r border-gray-100 bg-white shadow-[20px_0_40px_rgba(0,0,0,0.02)] z-50">
+        <div className="flex h-screen w-72 flex-col bg-white/40 backdrop-blur-2xl border-r border-white/20 shadow-[20px_0_40px_rgba(0,14,30,0.02)] z-50 overflow-hidden">
             <div className="p-8">
                 <Link href="/" className="flex items-center group mb-10">
                     <div className="p-2.5 bg-gradient-to-br from-cyan-600 to-teal-600 rounded-2xl shadow-lg shadow-cyan-600/20 group-hover:rotate-6 transition-transform">
@@ -61,13 +61,13 @@ export function Sidebar() {
                                     )}
                                 >
                                     <div className="flex items-center">
-                                        <Icon className={cn("mr-3.5 h-5 w-5 transition-transform duration-300 group-hover:scale-110", isActive ? "text-cyan-600" : "text-gray-400 group-hover:text-cyan-500")} />
-                                        <span>{item.name}</span>
+                                        <Icon className={cn("mr-3.5 h-5 w-5 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6", isActive ? "text-cyan-600" : "text-slate-400 group-hover:text-cyan-500")} />
+                                        <span className="tracking-tight">{item.name}</span>
                                     </div>
                                     {isActive ? (
-                                        <motion.div layoutId="sidebar-active" className="absolute left-0 w-1.5 h-8 bg-cyan-600 rounded-r-full" />
+                                        <motion.div layoutId="sidebar-active" className="absolute left-0 w-1.5 h-8 bg-cyan-600 rounded-r-full shadow-[0_0_10px_rgba(8,145,178,0.3)]" />
                                     ) : (
-                                        <span className="text-[9px] font-black opacity-0 group-hover:opacity-100 transition-opacity bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
+                                        <span className="text-[9px] font-black opacity-0 group-hover:opacity-100 transition-opacity bg-white/50 text-slate-400 px-2 py-1 rounded-lg uppercase tracking-widest border border-white/40">
                                             {item.tag}
                                         </span>
                                     )}

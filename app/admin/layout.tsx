@@ -51,9 +51,9 @@ export default function AdminLayout({
     if (!profile || profile.role !== "ADMIN") return null;
 
     return (
-        <div className="flex h-screen bg-gray-50 overflow-hidden">
+        <div className="flex h-screen bg-mesh overflow-hidden">
             <Sidebar />
-            <div className="flex-1 flex flex-col min-w-0 bg-[radial-gradient(circle_at_50%_0%,#f0f9ff,transparent_50%)]">
+            <div className="flex-1 flex flex-col min-w-0">
                 <main className="flex-1 overflow-y-auto px-10 py-10 scrollbar-hide">
                     <AnimatePresence mode="wait">
                         <motion.div

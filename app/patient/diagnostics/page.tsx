@@ -86,8 +86,10 @@ export default function PatientDiagnosticsPage() {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-lg font-bold text-gray-900">Oct 24, 2025</div>
-                                        <div className="text-xs text-blue-600 font-bold uppercase tracking-widest">Valid Document</div>
+                                        <div className="text-lg font-bold text-gray-900">
+                                            {report.createdAt?.seconds ? new Date(report.createdAt.seconds * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Pending'}
+                                        </div>
+                                        <div className="text-xs text-blue-600 font-bold uppercase tracking-widest">Digital Healthcare Signature</div>
                                     </div>
                                 </div>
 

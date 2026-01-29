@@ -9,6 +9,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
 import {
     Search,
     Pill,
@@ -155,9 +156,16 @@ export default function PharmacyDashboard() {
                                                 <FileText className="h-5 w-5 mr-4 text-gray-400 mt-0.5" />
                                                 <p className="text-sm text-gray-700 font-bold italic leading-relaxed">"{diag.usageDirections}"</p>
                                             </div>
-                                            <Button className="w-full h-18 text-xl font-black rounded-3xl shadow-premium group-hover:bg-cyan-700 transition-all flex items-center justify-center gap-4 group/btn">
-                                                Finalize Fulfillment <ArrowRight className="h-6 w-6 group-hover/btn:translate-x-1.5 transition-transform" />
-                                            </Button>
+                                            <div className="flex gap-3">
+                                                <Link href={`/pharmacy/diagnostics/${diag.id}`} className="flex-1">
+                                                    <Button variant="outline" className="w-full h-18 text-sm font-black rounded-3xl border-gray-100 hover:bg-white/50 hover:border-cyan-200 transition-all uppercase tracking-widest">
+                                                        Inspect Details
+                                                    </Button>
+                                                </Link>
+                                                <Button className="flex-1 h-18 text-sm font-black rounded-3xl shadow-premium group-hover:bg-cyan-700 transition-all flex items-center justify-center gap-3 group/btn">
+                                                    Finalize <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

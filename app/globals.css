@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #f8fafc;
   --foreground: #0f172a;
   --cyan-50: #ecfeff;
   --cyan-100: #cffafe;
@@ -21,11 +21,28 @@
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
   --radius-3xl: 2rem;
+
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-slow: pulse-slow 8s ease-in-out infinite;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.1); }
+  }
 }
 
 @layer utilities {
   .bg-glass {
-    @apply bg-white/85 backdrop-blur-2xl border border-white/40;
+    @apply bg-white/70 backdrop-blur-2xl border border-white/40;
+  }
+
+  .bg-glass-dark {
+    @apply bg-slate-900/80 backdrop-blur-2xl border border-slate-800/50;
   }
 
   .text-high-contrast {
@@ -37,7 +54,15 @@
   }
 
   .shadow-premium {
-    box-shadow: 0 20px 50px -12px rgba(8, 145, 178, 0.15);
+    box-shadow: 0 25px 50px -12px rgba(8, 145, 178, 0.2);
+  }
+
+  .bg-mesh {
+    background-color: #f8fafc;
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(187, 85%, 85%, 0.3) 0, transparent 50%), 
+      radial-gradient(at 50% 0%, hsla(190, 85%, 85%, 0.3) 0, transparent 50%), 
+      radial-gradient(at 100% 0%, hsla(195, 85%, 85%, 0.3) 0, transparent 50%);
   }
 }
 
@@ -46,4 +71,12 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+
+.mesh-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  z-index: -1;
+  opacity: 0.4;
 }

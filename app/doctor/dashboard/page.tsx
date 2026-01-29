@@ -147,9 +147,11 @@ export default function DoctorDashboard() {
                             <ClipboardList className="h-6 w-6 text-cyan-600" /> Quick Access
                         </h3>
                         <div className="space-y-4">
-                            <Button variant="outline" className="w-full justify-start h-16 rounded-2xl border-gray-100 bg-gray-50/50 hover:bg-white hover:border-cyan-200 text-gray-700 font-bold group">
-                                <FileText className="mr-3 h-5 w-5 text-gray-400 group-hover:text-cyan-500 transition-colors" /> Medical History
-                            </Button>
+                            <Link href="/doctor/diagnostics">
+                                <Button variant="outline" className="w-full justify-start h-16 rounded-2xl border-gray-100 bg-gray-50/50 hover:bg-white hover:border-cyan-200 text-gray-700 font-bold group mb-4">
+                                    <FileText className="mr-3 h-5 w-5 text-gray-400 group-hover:text-cyan-500 transition-colors" /> Diagnostic History
+                                </Button>
+                            </Link>
                             <Button variant="outline" className="w-full justify-start h-16 rounded-2xl border-gray-100 bg-gray-50/50 hover:bg-white hover:border-cyan-200 text-gray-700 font-bold group">
                                 <Users className="mr-3 h-5 w-5 text-gray-400 group-hover:text-cyan-500 transition-colors" /> Patient Registry
                             </Button>

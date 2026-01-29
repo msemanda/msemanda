@@ -1,6 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { cn } from "@/lib/utils";
 import {
     Users,
     Stethoscope,
@@ -17,31 +21,95 @@ import { Button } from "@/components/ui/Button";
 
 export default function AdminDashboard() {
     const { profile } = useAuth();
+    const [stats, setStats] = useState([
+        { name: "Total Patients", value: "...", icon: Users, color: "text-cyan-600", bg: "bg-cyan-50" },
+        { name: "Verified Doctors", value: "...", icon: Stethoscope, color: "text-teal-600", bg: "bg-teal-50" },
+        { name: "Consultations", value: "...", icon: Calendar, color: "text-sky-600", bg: "bg-sky-50" },
+        { name: "Wallet Revenue", value: "...", icon: CreditCard, color: "text-indigo-600", bg: "bg-indigo-50" },
+    ]);
+    const [loading, setLoading] = useState(true);
 
-    const stats = [
-        { name: "Total Patients", value: "128", icon: Users, color: "text-cyan-600", bg: "bg-cyan-50" },
-        { name: "Verified Doctors", value: "24", icon: Stethoscope, color: "text-teal-600", bg: "bg-teal-50" },
-        { name: "Consultations", value: "56", icon: Calendar, color: "text-sky-600", bg: "bg-sky-50" },
-        { name: "Wallet Revenue", value: "$18,240", icon: CreditCard, color: "text-indigo-600", bg: "bg-indigo-50" },
-    ];
+    useEffect(() => {
+        fetchStats();
+    }, []);
+
+    const fetchStats = async () => {
+        setLoading(true);
+        try {
+            // Patients
+            const patientsQ = query(collection(db, "users"), where("role", "==", "PATIENT"));
+            const patientsSnapshot = await getDocs(patientsQ);
+
+            // Verified Doctors
+            const doctorsQ = query(collection(db, "users"), where("role", "==", "DOCTOR"), where("approved", "==", true));
+            const doctorsSnapshot = await getDocs(doctorsQ);
+
+            // Consultations (patients where status is "true")
+            const consultQ = query(collection(db, "users"), where("role", "==", "PATIENT"), where("status", "==", "true"));
+            const consultSnapshot = await getDocs(consultQ);
+
+            // Revenue (sum of bills netAmount)
+            const billsSnapshot = await getDocs(collection(db, "bills"));
+            let totalRevenue = 0;
+            billsSnapshot.forEach(doc => {
+                totalRevenue += doc.data().netAmount || 0;
+            });
+
+            setStats([
+                { name: "Total Patients", value: patientsSnapshot.size.toString(), icon: Users, color: "text-cyan-600", bg: "bg-cyan-50" },
+                { name: "Verified Doctors", value: doctorsSnapshot.size.toString(), icon: Stethoscope, color: "text-teal-600", bg: "bg-teal-50" },
+                { name: "Consultations", value: consultSnapshot.size.toString(), icon: Calendar, color: "text-sky-600", bg: "bg-sky-50" },
+                { name: "Wallet Revenue", value: `$${totalRevenue.toLocaleString()}`, icon: CreditCard, color: "text-indigo-600", bg: "bg-indigo-50" },
+            ]);
+        } catch (error) {
+            console.error("Error fetching admin stats:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const [recentPatients, setRecentPatients] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchRecentActivity = async () => {
+            try {
+                const q = query(
+                    collection(db, "users"),
+                    where("role", "==", "PATIENT"),
+                    // We could order by createdAt if it existed on all, but let's just get a few for now
+                    // In a real app we'd use: orderBy("createdAt", "desc"), limit(5)
+                );
+                const snapshot = await getDocs(q);
+                // Sort by createdAt manually if needed, or just take first few
+                const recent = snapshot.docs
+                    .map(doc => ({ ...doc.data(), uid: doc.id }))
+                    .sort((a: any, b: any) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+                    .slice(0, 3);
+                setRecentPatients(recent);
+            } catch (error) {
+                console.error("Error fetching recent activity:", error);
+            }
+        };
+        fetchRecentActivity();
+    }, []);
 
     return (
         <div className="space-y-12 pb-20">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-1">
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tight">System <span className="text-gradient-cyan">Intelligence</span></h1>
-                    <p className="text-gray-500 font-medium">Monitoring the core heartbeat of the E-Health network.</p>
+                    <h1 className="text-5xl font-black text-slate-900 tracking-tighter leading-none">Intelligence <span className="text-gradient-cyan">Ledger.</span></h1>
+                    <p className="text-slate-500 font-medium italic">Autonomous monitoring of the E-Health medical network.</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button className="h-12 w-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-cyan-600 hover:border-cyan-100 transition-all shadow-sm">
-                        <Search className="h-5 w-5" />
+                <div className="flex items-center gap-4">
+                    <button className="h-14 w-14 rounded-[20px] bg-white/40 backdrop-blur-md border border-white flex items-center justify-center text-slate-400 hover:text-cyan-600 hover:border-cyan-100 transition-all shadow-premium group">
+                        <Search className="h-6 w-6 group-hover:scale-110 transition-transform" />
                     </button>
-                    <button className="h-12 w-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-cyan-600 hover:border-cyan-100 transition-all shadow-sm relative">
-                        <Bell className="h-5 w-5" />
-                        <span className="absolute top-3 right-3 h-2 w-2 bg-red-500 rounded-full border-2 border-white" />
+                    <button className="h-14 w-14 rounded-[20px] bg-white/40 backdrop-blur-md border border-white flex items-center justify-center text-slate-400 hover:text-cyan-600 hover:border-cyan-100 transition-all shadow-premium relative group">
+                        <Bell className="h-6 w-6 group-hover:rotate-12 transition-transform" />
+                        <span className="absolute top-4 right-4 h-2.5 w-2.5 bg-cyan-500 rounded-full border-2 border-white shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
                     </button>
-                    <div className="h-12 px-6 rounded-2xl bg-cyan-600 text-white font-black text-sm flex items-center shadow-lg shadow-cyan-600/20 cursor-pointer hover:bg-cyan-700 transition-all">
-                        Operational Live
+                    <div className="h-14 px-8 rounded-[20px] bg-slate-900 text-cyan-400 font-black text-[11px] uppercase tracking-[0.2em] flex items-center shadow-2xl shadow-slate-900/40 border border-slate-800">
+                        <div className="w-2 h-2 rounded-full bg-cyan-400 mr-3 animate-pulse shadow-[0_0_10px_rgba(34,211,238,1)]" /> Operational Live
                     </div>
                 </div>
             </div>
@@ -55,21 +123,22 @@ export default function AdminDashboard() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.1 }}
-                            className="bg-white p-8 rounded-[32px] shadow-premium border border-gray-100 group hover:border-cyan-200 transition-all cursor-default relative overflow-hidden"
+                            whileHover={{ y: -5, scale: 1.02 }}
+                            className="bg-white/70 backdrop-blur-xl p-8 rounded-[40px] shadow-premium border border-white/60 group hover:border-cyan-200 transition-all cursor-default relative overflow-hidden"
                         >
-                            <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-                                <Icon className="h-24 w-24 text-cyan-900" />
+                            <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.1] transition-all duration-700 group-hover:scale-110">
+                                <Icon className="h-28 w-28 text-cyan-900" />
                             </div>
                             <div className="flex flex-col space-y-4">
-                                <div className={`${stat.bg} ${stat.color} h-14 w-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                                <div className={cn(stat.bg, stat.color, "h-14 w-14 rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform shadow-sm")}>
                                     <Icon className="h-7 w-7" />
                                 </div>
                                 <div>
-                                    <p className="text-[11px] font-black text-gray-600 uppercase tracking-widest leading-none mb-2">{stat.name}</p>
-                                    <p className="text-3xl font-black text-gray-900 tracking-tight">{stat.value}</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-3">{stat.name}</p>
+                                    <p className="text-4xl font-black text-slate-900 tracking-tighter">{stat.value}</p>
                                 </div>
-                                <div className="flex items-center text-[10px] font-bold text-teal-600 bg-teal-50 w-fit px-2 py-1 rounded-lg">
-                                    <TrendingUp className="h-3 w-3 mr-1" /> +12% vs last month
+                                <div className="flex items-center text-[10px] font-black text-teal-600 bg-teal-50/50 w-fit px-3 py-1.5 rounded-xl border border-teal-100/30">
+                                    <TrendingUp className="h-3 w-3 mr-1.5" /> SYSTEM STABLE
                                 </div>
                             </div>
                         </motion.div>
@@ -85,20 +154,29 @@ export default function AdminDashboard() {
                     </div>
                     <div className="bg-glass rounded-[40px] border border-white shadow-premium overflow-hidden font-medium">
                         <div className="p-8 space-y-6">
-                            {[1, 2, 3].map((_, i) => (
-                                <div key={i} className="flex items-center justify-between p-4 rounded-3xl hover:bg-white/50 transition-all">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-12 w-12 rounded-2xl bg-gray-100 flex items-center justify-center font-black text-gray-400 text-xs">
-                                            {String.fromCharCode(65 + i)}P
+                            {recentPatients.length === 0 ? (
+                                <p className="text-center text-gray-400 py-10 font-bold uppercase tracking-widest text-xs">No Recent Activity Detected</p>
+                            ) : (
+                                recentPatients.map((p, i) => (
+                                    <div key={p.uid} className="flex items-center justify-between p-4 rounded-3xl hover:bg-white/50 transition-all">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-12 w-12 rounded-2xl bg-gray-100 flex items-center justify-center font-black text-cyan-600 text-xs shadow-sm">
+                                                {p.name.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-black text-gray-900">{p.name}</p>
+                                                <p className="text-xs text-gray-400 uppercase tracking-tighter font-bold">Identity Node: {p.uid.substring(0, 12)}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-black text-gray-900">New Patient Registration</p>
-                                            <p className="text-xs text-gray-400">UUID: patient_0x42384{i}</p>
-                                        </div>
+                                        <span className={cn(
+                                            "text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest",
+                                            p.status === "true" ? "bg-teal-50 text-teal-700" : "bg-cyan-50 text-cyan-700"
+                                        )}>
+                                            {p.status === "true" ? "Session Complete" : "Awaiting Validation"}
+                                        </span>
                                     </div>
-                                    <span className="text-[10px] font-black bg-cyan-50 text-cyan-700 px-3 py-1.5 rounded-full uppercase tracking-widest">Awaiting Validation</span>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>
