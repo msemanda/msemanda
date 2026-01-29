@@ -19,9 +19,11 @@ import {
     Pill,
     Calendar,
     FileText,
-    User
+    User,
+    ArrowRight
 } from "lucide-react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 export default function DiagnosisEntryPage() {
     const { id } = useParams();
@@ -52,7 +54,7 @@ export default function DiagnosisEntryPage() {
                 setPatient(patientDoc.data());
             }
 
-            const pharmaciesSnapshot = await getDocs(collection(db, "users")); // Simple mock, in reality we'd filter by role
+            const pharmaciesSnapshot = await getDocs(collection(db, "users"));
             setPharmacies(pharmaciesSnapshot.docs
                 .map(doc => ({ ...doc.data(), uid: doc.id }))
                 .filter((u: any) => u.role === "PHARMACY"));
@@ -74,7 +76,6 @@ export default function DiagnosisEntryPage() {
                 patientName: patient?.name,
                 createdAt: serverTimestamp(),
             });
-            alert("Diagnostic Consultation Recorded Successfully");
             router.push("/doctor/dashboard");
         } catch (error) {
             console.error("Error saving diagnosis:", error);
@@ -83,55 +84,74 @@ export default function DiagnosisEntryPage() {
         }
     };
 
-    if (loading) return <div className="p-20 text-center italic text-gray-400">Loading consultation record...</div>;
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center p-20">
+                <div className="animate-spin h-10 w-10 border-4 border-cyan-100 border-t-cyan-600 rounded-full" />
+            </div>
+        );
+    }
 
     return (
-        <div className="max-w-5xl mx-auto py-12 px-4">
-            <Link href="/doctor/dashboard" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-8 font-medium">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Return to Queue
+        <div className="max-w-6xl mx-auto py-12 px-6 pb-32">
+            <Link href="/doctor/dashboard" className="group inline-flex items-center text-gray-400 hover:text-cyan-600 mb-12 transition-colors font-black uppercase tracking-widest text-[10px]">
+                <ArrowLeft className="mr-3 h-4 w-4 group-hover:-translate-x-1 transition-transform" /> Back to Intelligence Queue
             </Link>
 
-            <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-10 text-white relative">
-                    <Stethoscope className="absolute right-10 top-1/2 -translate-y-1/2 h-24 w-24 opacity-10" />
-                    <div className="flex items-center space-x-6">
-                        <div className="h-20 w-20 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 text-3xl font-bold">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-glass rounded-[48px] shadow-premium border border-white overflow-hidden"
+            >
+                <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-12 text-white relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-12 opacity-5 scale-150 rotate-12 group-hover:scale-175 transition-transform duration-1000">
+                        <Stethoscope className="h-48 w-48" />
+                    </div>
+                    <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
+                        <div className="h-24 w-24 rounded-[32px] bg-gradient-to-br from-cyan-400 to-teal-400 flex items-center justify-center text-white text-4xl font-black shadow-xl shrink-0 group-hover:rotate-6 transition-transform">
                             {patient?.name.charAt(0)}
                         </div>
-                        <div>
-                            <h1 className="text-3xl font-bold font-premium">Medical Consultation</h1>
-                            <p className="text-blue-100 flex items-center mt-1">
-                                <User className="h-4 w-4 mr-2" /> Patient: {patient?.name} • ID: {(id as string).substring(0, 8)}
-                            </p>
+                        <div className="text-center md:text-left">
+                            <h1 className="text-4xl font-black tracking-tight mb-2">Patient <span className="text-cyan-400">Diagnosis</span> Portal</h1>
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                                <p className="text-gray-400 font-bold flex items-center bg-white/5 px-4 py-2 rounded-2xl backdrop-blur-sm border border-white/10 uppercase tracking-tighter text-xs">
+                                    <User className="h-4 w-4 mr-2 text-cyan-400" /> Subject: {patient?.name}
+                                </p>
+                                <p className="text-gray-400 font-bold flex items-center bg-white/5 px-4 py-2 rounded-2xl backdrop-blur-sm border border-white/10 uppercase tracking-tighter text-xs">
+                                    <FileText className="h-4 w-4 mr-2 text-teal-400" /> Node ID: {(id as string).substring(0, 12).toUpperCase()}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-10 space-y-10">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div className="space-y-6">
-                            <h3 className="text-lg font-bold flex items-center border-b pb-2 text-gray-800">
-                                <FileText className="mr-2 h-5 w-5 text-blue-600" /> Clinical Findings
-                            </h3>
-                            <div className="space-y-4">
-                                <div className="space-y-1">
-                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Medical Predictions</label>
+                <form onSubmit={handleSubmit} className="p-12 space-y-12 bg-white/40">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div className="space-y-10">
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-black text-gray-900 flex items-center gap-4">
+                                    <FileText className="h-6 w-6 text-cyan-500" /> Clinical Assessment
+                                </h3>
+                                <p className="text-sm text-gray-400 font-medium">Document your findings and predictive outcomes.</p>
+                            </div>
+
+                            <div className="space-y-8">
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Medical Predictions</label>
                                     <textarea
-                                        className="w-full h-32 rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm transition-all placeholder:text-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none"
-                                        rows={4}
+                                        className="w-full h-48 rounded-[32px] border border-gray-100 bg-white px-8 py-6 text-sm font-medium transition-all placeholder:text-gray-300 focus:bg-white focus:border-cyan-200 focus:ring-8 focus:ring-cyan-500/5 shadow-sm outline-none resize-none"
                                         required
-                                        placeholder="Enter observations and likely conditions..."
+                                        placeholder="Analyze patient symptoms and primary condition..."
                                         value={formData.predictions}
                                         onChange={(e) => setFormData({ ...formData, predictions: e.target.value })}
                                     />
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Usage Directions</label>
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Temporal Protocol</label>
                                     <textarea
-                                        className="w-full h-24 rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm transition-all placeholder:text-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none"
-                                        rows={3}
+                                        className="w-full h-32 rounded-[32px] border border-gray-100 bg-white px-8 py-6 text-sm font-medium transition-all placeholder:text-gray-300 focus:bg-white focus:border-cyan-200 focus:ring-8 focus:ring-cyan-500/5 shadow-sm outline-none resize-none"
                                         required
-                                        placeholder="Specific instructions for the patient..."
+                                        placeholder="Usage directions and patient care instructions..."
                                         value={formData.usageDirections}
                                         onChange={(e) => setFormData({ ...formData, usageDirections: e.target.value })}
                                     />
@@ -139,42 +159,53 @@ export default function DiagnosisEntryPage() {
                             </div>
                         </div>
 
-                        <div className="space-y-6">
-                            <h3 className="text-lg font-bold flex items-center border-b pb-2 text-gray-800">
-                                <Pill className="mr-2 h-5 w-5 text-indigo-600" /> Medication Control
-                            </h3>
-                            <div className="space-y-4">
-                                <div className="space-y-1">
-                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Prescribed Medicines</label>
-                                    <Input
-                                        required
-                                        placeholder="e.g. Amoxicillin, Paracetamol"
-                                        value={formData.medicines}
-                                        onChange={(e) => setFormData({ ...formData, medicines: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Dosage Amount</label>
-                                    <Input
-                                        required
-                                        placeholder="e.g. 500mg, 2 tablets"
-                                        value={formData.dosage}
-                                        onChange={(e) => setFormData({ ...formData, dosage: e.target.value })}
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest text-[10px]">Start Date</label>
+                        <div className="space-y-10">
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-black text-gray-900 flex items-center gap-4">
+                                    <Pill className="h-6 w-6 text-teal-600" /> Pharmacy Directive
+                                </h3>
+                                <p className="text-sm text-gray-400 font-medium">Authorize medication and specify dosage cycles.</p>
+                            </div>
+
+                            <div className="space-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Prescribed Items</label>
                                         <Input
+                                            className="h-16 rounded-2xl border-gray-100 bg-white px-6 font-bold"
+                                            required
+                                            placeholder="e.g. Amoxicillin Node"
+                                            value={formData.medicines}
+                                            onChange={(e) => setFormData({ ...formData, medicines: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Dosage Pattern</label>
+                                        <Input
+                                            className="h-16 rounded-2xl border-gray-100 bg-white px-6 font-bold"
+                                            required
+                                            placeholder="e.g. 500mg BID"
+                                            value={formData.dosage}
+                                            onChange={(e) => setFormData({ ...formData, dosage: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-8">
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Cycle Start</label>
+                                        <Input
+                                            className="h-16 rounded-2xl border-gray-100 bg-white px-6 font-bold appearance-none"
                                             type="date"
                                             required
                                             value={formData.fromDate}
                                             onChange={(e) => setFormData({ ...formData, fromDate: e.target.value })}
                                         />
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest text-[10px]">End Date</label>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Cycle Termination</label>
                                         <Input
+                                            className="h-16 rounded-2xl border-gray-100 bg-white px-6 font-bold"
                                             type="date"
                                             required
                                             value={formData.toDate}
@@ -182,15 +213,16 @@ export default function DiagnosisEntryPage() {
                                         />
                                     </div>
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Assign Pharmacy</label>
+
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Fulfilment Partner</label>
                                     <select
-                                        className="w-full h-11 rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2 text-sm transition-all focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none"
+                                        className="w-full h-16 rounded-2xl border border-gray-100 bg-white px-6 text-sm font-bold transition-all focus:border-cyan-200 focus:ring-8 focus:ring-cyan-500/5 outline-none shadow-sm"
                                         required
                                         value={formData.pharmacyId}
                                         onChange={(e) => setFormData({ ...formData, pharmacyId: e.target.value })}
                                     >
-                                        <option value="">Select Pharmacy Location</option>
+                                        <option value="">Select Priority Pharmacy Location</option>
                                         {pharmacies.map(ph => (
                                             <option key={ph.uid} value={ph.uid}>{ph.name}</option>
                                         ))}
@@ -200,16 +232,18 @@ export default function DiagnosisEntryPage() {
                         </div>
                     </div>
 
-                    <div className="pt-10 border-t flex justify-between items-center">
-                        <div className="flex items-center text-sm text-gray-500">
-                            <Calendar className="mr-2 h-4 w-4" /> Consultation Date: {new Date().toLocaleDateString()}
+                    <div className="pt-12 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-8">
+                        <div className="flex items-center gap-4 bg-gray-50/50 px-6 py-3 rounded-2xl border border-gray-100">
+                            <Calendar className="h-5 w-5 text-gray-400" />
+                            <p className="text-xs font-black text-gray-500 uppercase tracking-widest">Protocol Date: <span className="text-cyan-600 ml-1">{new Date().toLocaleDateString()}</span></p>
                         </div>
-                        <Button type="submit" className="px-12 py-6 text-lg rounded-2xl shadow-lg" disabled={processing}>
-                            {processing ? "Saving Consultation..." : "Finalize Diagnostic Report"}
+                        <Button type="submit" className="h-20 px-16 text-xl font-black rounded-[28px] shadow-heavy group/btn w-full md:w-auto" disabled={processing}>
+                            {processing ? "Syncing Directive..." : "Authorize Diagnostic Report"}
+                            <ArrowRight className="ml-4 h-6 w-6 group-hover/btn:translate-x-2 transition-transform" />
                         </Button>
                     </div>
                 </form>
-            </div>
+            </motion.div>
         </div>
     );
 }

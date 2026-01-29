@@ -8,6 +8,14 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { UserProfile } from "@/types";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+    ShieldAlert,
+    Lock,
+    Settings as UserSettings,
+    ShieldCheck,
+    ArrowRight
+} from "lucide-react";
 
 export default function AdminRegistrationPage() {
     const { user: authUser } = useAuth();
@@ -89,91 +97,141 @@ export default function AdminRegistrationPage() {
 
     if (success) {
         return (
-            <div className="flex min-h-screen items-center justify-center">
-                <div className="text-center space-y-4">
-                    <h2 className="text-2xl font-bold text-green-600">Admin Registered Successfully!</h2>
-                    <Button onClick={() => window.location.href = "/login"}>Go to Login</Button>
-                </div>
+            <div className="flex min-h-screen items-center justify-center p-6 bg-[radial-gradient(circle_at_50%_0%,rgba(8,145,178,0.08),transparent_50%)]">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center space-y-8 max-w-md bg-glass p-12 rounded-[32px] shadow-premium"
+                >
+                    <div className="h-20 w-20 bg-cyan-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <ShieldAlert className="h-10 w-10 text-cyan-600" />
+                    </div>
+                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">Admin Registered</h2>
+                    <p className="text-gray-500 font-medium leading-relaxed">System administrator account has been initialized. You now have full control over the healthcare platform.</p>
+                    <Button onClick={() => window.location.href = "/login"} className="w-full">Enter Command Center</Button>
+                </motion.div>
             </div>
         );
     }
 
     return (
-        <div className="max-w-2xl mx-auto py-12 px-4">
-            <h1 className="text-3xl font-bold mb-8">Administrator Registration</h1>
-            <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-lg shadow">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Full Name</label>
-                        <Input
-                            required
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Email Address</label>
-                        <Input
-                            type="email"
-                            required
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        />
-                    </div>
-                    {!authUser && (
-                        <>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Password</label>
-                                <Input
-                                    type="password"
-                                    required
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                />
+        <div className="min-h-screen bg-gray-50 py-20 px-6 bg-[radial-gradient(circle_at_50%_0%,rgba(8,145,178,0.08),transparent_50%)]">
+            <div className="max-w-4xl mx-auto">
+                <div className="text-center mb-16 space-y-4">
+                    <h1 className="text-5xl font-black tracking-tight text-gray-900">System <span className="text-gradient-cyan">Administrator</span></h1>
+                    <p className="text-lg text-gray-500 font-medium max-w-xl mx-auto leading-relaxed">Initialize the core administration layer of the E-Health platform.</p>
+                </div>
+                <div className="bg-glass rounded-[40px] shadow-premium p-10 lg:p-12 border border-white/60">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <section className="space-y-6">
+                            <h3 className="text-xl font-black text-gray-900 flex items-center gap-3">
+                                <UserSettings className="text-cyan-600 h-5 w-5" /> Core Identity
+                            </h3>
+                            <div className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Full Admin Name</label>
+                                    <Input
+                                        required
+                                        placeholder="System Operator"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Secure Email</label>
+                                    <Input
+                                        type="email"
+                                        required
+                                        placeholder="admin@e-health.com"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Birth Date</label>
+                                        <Input
+                                            placeholder="DD-MM-YYYY"
+                                            value={formData.dob}
+                                            onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Gender</label>
+                                        <Input
+                                            placeholder="Select"
+                                            value={formData.gender}
+                                            onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Confirm Password</label>
-                                <Input
-                                    type="password"
-                                    required
-                                    value={formData.confirmPassword}
-                                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                />
+                        </section>
+
+                        <section className="space-y-6">
+                            <h3 className="text-xl font-black text-gray-900 flex items-center gap-3">
+                                <Lock className="text-cyan-600 h-5 w-5" /> Access & Location
+                            </h3>
+                            <div className="space-y-4">
+                                {!authUser && (
+                                    <>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Root Password</label>
+                                            <Input
+                                                type="password"
+                                                required
+                                                placeholder="••••••••"
+                                                value={formData.password}
+                                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Confirm Root</label>
+                                            <Input
+                                                type="password"
+                                                required
+                                                placeholder="••••••••"
+                                                value={formData.confirmPassword}
+                                                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                            />
+                                        </div>
+                                    </>
+                                )}
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Official Address</label>
+                                    <textarea
+                                        className="w-full h-24 rounded-2xl border border-gray-200 bg-gray-50/20 px-4 py-3 text-sm transition-all placeholder:text-gray-400 focus:bg-white focus:border-cyan-primary focus:ring-4 focus:ring-cyan-primary/10 outline-none shadow-sm focus:shadow-premium"
+                                        rows={3}
+                                        placeholder="Command center location"
+                                        value={formData.address}
+                                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                    />
+                                </div>
                             </div>
-                        </>
-                    )}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Date of Birth</label>
-                        <Input
-                            placeholder="DD-MM-YYYY"
-                            value={formData.dob}
-                            onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                        />
+                        </section>
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Gender</label>
-                        <Input
-                            value={formData.gender}
-                            onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                        />
+
+                    <AnimatePresence>
+                        {error && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                className="p-4 rounded-2xl bg-red-50 border border-red-100 text-red-600 text-[11px] font-bold flex gap-3 shadow-sm"
+                            >
+                                <ShieldCheck className="h-5 w-5 shrink-0" />
+                                <span>{error}</span>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <div className="pt-6">
+                        <Button type="submit" className="w-full h-16 text-lg group shadow-premium" disabled={loading}>
+                            {loading ? "Initializing System Admin..." : "Finalize Admin Setup"}
+                            <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                        </Button>
                     </div>
                 </div>
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">Address</label>
-                    <textarea
-                        className="w-full h-24 rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm transition-all placeholder:text-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none"
-                        rows={3}
-                        value={formData.address}
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    />
-                </div>
-
-                {error && <p className="text-sm text-red-600">{error}</p>}
-
-                <Button type="submit" className="w-full md:w-auto px-12" disabled={loading}>
-                    {loading ? "Registering..." : "Submit"}
-                </Button>
-            </form>
+            </div>
         </div>
     );
 }

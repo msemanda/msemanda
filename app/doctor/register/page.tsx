@@ -8,6 +8,15 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { UserProfile, DoctorProfile } from "@/types";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+    Activity,
+    Lock,
+    UserCircle,
+    ShieldCheck,
+    ArrowRight,
+    UserRoundCheck
+} from "lucide-react";
 
 export default function DoctorRegistrationPage() {
     const { user: authUser } = useAuth();
@@ -95,122 +104,157 @@ export default function DoctorRegistrationPage() {
 
     if (success) {
         return (
-            <div className="flex min-h-screen items-center justify-center p-4">
-                <div className="text-center space-y-4 max-w-md">
-                    <h2 className="text-2xl font-bold text-blue-600">Registration Complete!</h2>
-                    <p className="text-gray-600">Your account has been created. Please wait for an administrator to authenticate your profile before you can log in.</p>
-                    <Button onClick={() => window.location.href = "/login"}>Back to Login</Button>
-                </div>
+            <div className="flex min-h-screen items-center justify-center p-6 bg-[radial-gradient(circle_at_50%_0%,rgba(8,145,178,0.08),transparent_50%)]">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center space-y-8 max-w-md bg-glass p-12 rounded-[32px] shadow-premium"
+                >
+                    <div className="h-20 w-20 bg-cyan-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <UserRoundCheck className="h-10 w-10 text-cyan-600" />
+                    </div>
+                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">Enrollment Received</h2>
+                    <p className="text-gray-500 font-medium leading-relaxed">Your professional profile has been submitted for verification. An administrator will review your credentials shortly.</p>
+                    <Button onClick={() => window.location.href = "/login"} className="w-full">Back to Portal</Button>
+                </motion.div>
             </div>
         );
     }
 
     return (
-        <div className="max-w-3xl mx-auto py-12 px-4">
-            <div className="text-center mb-10">
-                <h1 className="text-4xl font-bold tracking-tight text-gray-900 font-premium">Doctor Enrollment</h1>
-                <p className="mt-2 text-lg text-gray-600">Join our network of healthcare professionals</p>
+        <div className="min-h-screen bg-gray-50 py-20 px-6 bg-[radial-gradient(circle_at_50%_0%,rgba(8,145,178,0.08),transparent_50%)]">
+            <div className="max-w-4xl mx-auto">
+                <div className="text-center mb-16 space-y-4">
+                    <h1 className="text-5xl font-black tracking-tight text-gray-900">Medical <span className="text-gradient-cyan">Practitioner</span></h1>
+                    <p className="text-lg text-gray-500 font-medium max-w-xl mx-auto leading-relaxed">Join our elite network of verified healthcare professionals and scale your practice digital.</p>
+                </div>
+
+                <div className="bg-glass rounded-[40px] shadow-premium p-10 lg:p-12 border border-white/60">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <section className="space-y-6">
+                            <h3 className="text-xl font-black text-gray-900 flex items-center gap-3">
+                                <UserCircle className="text-cyan-600 h-5 w-5" /> Persona Information
+                            </h3>
+                            <div className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Full Professional Name</label>
+                                    <Input
+                                        required
+                                        placeholder="Dr. John Smith"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Medical Email</label>
+                                    <Input
+                                        type="email"
+                                        required
+                                        placeholder="dr.smith@e-health.com"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Current Age</label>
+                                    <Input
+                                        type="number"
+                                        required
+                                        placeholder="35"
+                                        value={formData.age}
+                                        onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                        </section>
+
+                        <section className="space-y-6">
+                            <h3 className="text-xl font-black text-gray-900 flex items-center gap-3">
+                                <Activity className="text-cyan-600 h-5 w-5" /> Professional Credentials
+                            </h3>
+                            <div className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Field of Expertise</label>
+                                    <Input
+                                        required
+                                        placeholder="e.g. Cardiology, Neurology"
+                                        value={formData.specialization}
+                                        onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Academic Qualifications</label>
+                                    <Input
+                                        required
+                                        placeholder="e.g. MBBS, MD, FRCP"
+                                        value={formData.qualification}
+                                        onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Practice Location</label>
+                                    <Input
+                                        required
+                                        placeholder="Clinic or Hospital address"
+                                        value={formData.address}
+                                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    {!authUser && (
+                        <section className="space-y-6 pt-10 mt-10 border-t border-gray-100/50">
+                            <h3 className="text-xl font-black text-gray-900 flex items-center gap-3">
+                                <Lock className="text-cyan-600 h-5 w-5" /> Account Security
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Secure Password</label>
+                                    <Input
+                                        type="password"
+                                        required
+                                        placeholder="••••••••"
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Verify Password</label>
+                                    <Input
+                                        type="password"
+                                        required
+                                        placeholder="••••••••"
+                                        value={formData.confirmPassword}
+                                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                        </section>
+                    )}
+
+                    <AnimatePresence>
+                        {error && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                className="p-4 rounded-2xl bg-red-50 border border-red-100 text-red-600 text-[11px] font-bold flex gap-3 shadow-sm"
+                            >
+                                <ShieldCheck className="h-5 w-5 shrink-0" />
+                                <span>{error}</span>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <div className="pt-6">
+                        <Button type="submit" className="w-full h-16 text-lg group shadow-premium" disabled={loading}>
+                            {loading ? "Registering Practitioner..." : "Initiate Enrollment"}
+                            <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                    </div>
+                </div>
             </div>
-
-            <form onSubmit={handleSubmit} className="space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-100">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <section className="space-y-4">
-                        <h3 className="text-lg font-semibold border-b pb-2">Personal Information</h3>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">Full Name</label>
-                            <Input
-                                required
-                                placeholder="Dr. John Doe"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">Email Address</label>
-                            <Input
-                                type="email"
-                                required
-                                placeholder="doctor@e-health.com"
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">Age</label>
-                            <Input
-                                type="number"
-                                required
-                                value={formData.age}
-                                onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                            />
-                        </div>
-                    </section>
-
-                    <section className="space-y-4">
-                        <h3 className="text-lg font-semibold border-b pb-2">Professional Details</h3>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">Specialization</label>
-                            <Input
-                                required
-                                placeholder="e.g. Cardiology"
-                                value={formData.specialization}
-                                onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">Qualification</label>
-                            <Input
-                                required
-                                placeholder="e.g. MBBS, MD"
-                                value={formData.qualification}
-                                onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">Address / Clinic Location</label>
-                            <Input
-                                required
-                                value={formData.address}
-                                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                            />
-                        </div>
-                    </section>
-                </div>
-
-                {!authUser && (
-                    <section className="space-y-4 pt-4 border-t">
-                        <h3 className="text-lg font-semibold">Secure Your Account</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Password</label>
-                                <Input
-                                    type="password"
-                                    required
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Confirm Password</label>
-                                <Input
-                                    type="password"
-                                    required
-                                    value={formData.confirmPassword}
-                                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                />
-                            </div>
-                        </div>
-                    </section>
-                )}
-
-                {error && <p className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-100">{error}</p>}
-
-                <div className="pt-6">
-                    <Button type="submit" className="w-full py-6 text-lg" disabled={loading}>
-                        {loading ? "Processing Registration..." : "Complete Enrollment"}
-                    </Button>
-                </div>
-            </form>
         </div>
     );
 }

@@ -8,19 +8,19 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ({ className, variant = "primary", size = "md", ...props }, ref) => {
-        const baseStyles = "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none";
+        const baseStyles = "inline-flex items-center justify-center rounded-2xl font-bold transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-primary/20 disabled:opacity-50 disabled:pointer-events-none tracking-tight";
 
         const variants = {
-            primary: "bg-blue-600 text-white hover:bg-blue-700",
-            secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200",
-            outline: "border border-gray-300 bg-transparent hover:bg-gray-50",
-            ghost: "bg-transparent hover:bg-gray-100",
+            primary: "bg-cyan-primary text-white hover:bg-cyan-dark shadow-lg shadow-cyan-600/20 hover:shadow-cyan-600/30",
+            secondary: "bg-cyan-50 text-cyan-700 hover:bg-cyan-100",
+            outline: "border-2 border-gray-100 bg-transparent hover:bg-gray-50 hover:border-gray-200 text-gray-700",
+            ghost: "bg-transparent hover:bg-cyan-50 text-cyan-700",
         };
 
         const sizes = {
-            sm: "h-9 px-3 text-xs",
-            md: "h-10 px-4 py-2",
-            lg: "h-11 px-8 text-lg",
+            sm: "h-9 px-4 text-xs",
+            md: "h-12 px-6 text-sm",
+            lg: "h-14 px-10 text-lg",
         };
 
         return (
