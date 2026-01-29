@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
@@ -15,7 +16,8 @@ import {
     UserCircle,
     ShieldCheck,
     ArrowRight,
-    UserRoundCheck
+    UserRoundCheck,
+    HeartPulse
 } from "lucide-react";
 
 export default function DoctorRegistrationPage() {
@@ -124,6 +126,13 @@ export default function DoctorRegistrationPage() {
     return (
         <div className="min-h-screen bg-gray-50 py-20 px-6 bg-[radial-gradient(circle_at_50%_0%,rgba(8,145,178,0.08),transparent_50%)]">
             <div className="max-w-4xl mx-auto">
+                <Link href="/" className="inline-flex items-center group mb-12 hover:opacity-80 transition-opacity">
+                    <div className="p-2 bg-white rounded-xl shadow-sm border border-gray-100 group-hover:rotate-6 transition-transform">
+                        <HeartPulse className="h-5 w-5 text-cyan-600" />
+                    </div>
+                    <span className="ml-3 text-sm font-black text-gray-400 uppercase tracking-[0.2em]">Return to Main Interface</span>
+                </Link>
+
                 <div className="text-center mb-16 space-y-4">
                     <h1 className="text-5xl font-black tracking-tight text-gray-900">Medical <span className="text-gradient-cyan">Practitioner</span></h1>
                     <p className="text-lg text-gray-500 font-medium max-w-xl mx-auto leading-relaxed">Join our elite network of verified healthcare professionals and scale your practice digital.</p>

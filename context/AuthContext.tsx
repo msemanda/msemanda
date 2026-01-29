@@ -31,26 +31,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     if (docSnap.exists()) {
                         setProfile(docSnap.data() as UserProfile);
 
-                        // Record Session
-                        const sessionRef = doc(db, "sessions", `${user.uid}_${Date.now()}`);
-                        await setDoc(sessionRef, {
-                            uid: user.uid,
-                            email: user.email,
-                            timestamp: serverTimestamp(),
-                            userAgent: window.navigator.userAgent,
-                            lastActive: serverTimestamp()
-                        });
+                        // Record Session (Non-fatal)
+                        try {
+                            const sessionRef = doc(db, "sessions", `${user.uid}_${Date.now()}`);
+                            await setDoc(sessionRef, {
+                                uid: user.uid,
+                                email: user.email,
+                                timestamp: serverTimestamp(),
+                                userAgent: window.navigator.userAgent,
+                                lastActive: serverTimestamp()
+                            });
+                        } catch (sessionError) {
+                            console.warn("Telemetry recording failed, proceeding with profile authorization:", sessionError);
+                        }
                     } else {
                         setProfile(null);
                     }
                 } catch (error: any) {
                     if (error.code === 'permission-denied') {
-                        console.error("Firestore Permission denied when fetching user profile. Please check your security rules.", error);
+                        console.error("Firestore Permission denied when fetching user profile:", error);
                     } else {
                         console.error("Error fetching user profile:", error);
                     }
                     setProfile(null);
-                    // Silently fail here to allow onAuthStateChanged to complete
                 }
             } else {
                 setProfile(null);
