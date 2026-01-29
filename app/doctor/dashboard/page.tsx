@@ -113,11 +113,11 @@ export default function DoctorDashboard() {
                                             <div>
                                                 <h3 className="text-xl font-black text-gray-900 mb-1">{patient.name}</h3>
                                                 <div className="flex items-center gap-4">
-                                                    <div className="flex items-center text-xs font-bold text-gray-400 uppercase tracking-tighter">
+                                                    <div className="flex items-center text-xs font-bold text-gray-600 uppercase tracking-tighter">
                                                         <Clock className="h-3.5 w-3.5 mr-1.5 text-cyan-500" /> {patient.visitDate || "TBA"}
                                                     </div>
-                                                    <div className="h-1 w-1 bg-gray-200 rounded-full" />
-                                                    <div className="flex items-center text-xs font-bold text-gray-400 uppercase tracking-tighter">
+                                                    <div className="h-1 w-1 bg-gray-300 rounded-full" />
+                                                    <div className="flex items-center text-xs font-bold text-gray-600 uppercase tracking-tighter">
                                                         <Activity className="h-3.5 w-3.5 mr-1.5 text-teal-500" /> Routine Checkup
                                                     </div>
                                                 </div>
@@ -125,8 +125,8 @@ export default function DoctorDashboard() {
                                         </div>
                                         <div className="flex items-center gap-6">
                                             <div className="hidden xl:block text-right">
-                                                <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Chief Complaint</p>
-                                                <p className="text-sm text-gray-500 font-medium italic line-clamp-1 max-w-[200px]">"{patient.problem}"</p>
+                                                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Chief Complaint</p>
+                                                <p className="text-sm text-gray-700 font-bold italic line-clamp-1 max-w-[200px]">"{patient.problem}"</p>
                                             </div>
                                             <Link href={`/doctor/diagnose/${patient.uid}`}>
                                                 <Button className="h-14 px-8 rounded-2xl shadow-premium group-hover:bg-cyan-700 transition-all flex items-center gap-2">

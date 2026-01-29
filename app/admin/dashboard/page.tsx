@@ -65,7 +65,7 @@ export default function AdminDashboard() {
                                     <Icon className="h-7 w-7" />
                                 </div>
                                 <div>
-                                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2">{stat.name}</p>
+                                    <p className="text-[11px] font-black text-gray-600 uppercase tracking-widest leading-none mb-2">{stat.name}</p>
                                     <p className="text-3xl font-black text-gray-900 tracking-tight">{stat.value}</p>
                                 </div>
                                 <div className="flex items-center text-[10px] font-bold text-teal-600 bg-teal-50 w-fit px-2 py-1 rounded-lg">

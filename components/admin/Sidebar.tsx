@@ -13,14 +13,16 @@ import {
     HeartPulse,
     ChevronRight,
     Search,
-    Bell
+    Bell,
+    Shield
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { motion } from "framer-motion";
 
 const menuItems = [
     { name: "Command Center", href: "/admin/dashboard", icon: LayoutDashboard, tag: "Overview" },
-    { name: "Registry Access", href: "/admin/register", icon: UserPlus, tag: "Admin" },
+    { name: "User Registry", href: "/admin/users", icon: UserPlus, tag: "Management" },
+    { name: "Access Logs", href: "/admin/sessions", icon: Shield, tag: "Auditing" },
     { name: "Medical Network", href: "/admin/invite-doctors", icon: UserCheck, tag: "Physicians" },
     { name: "Patient Flow", href: "/admin/schedule-patients", icon: Calendar, tag: "Queues" },
     { name: "Identity Validation", href: "/admin/validate-patient", icon: FileText, tag: "KYC" },

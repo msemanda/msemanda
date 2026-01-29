@@ -15,9 +15,9 @@
   --color-cyan-primary: #0891b2;
   --color-cyan-dark: #0e7490;
   --color-teal-accent: #0f766e;
-  
+
   --font-sans: "Outfit", var(--font-geist-sans), sans-serif;
-  
+
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
   --radius-3xl: 2rem;
@@ -25,13 +25,17 @@
 
 @layer utilities {
   .bg-glass {
-    @apply bg-white/70 backdrop-blur-xl border border-white/20;
+    @apply bg-white/85 backdrop-blur-2xl border border-white/40;
   }
-  
+
+  .text-high-contrast {
+    @apply text-slate-900 font-semibold;
+  }
+
   .text-gradient-cyan {
     @apply bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent;
   }
-  
+
   .shadow-premium {
     box-shadow: 0 20px 50px -12px rgba(8, 145, 178, 0.15);
   }

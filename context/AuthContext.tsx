@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User, signInWithPopup } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db, googleProvider } from "@/lib/firebase";
 import { UserProfile } from "@/types";
 
@@ -30,6 +30,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists()) {
                         setProfile(docSnap.data() as UserProfile);
+
+                        // Record Session
+                        const sessionRef = doc(db, "sessions", `${user.uid}_${Date.now()}`);
+                        await setDoc(sessionRef, {
+                            uid: user.uid,
+                            email: user.email,
+                            timestamp: serverTimestamp(),
+                            userAgent: window.navigator.userAgent,
+                            lastActive: serverTimestamp()
+                        });
                     } else {
                         setProfile(null);
                     }

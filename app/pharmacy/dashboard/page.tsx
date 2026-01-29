@@ -142,9 +142,9 @@ export default function PharmacyDashboard() {
                                                     <p className="text-lg text-cyan-600 font-black mt-2 bg-white/60 w-fit px-4 py-1 rounded-2xl shadow-sm border border-cyan-50">{diag.dosage} Frequency</p>
                                                 </div>
                                                 <div className="md:text-right">
-                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Treatment Cycle</p>
-                                                    <p className="text-sm font-black text-gray-700 flex items-center gap-2">
-                                                        {diag.fromDate} <ArrowRight className="h-3 w-3 text-cyan-400" /> {diag.toDate}
+                                                    <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-1.5">Treatment Cycle</p>
+                                                    <p className="text-sm font-black text-gray-900 flex items-center gap-2">
+                                                        {diag.fromDate} <ArrowRight className="h-3 w-3 text-cyan-500" /> {diag.toDate}
                                                     </p>
                                                 </div>
                                             </div>
@@ -152,8 +152,8 @@ export default function PharmacyDashboard() {
 
                                         <div className="space-y-6">
                                             <div className="flex items-start bg-white/40 p-5 rounded-2xl border border-white group-hover:border-cyan-50 transition-all">
-                                                <FileText className="h-5 w-5 mr-4 text-gray-300 mt-0.5" />
-                                                <p className="text-sm text-gray-500 font-medium italic leading-relaxed">"{diag.usageDirections}"</p>
+                                                <FileText className="h-5 w-5 mr-4 text-gray-400 mt-0.5" />
+                                                <p className="text-sm text-gray-700 font-bold italic leading-relaxed">"{diag.usageDirections}"</p>
                                             </div>
                                             <Button className="w-full h-18 text-xl font-black rounded-3xl shadow-premium group-hover:bg-cyan-700 transition-all flex items-center justify-center gap-4 group/btn">
                                                 Finalize Fulfillment <ArrowRight className="h-6 w-6 group-hover/btn:translate-x-1.5 transition-transform" />
