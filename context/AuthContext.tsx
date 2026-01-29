@@ -65,7 +65,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const logout = async () => {
-        await auth.signOut();
+        setLoading(true);
+        try {
+            await auth.signOut();
+            setUser(null);
+            setProfile(null);
+            window.location.href = "/login";
+        } catch (error) {
+            console.error("Logout failed:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const signInWithGoogle = async () => {
