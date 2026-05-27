@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, where, updateDoc, doc, serverTimestamp } from "firebase/firestore";
+import { collection, getDocs, query, where, updateDoc, doc, serverTimestamp, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -94,6 +94,19 @@ export default function CashierBillsPage() {
                     paidAt: serverTimestamp(),
                 });
             }
+            // Record as income so cashier dashboard totals stay accurate
+            await addDoc(collection(db, "transactions"), {
+                type: "INCOME",
+                category: "Service Bills",
+                description: `${bill.billType} — ${bill.patientName}: ${bill.description}`,
+                amount: bill.amount,
+                paymentMethod: "CASH",
+                date: serverTimestamp(),
+                recordedBy: profile?.name,
+                recordedAt: serverTimestamp(),
+                patientId: bill.patientEmail,
+                receiptNo,
+            });
             setBills(prev => prev.filter(b => b.id !== bill.id));
             setCounts(prev => ({ ...prev, pending: prev.pending - 1, paid: prev.paid + 1 }));
         } catch(e) { console.error(e); }

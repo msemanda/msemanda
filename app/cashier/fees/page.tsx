@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
     collection, query, where, getDocs,
-    doc, setDoc, serverTimestamp, updateDoc
+    doc, setDoc, serverTimestamp, updateDoc, addDoc
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -105,6 +105,19 @@ export default function CashierFeesPage() {
                 status: "PAID",
                 paidAt: serverTimestamp(),
                 collectedBy: profile?.uid,
+                receiptNo,
+            });
+            // Record as income so cashier dashboard totals are accurate
+            await addDoc(collection(db, "transactions"), {
+                type: "INCOME",
+                category: "Consultation Fees",
+                description: `Consultation fee — ${fee.patientName} (${fee.consultationType})`,
+                amount: fee.amount,
+                paymentMethod: fee.paymentMethod || "CASH",
+                date: serverTimestamp(),
+                recordedBy: profile?.name,
+                recordedAt: serverTimestamp(),
+                patientId: fee.patientEmail,
                 receiptNo,
             });
             setFees(prev => prev.filter(f => f.id !== fee.id));
