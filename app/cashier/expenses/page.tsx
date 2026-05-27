@@ -26,11 +26,18 @@ export default function ExpensesPage() {
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [search, setSearch] = useState("");
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<{
+        description: string;
+        category: typeof EXPENSE_CATEGORIES[number];
+        amount: string;
+        paymentMethod: PaymentMethod;
+        reference: string;
+        notes: string;
+    }>({
         description: "",
         category: EXPENSE_CATEGORIES[0],
         amount: "",
-        paymentMethod: "CASH" as PaymentMethod,
+        paymentMethod: "CASH",
         reference: "",
         notes: "",
     });

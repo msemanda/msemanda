@@ -29,11 +29,19 @@ export default function IncomePage() {
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [search, setSearch] = useState("");
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<{
+        description: string;
+        category: typeof INCOME_CATEGORIES[number];
+        amount: string;
+        paymentMethod: PaymentMethod;
+        patientName: string;
+        reference: string;
+        notes: string;
+    }>({
         description: "",
         category: INCOME_CATEGORIES[0],
         amount: "",
-        paymentMethod: "CASH" as PaymentMethod,
+        paymentMethod: "CASH",
         patientName: "",
         reference: "",
         notes: "",
