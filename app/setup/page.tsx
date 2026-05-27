@@ -80,18 +80,19 @@ export default function SetupPage() {
 
     const checkInvite = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
         setError("");
         const normalEmail = email.toLowerCase().trim();
-        try {
-            // Superadmin bootstrap — no invite needed
-            if (normalEmail === SUPERADMIN_EMAIL) {
-                setInvite({ role: "ADMIN", invitedBy: "System", isSuperadmin: true });
-                setName("System Administrator");
-                setStep("setup");
-                return;
-            }
 
+        // Superadmin bootstrap — fully outside try/catch, no Firestore call needed
+        if (normalEmail === SUPERADMIN_EMAIL) {
+            setInvite({ role: "ADMIN", invitedBy: "System", isSuperadmin: true });
+            setName("System Administrator");
+            setStep("setup");
+            return;
+        }
+
+        setLoading(true);
+        try {
             const inviteSnap = await getDoc(doc(db, "invites", normalEmail));
             if (!inviteSnap.exists()) {
                 setError("No invitation found for this email. Please contact your administrator.");

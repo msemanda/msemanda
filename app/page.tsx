@@ -387,7 +387,7 @@ export default function LandingPage() {
             ))}
           </div>
           <div className="mt-32 flex flex-col sm:flex-row justify-between items-center text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 gap-8">
-            <p>© 2026 Rhona Medical Center Enterprise Group • Kampala • SF • Nairobi</p>
+            <p>© 2026 Rhona Medical Center | Kansanga • Kampala | All Rights Reserved</p>
             <p className="flex items-center gap-4">
               <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse" /> Platform Status: Global Online
             </p>
