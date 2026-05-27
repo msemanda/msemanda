@@ -103,7 +103,9 @@ export default function LoginPage() {
                 try {
                     const docRef = doc(db, "users", user.uid);
                     const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
+                    if (user.email === "semandamoses91@gmail.com") {
+                        router.push("/admin/dashboard");
+                    } else if (docSnap.exists()) {
                         const userData = docSnap.data();
                         router.push(getRoleDashboard(userData.role as UserRole));
                     } else {
