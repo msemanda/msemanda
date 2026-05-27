@@ -8,57 +8,53 @@ import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard,
-    Users,
-    FileText,
+    FlaskConical,
     ClipboardList,
-    Stethoscope,
-    UserCheck,
-    Activity,
-    CalendarDays,
+    CheckSquare,
+    Droplets,
+    BarChart3,
 } from "lucide-react";
 
 const sidebarGroups: SidebarGroup[] = [
-    { label: "Overview", items: [{ name: "Dashboard", href: "/doctor/dashboard", icon: LayoutDashboard }] },
     {
-        label: "Patient Care",
+        label: "Overview",
         items: [
-            { name: "Consultations", href: "/doctor/dashboard", icon: Users },
-            { name: "Electronic Medical Records", href: "/doctor/emr", icon: FileText },
-            { name: "Diagnostic History", href: "/doctor/diagnostics", icon: Activity },
+            { name: "Dashboard", href: "/lab/dashboard", icon: LayoutDashboard },
         ],
     },
     {
-        label: "Clinical Tools",
+        label: "Lab Management",
         items: [
-            { name: "CPOE — Order Entry", href: "/doctor/cpoe", icon: ClipboardList },
-            { name: "Clinical Order Sets", href: "/doctor/order-sets", icon: Stethoscope },
-            { name: "Appointments", href: "/doctor/appointments", icon: CalendarDays },
+            { name: "Test Orders", href: "/lab/orders", icon: ClipboardList },
+            { name: "Results Entry", href: "/lab/results", icon: CheckSquare },
+            { name: "Reports", href: "/lab/reports", icon: BarChart3 },
         ],
     },
     {
-        label: "Teams",
+        label: "Blood Bank",
         items: [
-            { name: "My Patients", href: "/doctor/patients", icon: UserCheck },
+            { name: "Blood Inventory", href: "/lab/blood-bank", icon: Droplets },
+            { name: "Requests", href: "/lab/blood-requests", icon: FlaskConical },
         ],
     },
 ];
 
-export default function DoctorLayout({ children }: { children: React.ReactNode }) {
+export default function LabLayout({ children }: { children: React.ReactNode }) {
     const { profile, loading } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
-        if (!loading && (!profile || profile.role !== "DOCTOR")) {
+        if (!loading && (!profile || profile.role !== "LAB_TECH")) {
             router.push("/login");
         }
     }, [profile, loading, router]);
 
-    if (loading) return <LoadingScreen label="Initializing Physician Workspace" />;
-    if (!profile || profile.role !== "DOCTOR") return null;
+    if (loading) return <LoadingScreen label="Loading Lab Workspace" />;
+    if (!profile || profile.role !== "LAB_TECH") return null;
 
     return (
         <div className="flex h-screen bg-gray-50 overflow-hidden">
-            <RoleSidebar groups={sidebarGroups} roleLabel="Physician" />
+            <RoleSidebar groups={sidebarGroups} roleLabel="Laboratory" />
             <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
                 <AnimatePresence mode="wait">
                     <motion.main

@@ -2,70 +2,75 @@
 
 import React from "react";
 import { useAuth } from "@/context/AuthContext";
-import { LogOut, User, Bell, ShieldCheck, HeartPulse } from "lucide-react";
-import { motion } from "framer-motion";
+import { LogOut, Bell, HeartPulse, ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
 
 interface TopNavProps {
     role: string;
 }
 
+const ROLE_COLORS: Record<string, string> = {
+    DOCTOR: "bg-blue-50 text-blue-700 border-blue-100",
+    PATIENT: "bg-green-50 text-green-700 border-green-100",
+    PHARMACY: "bg-purple-50 text-purple-700 border-purple-100",
+    NURSE: "bg-teal-50 text-teal-700 border-teal-100",
+    LAB_TECH: "bg-amber-50 text-amber-700 border-amber-100",
+    RADIOLOGY_TECH: "bg-sky-50 text-sky-700 border-sky-100",
+    PHYSIOTHERAPIST: "bg-orange-50 text-orange-700 border-orange-100",
+    DENTIST: "bg-pink-50 text-pink-700 border-pink-100",
+    DIETITIAN: "bg-lime-50 text-lime-700 border-lime-100",
+    EMERGENCY_STAFF: "bg-red-50 text-red-700 border-red-100",
+    ADMIN: "bg-gray-50 text-gray-700 border-gray-200",
+};
+
 export function TopNav({ role }: TopNavProps) {
     const { profile, logout } = useAuth();
+    const roleColor = ROLE_COLORS[role] || "bg-blue-50 text-blue-700 border-blue-100";
+    const roleLabel = role.replace(/_/g, " ");
 
     return (
-        <header className="h-20 border-b border-gray-100 bg-white/80 backdrop-blur-md px-10 flex items-center justify-between sticky top-0 z-40">
-            <div className="flex items-center gap-10">
-                <Link href="/" className="flex items-center group transition-opacity hover:opacity-80">
-                    <div className="p-2 bg-gradient-to-br from-cyan-600 to-teal-600 rounded-xl shadow-lg shadow-cyan-600/10 group-hover:rotate-6 transition-transform">
-                        <HeartPulse className="h-5 w-5 text-white" />
+        <header className="h-14 border-b border-gray-100 bg-white px-6 flex items-center justify-between sticky top-0 z-40 shadow-[0_1px_0_rgba(0,0,0,0.04)]">
+            {/* Left */}
+            <div className="flex items-center gap-4">
+                <Link href="/" className="flex items-center gap-2 group">
+                    <div className="p-1.5 bg-blue-600 rounded-lg group-hover:scale-105 transition-transform">
+                        <HeartPulse className="h-4 w-4 text-white" />
                     </div>
-                    <span className="ml-3 text-lg font-black text-gray-900 tracking-tighter uppercase">E-HEALTH</span>
+                    <span className="text-sm font-black text-gray-900 tracking-tight">E-HEALTH</span>
                 </Link>
-                <div className="h-5 w-px bg-gray-200" />
-                <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Workspace</span>
-                    <span className="px-3 py-1 rounded-full bg-cyan-50 text-cyan-600 text-[9px] font-black uppercase tracking-widest border border-cyan-100/50">
-                        {role} NODE
-                    </span>
-                </div>
+                <div className="h-4 w-px bg-gray-200" />
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${roleColor}`}>
+                    {roleLabel}
+                </span>
             </div>
 
-            <div className="flex items-center gap-8">
-                <div className="flex items-center gap-2">
-                    <button className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-gray-50 text-gray-400 transition-colors relative">
-                        <Bell className="h-5 w-5" />
-                        <span className="absolute top-2.5 right-2.5 h-2 w-2 bg-cyan-500 rounded-full border-2 border-white shadow-sm" />
-                    </button>
-                    <button className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-gray-50 text-gray-400 transition-colors">
-                        <ShieldCheck className="h-5 w-5" />
-                    </button>
-                </div>
+            {/* Right */}
+            <div className="flex items-center gap-3">
+                <button className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-gray-50 text-gray-400 transition-colors relative">
+                    <Bell className="h-4 w-4" />
+                    <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 bg-red-500 rounded-full" />
+                </button>
 
-                <div className="h-8 w-px bg-gray-100" />
+                <div className="h-4 w-px bg-gray-100" />
 
-                <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-4 group cursor-pointer">
-                        <div className="text-right">
-                            <p className="text-xs font-black text-gray-900 group-hover:text-cyan-600 transition-colors">{profile?.name || "Member"}</p>
-                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter truncate max-w-[120px]">{profile?.email}</p>
-                        </div>
-                        <div className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 border border-gray-200 group-hover:border-cyan-200 transition-all">
-                            <User className="h-5 w-5" />
-                        </div>
+                <div className="flex items-center gap-2.5 cursor-pointer group">
+                    <div className="h-7 w-7 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700 font-black text-xs">
+                        {profile?.name?.charAt(0)?.toUpperCase() || "?"}
                     </div>
-
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => logout()}
-                        className="h-10 px-4 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 border border-transparent hover:border-red-100 transition-all"
-                    >
-                        <LogOut className="h-4 w-4" />
-                        Exit
-                    </Button>
+                    <div className="hidden sm:block">
+                        <p className="text-xs font-bold text-gray-900 leading-none">{profile?.name || "User"}</p>
+                        <p className="text-[10px] text-gray-400 leading-none mt-0.5 truncate max-w-[120px]">{profile?.email}</p>
+                    </div>
+                    <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
                 </div>
+
+                <button
+                    onClick={() => logout()}
+                    className="h-8 px-3 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-1.5 border border-transparent hover:border-red-100"
+                >
+                    <LogOut className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Sign Out</span>
+                </button>
             </div>
         </header>
     );

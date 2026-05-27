@@ -8,57 +8,60 @@ import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard,
-    Users,
-    FileText,
+    Activity,
+    CalendarClock,
     ClipboardList,
     Stethoscope,
+    BedDouble,
     UserCheck,
-    Activity,
-    CalendarDays,
 } from "lucide-react";
 
 const sidebarGroups: SidebarGroup[] = [
-    { label: "Overview", items: [{ name: "Dashboard", href: "/doctor/dashboard", icon: LayoutDashboard }] },
+    {
+        label: "Overview",
+        items: [
+            { name: "Dashboard", href: "/nurse/dashboard", icon: LayoutDashboard },
+        ],
+    },
     {
         label: "Patient Care",
         items: [
-            { name: "Consultations", href: "/doctor/dashboard", icon: Users },
-            { name: "Electronic Medical Records", href: "/doctor/emr", icon: FileText },
-            { name: "Diagnostic History", href: "/doctor/diagnostics", icon: Activity },
+            { name: "Ward Patients", href: "/nurse/patients", icon: BedDouble },
+            { name: "Vitals", href: "/nurse/vitals", icon: Activity },
+            { name: "Nursing Orders", href: "/nurse/orders", icon: ClipboardList },
         ],
     },
     {
-        label: "Clinical Tools",
+        label: "Operating Theater",
         items: [
-            { name: "CPOE — Order Entry", href: "/doctor/cpoe", icon: ClipboardList },
-            { name: "Clinical Order Sets", href: "/doctor/order-sets", icon: Stethoscope },
-            { name: "Appointments", href: "/doctor/appointments", icon: CalendarDays },
+            { name: "OT Schedule", href: "/nurse/ot", icon: Stethoscope },
         ],
     },
     {
-        label: "Teams",
+        label: "Shift",
         items: [
-            { name: "My Patients", href: "/doctor/patients", icon: UserCheck },
+            { name: "Shift Schedule", href: "/nurse/shift", icon: CalendarClock },
+            { name: "Handover", href: "/nurse/handover", icon: UserCheck },
         ],
     },
 ];
 
-export default function DoctorLayout({ children }: { children: React.ReactNode }) {
+export default function NurseLayout({ children }: { children: React.ReactNode }) {
     const { profile, loading } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
-        if (!loading && (!profile || profile.role !== "DOCTOR")) {
+        if (!loading && (!profile || profile.role !== "NURSE")) {
             router.push("/login");
         }
     }, [profile, loading, router]);
 
-    if (loading) return <LoadingScreen label="Initializing Physician Workspace" />;
-    if (!profile || profile.role !== "DOCTOR") return null;
+    if (loading) return <LoadingScreen label="Loading Nurse Workspace" />;
+    if (!profile || profile.role !== "NURSE") return null;
 
     return (
         <div className="flex h-screen bg-gray-50 overflow-hidden">
-            <RoleSidebar groups={sidebarGroups} roleLabel="Physician" />
+            <RoleSidebar groups={sidebarGroups} roleLabel="Nursing" />
             <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
                 <AnimatePresence mode="wait">
                     <motion.main

@@ -1,147 +1,165 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {
-    collection,
-    query,
-    where,
-    getDocs,
-    doc,
-    updateDoc
-} from "firebase/firestore";
+import { collection, query, where, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Button } from "@/components/ui/Button";
-import { UserProfile } from "@/types";
-import { CheckCircle, XCircle, User, ShieldCheck, Stethoscope } from "lucide-react";
+import { UserProfile, UserRole } from "@/types";
+import { CheckCircle2, User, ShieldCheck, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function AuthenticateDoctorsPage() {
-    const [doctors, setDoctors] = useState<UserProfile[]>([]);
+const STAFF_ROLES: { value: UserRole; label: string }[] = [
+    { value: "DOCTOR", label: "Doctors" },
+    { value: "NURSE", label: "Nurses" },
+    { value: "LAB_TECH", label: "Lab Technicians" },
+    { value: "RADIOLOGY_TECH", label: "Radiology Technicians" },
+    { value: "PHYSIOTHERAPIST", label: "Physiotherapists" },
+    { value: "DENTIST", label: "Dentists" },
+    { value: "DIETITIAN", label: "Dietitians" },
+    { value: "EMERGENCY_STAFF", label: "Emergency Staff" },
+    { value: "PHARMACY", label: "Pharmacists" },
+];
+
+const ROLE_COLORS: Record<string, string> = {
+    DOCTOR: "bg-blue-50 text-blue-700 border-blue-100",
+    NURSE: "bg-teal-50 text-teal-700 border-teal-100",
+    LAB_TECH: "bg-amber-50 text-amber-700 border-amber-100",
+    RADIOLOGY_TECH: "bg-purple-50 text-purple-700 border-purple-100",
+    PHYSIOTHERAPIST: "bg-orange-50 text-orange-700 border-orange-100",
+    DENTIST: "bg-pink-50 text-pink-700 border-pink-100",
+    DIETITIAN: "bg-green-50 text-green-700 border-green-100",
+    EMERGENCY_STAFF: "bg-red-50 text-red-700 border-red-100",
+    PHARMACY: "bg-sky-50 text-sky-700 border-sky-100",
+};
+
+export default function StaffVerificationPage() {
+    const [selectedRole, setSelectedRole] = useState<UserRole>("DOCTOR");
+    const [staff, setStaff] = useState<UserProfile[]>([]);
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState<string | null>(null);
 
     useEffect(() => {
-        fetchPendingDoctors();
-    }, []);
+        fetchPendingStaff(selectedRole);
+    }, [selectedRole]);
 
-    const fetchPendingDoctors = async () => {
+    const fetchPendingStaff = async (role: UserRole) => {
         setLoading(true);
         try {
             const q = query(
                 collection(db, "users"),
-                where("role", "==", "DOCTOR"),
+                where("role", "==", role),
                 where("approved", "==", false)
             );
-            const querySnapshot = await getDocs(q);
-            const docs: UserProfile[] = [];
-            querySnapshot.forEach((doc) => {
-                docs.push(doc.data() as UserProfile);
-            });
-            setDoctors(docs);
+            const snapshot = await getDocs(q);
+            setStaff(snapshot.docs.map(d => d.data() as UserProfile));
         } catch (error) {
-            console.error("Error fetching doctors:", error);
+            console.error("Error fetching staff:", error);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleAuthenticate = async (uid: string) => {
+    const handleApprove = async (uid: string) => {
         setProcessing(uid);
         try {
-            const docRef = doc(db, "users", uid);
-            await updateDoc(docRef, {
-                approved: true
-            });
-            setDoctors(doctors.filter(d => d.uid !== uid));
+            await updateDoc(doc(db, "users", uid), { approved: true });
+            setStaff(prev => prev.filter(s => s.uid !== uid));
         } catch (error) {
-            console.error("Error authenticating doctor:", error);
+            console.error("Error approving staff:", error);
         } finally {
             setProcessing(null);
         }
     };
 
+    const currentLabel = STAFF_ROLES.find(r => r.value === selectedRole)?.label || "Staff";
+    const roleColor = ROLE_COLORS[selectedRole] || "bg-blue-50 text-blue-700 border-blue-100";
+
     return (
-        <div className="space-y-12 pb-24">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-                <div className="space-y-1">
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tight">Credentials <span className="text-gradient-cyan">Verification</span></h1>
-                    <p className="text-gray-500 font-medium">Review and authorize the medical network infrastructure.</p>
+        <div className="space-y-6 pb-10">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-black text-gray-900">Staff Verification</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Review and approve pending staff registrations</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="h-12 px-6 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-xs font-black text-gray-400 uppercase tracking-widest shadow-sm">
-                        Total Pending: {doctors.length}
-                    </div>
+                    <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${roleColor}`}>
+                        {staff.length} pending
+                    </span>
                 </div>
             </div>
 
-            {loading ? (
-                <div className="flex flex-col items-center justify-center py-40 bg-white/50 rounded-[48px] border-2 border-dashed border-gray-100">
-                    <div className="animate-spin h-10 w-10 border-4 border-cyan-100 border-t-cyan-600 rounded-full mb-6" />
-                    <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px]">Scanning Registry</p>
+            {/* Role tabs */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3">
+                <div className="flex flex-wrap gap-1.5">
+                    {STAFF_ROLES.map((r) => (
+                        <button
+                            key={r.value}
+                            onClick={() => setSelectedRole(r.value)}
+                            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                                selectedRole === r.value
+                                    ? "bg-blue-600 text-white shadow-sm"
+                                    : "text-gray-600 hover:bg-gray-50"
+                            }`}
+                        >
+                            {r.label}
+                        </button>
+                    ))}
                 </div>
-            ) : doctors.length === 0 ? (
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="bg-white/50 p-24 rounded-[48px] border-2 border-dashed border-gray-100 text-center"
-                >
-                    <div className="h-24 w-24 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm">
-                        <CheckCircle className="h-10 w-10 text-teal-600" />
-                    </div>
-                    <h2 className="text-3xl font-black text-gray-900 mb-2">Network Fully Verified</h2>
-                    <p className="text-gray-400 font-medium max-w-sm mx-auto">All medical professionals have been successfully synchronized and authenticated.</p>
+            </div>
+
+            {/* Content */}
+            {loading ? (
+                <div className="flex flex-col items-center justify-center py-24 bg-white rounded-2xl border border-gray-100">
+                    <div className="animate-spin h-8 w-8 border-3 border-blue-100 border-t-blue-600 rounded-full mb-4" />
+                    <p className="text-sm text-gray-400 font-semibold">Loading {currentLabel}...</p>
+                </div>
+            ) : staff.length === 0 ? (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="flex flex-col items-center justify-center py-24 bg-white rounded-2xl border border-dashed border-gray-200 text-center">
+                    <CheckCircle2 className="h-12 w-12 text-green-400 mb-3" />
+                    <h3 className="text-lg font-black text-gray-900 mb-1">All Clear</h3>
+                    <p className="text-sm text-gray-400">No pending {currentLabel.toLowerCase()} awaiting verification</p>
                 </motion.div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <AnimatePresence>
-                        {doctors.map((doctor, idx) => (
+                        {staff.map((member, idx) => (
                             <motion.div
-                                key={doctor.uid}
-                                initial={{ opacity: 0, y: 20 }}
+                                key={member.uid}
+                                initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                transition={{ delay: idx * 0.1 }}
-                                className="bg-glass p-8 rounded-[40px] shadow-premium border border-white group hover:border-cyan-200 transition-all overflow-hidden relative"
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ delay: idx * 0.06 }}
+                                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-premium transition-all"
                             >
-                                <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-                                    <Stethoscope className="h-24 w-24" />
-                                </div>
-
-                                <div className="flex items-start justify-between mb-8 relative z-10">
-                                    <div className="bg-cyan-50 p-4 rounded-2xl group-hover:rotate-6 transition-transform shadow-sm">
-                                        <User className="h-6 w-6 text-cyan-600" />
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                                        <User className="h-5 w-5 text-blue-600" />
                                     </div>
-                                    <div className="text-[9px] font-black px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-full uppercase tracking-widest border border-yellow-100/50">
-                                        Identity Pending
-                                    </div>
+                                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
+                                        Pending
+                                    </span>
                                 </div>
+                                <h3 className="text-base font-black text-gray-900">{member.name}</h3>
+                                <p className="text-xs text-gray-500 mt-0.5">{member.email}</p>
+                                {member.address && (
+                                    <p className="text-xs text-gray-400 mt-0.5">{member.address}</p>
+                                )}
+                                <p className="text-[10px] text-gray-300 uppercase tracking-wider mt-1">
+                                    Registered {member.createdAt?.seconds ? new Date(member.createdAt.seconds * 1000).toLocaleDateString() : "recently"}
+                                </p>
 
-                                <div className="relative z-10">
-                                    <h3 className="text-2xl font-black text-gray-900 mb-1">{doctor.name}</h3>
-                                    <p className="text-sm text-gray-500 font-medium mb-1">{doctor.email}</p>
-                                    <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Joined {new Date(doctor.createdAt?.seconds * 1000).toLocaleDateString()}</p>
-                                </div>
-
-                                <div className="mt-10 pt-8 border-t border-gray-100 space-y-6 relative z-10">
-                                    <div className="flex justify-between items-center text-xs">
-                                        <span className="font-black text-gray-400 uppercase tracking-[0.2em]">Operational Address</span>
-                                        <span className="font-bold text-gray-700 truncate ml-4 bg-gray-50 px-3 py-1 rounded-lg">{doctor.address}</span>
-                                    </div>
-                                    <Button
-                                        className="h-16 w-full rounded-2xl shadow-xl font-black group-hover:bg-cyan-700 transition-all flex items-center justify-center gap-3"
-                                        disabled={processing === doctor.uid}
-                                        onClick={() => handleAuthenticate(doctor.uid)}
-                                    >
-                                        {processing === doctor.uid ? (
-                                            <div className="animate-spin h-5 w-5 border-2 border-white/20 border-t-white rounded-full" />
-                                        ) : (
-                                            <>
-                                                <ShieldCheck className="h-5 w-5" />
-                                                Authenticate Node
-                                            </>
-                                        )}
-                                    </Button>
-                                </div>
+                                <button
+                                    onClick={() => handleApprove(member.uid)}
+                                    disabled={processing === member.uid}
+                                    className="mt-4 w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-bold flex items-center justify-center gap-2 transition-colors"
+                                >
+                                    {processing === member.uid ? (
+                                        <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full" />
+                                    ) : (
+                                        <><ShieldCheck className="h-4 w-4" /> Approve Access</>
+                                    )}
+                                </button>
                             </motion.div>
                         ))}
                     </AnimatePresence>

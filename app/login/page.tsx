@@ -23,6 +23,37 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+const ROLES: { value: UserRole; label: string }[] = [
+    { value: "ADMIN", label: "System Administrator" },
+    { value: "PATIENT", label: "Patient" },
+    { value: "DOCTOR", label: "Medical Practitioner" },
+    { value: "PHARMACY", label: "Pharmacist" },
+    { value: "NURSE", label: "Nurse" },
+    { value: "LAB_TECH", label: "Laboratory Technician" },
+    { value: "RADIOLOGY_TECH", label: "Radiology Technician" },
+    { value: "PHYSIOTHERAPIST", label: "Physiotherapist" },
+    { value: "DENTIST", label: "Dentist" },
+    { value: "DIETITIAN", label: "Dietitian" },
+    { value: "EMERGENCY_STAFF", label: "Emergency Staff" },
+];
+
+function getRoleDashboard(role: UserRole): string {
+    switch (role) {
+        case "ADMIN": return "/admin/dashboard";
+        case "PATIENT": return "/patient/dashboard";
+        case "DOCTOR": return "/doctor/dashboard";
+        case "PHARMACY": return "/pharmacy/dashboard";
+        case "NURSE": return "/nurse/dashboard";
+        case "LAB_TECH": return "/lab/dashboard";
+        case "RADIOLOGY_TECH": return "/radiology/dashboard";
+        case "PHYSIOTHERAPIST": return "/physiotherapy/dashboard";
+        case "DENTIST": return "/dental/dashboard";
+        case "DIETITIAN": return "/dietary/dashboard";
+        case "EMERGENCY_STAFF": return "/emergency/dashboard";
+        default: return "/login";
+    }
+}
+
 export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -40,16 +71,15 @@ export default function LoginPage() {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
-
             const docRef = doc(db, "users", user.uid);
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
                 const userData = docSnap.data();
                 if (userData.role === role) {
-                    router.push(`/${role.toLowerCase()}/dashboard`);
+                    router.push(getRoleDashboard(role));
                 } else {
-                    setError(`Invalid role selection for this account. Expected ${userData.role}.`);
+                    setError(`Role mismatch. This account is registered as ${userData.role}.`);
                     await auth.signOut();
                 }
             } else {
@@ -57,11 +87,7 @@ export default function LoginPage() {
                 await auth.signOut();
             }
         } catch (err: any) {
-            if (err.code === "auth/permission-denied" || err.message.includes("permissions")) {
-                setError("Firebase Permission Error: Please update your Firestore rules.");
-            } else {
-                setError(err.message || "Failed to login. Please check your credentials.");
-            }
+            setError(err.message || "Failed to login. Please check your credentials.");
         } finally {
             setLoading(false);
         }
@@ -77,14 +103,13 @@ export default function LoginPage() {
                 try {
                     const docRef = doc(db, "users", user.uid);
                     const docSnap = await getDoc(docRef);
-
                     if (docSnap.exists()) {
                         const userData = docSnap.data();
-                        router.push(`/${userData.role.toLowerCase()}/dashboard`);
+                        router.push(getRoleDashboard(userData.role as UserRole));
                     } else {
                         router.push(`/patient/register`);
                     }
-                } catch (firestoreErr: any) {
+                } catch {
                     router.push(`/patient/register`);
                 }
             }
@@ -96,63 +121,67 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 bg-[radial-gradient(circle_at_50%_0%,rgba(8,145,178,0.08),transparent_50%)]">
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6"
+            style={{ backgroundImage: "radial-gradient(at 50% 0%, rgba(37,99,235,0.06) 0, transparent 60%), radial-gradient(at 100% 100%, rgba(22,163,74,0.05) 0, transparent 50%)" }}>
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="w-full max-w-md"
             >
-                <div className="text-center mb-10">
+                {/* Header */}
+                <div className="text-center mb-8">
                     <Link href="/" className="inline-flex items-center group mb-6">
-                        <div className="p-2.5 bg-gradient-to-br from-cyan-600 to-teal-600 rounded-2xl shadow-lg shadow-cyan-600/20 group-hover:rotate-6 transition-transform">
+                        <div className="p-2.5 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl shadow-lg shadow-blue-600/20 group-hover:scale-105 transition-transform">
                             <HeartPulse className="h-6 w-6 text-white" />
                         </div>
                         <span className="ml-3 text-2xl font-black text-gray-900 tracking-tighter">E-HEALTH</span>
                     </Link>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">Portal Access</h1>
-                    <p className="text-gray-500 mt-2 font-medium">Verify your identity to enter the medical workspace</p>
+                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">Staff Portal</h1>
+                    <p className="text-gray-500 mt-2 font-medium text-sm">Sign in to your clinical workspace</p>
                 </div>
 
-                <div className="bg-glass rounded-[32px] shadow-premium p-8 border border-white/60">
-                    <div className="space-y-6">
+                {/* Card */}
+                <div className="bg-white rounded-3xl shadow-premium border border-gray-100 p-8">
+                    <div className="space-y-5">
                         <AuthButton onClick={handleGoogleLogin} disabled={loading} text="Continue with Google" />
 
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-100"></div>
+                                <div className="w-full border-t border-gray-100" />
                             </div>
-                            <div className="relative flex justify-center text-xs uppercase tracking-widest font-black text-gray-400">
-                                <span className="bg-white px-4 rounded-full">Or secure email</span>
+                            <div className="relative flex justify-center text-xs uppercase tracking-widest font-bold text-gray-400">
+                                <span className="bg-white px-4">or sign in with email</span>
                             </div>
                         </div>
 
-                        <form onSubmit={handleEmailLogin} className="space-y-5">
+                        <form onSubmit={handleEmailLogin} className="space-y-4">
+                            {/* Role Selector */}
                             <div className="space-y-1.5">
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Work Persona</label>
-                                <div className="relative group">
-                                    <UserCircle className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-cyan-600 transition-colors z-10" />
+                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Your Role</label>
+                                <div className="relative">
+                                    <UserCircle className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-blue-500 z-10" />
                                     <select
                                         value={role}
                                         onChange={(e) => setRole(e.target.value as UserRole)}
-                                        className="relative w-full h-12 pl-12 pr-10 rounded-2xl border border-gray-200 bg-gray-50/20 text-sm font-bold text-gray-700 appearance-none focus:bg-white focus:border-cyan-primary focus:ring-4 focus:ring-cyan-primary/10 outline-none transition-all cursor-pointer"
+                                        className="w-full h-11 pl-10 pr-10 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 appearance-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all cursor-pointer"
                                     >
-                                        <option value="ADMIN">System Administrator</option>
-                                        <option value="PATIENT">Verified Patient</option>
-                                        <option value="DOCTOR">Medical Practitioner</option>
-                                        <option value="PHARMACY">Smart Pharmacy</option>
+                                        {ROLES.map(r => (
+                                            <option key={r.value} value={r.value}>{r.label}</option>
+                                        ))}
                                     </select>
-                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                                    <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                                 </div>
                             </div>
 
+                            {/* Email */}
                             <div className="space-y-1.5">
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
-                                <div className="relative group">
-                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-cyan-600 transition-colors" />
+                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Email Address</label>
+                                <div className="relative">
+                                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-gray-400" />
                                     <Input
                                         type="email"
-                                        placeholder="dr.smith@hospital.com"
-                                        className="pl-12 font-medium"
+                                        placeholder="staff@hospital.com"
+                                        className="pl-10 font-medium"
                                         required
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
@@ -160,14 +189,15 @@ export default function LoginPage() {
                                 </div>
                             </div>
 
+                            {/* Password */}
                             <div className="space-y-1.5">
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Password</label>
-                                <div className="relative group">
-                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-cyan-600 transition-colors" />
+                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Password</label>
+                                <div className="relative">
+                                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-gray-400" />
                                     <Input
                                         type="password"
                                         placeholder="••••••••"
-                                        className="pl-12"
+                                        className="pl-10"
                                         required
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
@@ -181,40 +211,45 @@ export default function LoginPage() {
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: "auto" }}
                                         exit={{ opacity: 0, height: 0 }}
-                                        className="p-4 rounded-2xl bg-red-50 border border-red-100 text-red-600 text-xs font-bold flex gap-3 shadow-sm"
+                                        className="p-3.5 rounded-xl bg-red-50 border border-red-100 text-red-600 text-xs font-semibold flex gap-2.5"
                                     >
-                                        <ShieldCheck className="h-5 w-5 shrink-0" />
+                                        <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5" />
                                         <span>{error}</span>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
 
-                            <Button type="submit" className="w-full h-14 group text-base" disabled={loading}>
-                                {loading ? "Authenticating..." : "Authorize Entry"}
-                                <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                            </Button>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm shadow-blue-600/20"
+                            >
+                                {loading ? "Signing in..." : "Sign In"}
+                                {!loading && <ArrowRight className="h-4 w-4" />}
+                            </button>
                         </form>
                     </div>
 
-                    <div className="mt-8 pt-8 border-t border-gray-100/50 text-center">
-                        <p className="text-sm text-gray-500 font-medium tracking-tight">
-                            Don't have a portal account?{" "}
-                            <Link href="/patient/register" className="text-cyan-600 font-black hover:text-cyan-700 transition-colors">
-                                Apply Now
+                    <div className="mt-6 pt-6 border-t border-gray-50 text-center">
+                        <p className="text-sm text-gray-500">
+                            New patient?{" "}
+                            <Link href="/patient/register" className="text-blue-600 font-bold hover:text-blue-700 transition-colors">
+                                Register here
                             </Link>
                         </p>
                     </div>
                 </div>
 
-                <div className="mt-10 flex items-center justify-center gap-6">
-                    <div className="flex items-center gap-2">
-                        <ShieldCheck className="h-4 w-4 text-cyan-600" />
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Hi-PPA Compliant</span>
+                {/* Footer badges */}
+                <div className="mt-8 flex items-center justify-center gap-6">
+                    <div className="flex items-center gap-1.5">
+                        <ShieldCheck className="h-3.5 w-3.5 text-blue-500" />
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">HIPAA Compliant</span>
                     </div>
                     <div className="h-1 w-1 bg-gray-300 rounded-full" />
-                    <div className="flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-cyan-600" />
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Next-Gen Security</span>
+                    <div className="flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-green-500" />
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Encrypted</span>
                     </div>
                 </div>
             </motion.div>

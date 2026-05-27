@@ -11,22 +11,71 @@ import {
     FileText,
     LogOut,
     HeartPulse,
-    ChevronRight,
-    Search,
-    Bell,
-    Shield
+    Shield,
+    CreditCard,
+    Users,
+    FlaskConical,
+    Scan,
+    Stethoscope,
+    Syringe,
+    Smile,
+    Apple,
+    Ambulance,
+    Home,
+    Sparkles,
+    Package,
+    Droplets,
+    Settings,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { motion } from "framer-motion";
 
-const menuItems = [
-    { name: "Command Center", href: "/admin/dashboard", icon: LayoutDashboard, tag: "Overview" },
-    { name: "User Registry", href: "/admin/users", icon: UserPlus, tag: "Management" },
-    { name: "Access Logs", href: "/admin/sessions", icon: Shield, tag: "Auditing" },
-    { name: "Medical Network", href: "/admin/invite-doctors", icon: UserCheck, tag: "Physicians" },
-    { name: "Patient Flow", href: "/admin/schedule-patients", icon: Calendar, tag: "Queues" },
-    { name: "Identity Validation", href: "/admin/validate-patient", icon: FileText, tag: "KYC" },
-    { name: "Revenue Desk", href: "/admin/generate-bill", icon: FileText, tag: "Billing" },
+const menuGroups = [
+    {
+        label: "Overview",
+        items: [
+            { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+        ],
+    },
+    {
+        label: "User Management",
+        items: [
+            { name: "User Registry", href: "/admin/users", icon: Users },
+            { name: "Invite Staff", href: "/admin/invite-doctors", icon: UserCheck },
+            { name: "Patient Flow", href: "/admin/schedule-patients", icon: Calendar },
+            { name: "Patient Validation", href: "/admin/validate-patient", icon: FileText },
+        ],
+    },
+    {
+        label: "Clinical Modules",
+        items: [
+            { name: "Nursing & OT", href: "/nurse/dashboard", icon: Stethoscope },
+            { name: "Laboratory", href: "/lab/dashboard", icon: FlaskConical },
+            { name: "Radiology", href: "/radiology/dashboard", icon: Scan },
+            { name: "Physiotherapy", href: "/physiotherapy/dashboard", icon: Syringe },
+            { name: "Dental", href: "/dental/dashboard", icon: Smile },
+            { name: "Dietary", href: "/dietary/dashboard", icon: Apple },
+            { name: "Emergency", href: "/emergency/dashboard", icon: Ambulance },
+            { name: "Home Care", href: "/homecare/dashboard", icon: Home },
+            { name: "Wellness", href: "/wellness/dashboard", icon: Sparkles },
+        ],
+    },
+    {
+        label: "Ancillary",
+        items: [
+            { name: "Pharmacy", href: "/pharmacy/dashboard", icon: Package },
+            { name: "Blood Bank", href: "/lab/blood-bank", icon: Droplets },
+            { name: "Inventory", href: "/admin/inventory", icon: Package },
+        ],
+    },
+    {
+        label: "Finance & Security",
+        items: [
+            { name: "Billing & Revenue", href: "/admin/generate-bill", icon: CreditCard },
+            { name: "Access Logs", href: "/admin/sessions", icon: Shield },
+            { name: "System Config", href: "/admin/config", icon: Settings },
+        ],
+    },
 ];
 
 export function Sidebar() {
@@ -34,71 +83,76 @@ export function Sidebar() {
     const { logout, profile } = useAuth();
 
     return (
-        <div className="flex h-screen w-72 flex-col bg-white/40 backdrop-blur-2xl border-r border-white/20 shadow-[20px_0_40px_rgba(0,14,30,0.02)] z-50 overflow-hidden">
-            <div className="p-8">
-                <Link href="/" className="flex items-center group mb-10">
-                    <div className="p-2.5 bg-gradient-to-br from-cyan-600 to-teal-600 rounded-2xl shadow-lg shadow-cyan-600/20 group-hover:rotate-6 transition-transform">
-                        <HeartPulse className="h-6 w-6 text-white" />
+        <div className="flex h-screen w-60 flex-col bg-white border-r border-gray-100 z-50 shrink-0">
+            {/* Logo */}
+            <div className="p-4 border-b border-gray-50">
+                <Link href="/" className="flex items-center gap-2.5 group">
+                    <div className="p-2 bg-blue-600 rounded-xl shadow-sm group-hover:scale-105 transition-transform">
+                        <HeartPulse className="h-4 w-4 text-white" />
                     </div>
-                    <span className="ml-3 text-2xl font-black text-gray-900 tracking-tighter">E-HEALTH</span>
+                    <div>
+                        <span className="text-sm font-black text-gray-900 tracking-tight">E-HEALTH</span>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Admin Console</p>
+                    </div>
                 </Link>
-
-                <div className="space-y-1">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4 mb-4">Master Operations</p>
-                    <nav className="space-y-1.5">
-                        {menuItems.map((item) => {
-                            const isActive = pathname === item.href;
-                            const Icon = item.icon;
-                            return (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    className={cn(
-                                        "group relative flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-bold transition-all duration-300",
-                                        isActive
-                                            ? "bg-cyan-50 text-cyan-700 shadow-sm"
-                                            : "text-gray-500 hover:bg-gray-50 hover:text-cyan-600"
-                                    )}
-                                >
-                                    <div className="flex items-center">
-                                        <Icon className={cn("mr-3.5 h-5 w-5 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6", isActive ? "text-cyan-600" : "text-slate-400 group-hover:text-cyan-500")} />
-                                        <span className="tracking-tight">{item.name}</span>
-                                    </div>
-                                    {isActive ? (
-                                        <motion.div layoutId="sidebar-active" className="absolute left-0 w-1.5 h-8 bg-cyan-600 rounded-r-full shadow-[0_0_10px_rgba(8,145,178,0.3)]" />
-                                    ) : (
-                                        <span className="text-[9px] font-black opacity-0 group-hover:opacity-100 transition-opacity bg-white/50 text-slate-400 px-2 py-1 rounded-lg uppercase tracking-widest border border-white/40">
-                                            {item.tag}
-                                        </span>
-                                    )}
-                                </Link>
-                            );
-                        })}
-                    </nav>
-                </div>
             </div>
 
-            <div className="flex-1" />
-
-            <div className="p-6 border-t border-gray-50">
-                <div className="bg-gray-50/50 rounded-3xl p-4 mb-4 flex items-center gap-3 border border-gray-100">
-                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-700 p-[2px]">
-                        <div className="h-full w-full rounded-[10px] bg-white flex items-center justify-center font-black text-cyan-700 text-xs">
-                            {profile?.name?.charAt(0) || "A"}
-                        </div>
+            {/* Nav */}
+            <div className="flex-1 overflow-y-auto py-2 px-2">
+                {menuGroups.map((group) => (
+                    <div key={group.label}>
+                        <p className="module-header">{group.label}</p>
+                        <nav className="space-y-0.5 mb-1">
+                            {group.items.map((item) => {
+                                const isActive = pathname === item.href;
+                                const Icon = item.icon;
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className={cn(
+                                            "group relative flex items-center rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-150",
+                                            isActive
+                                                ? "bg-blue-50 text-blue-700"
+                                                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                        )}
+                                    >
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="admin-sidebar-indicator"
+                                                className="absolute left-0 w-1 h-4 bg-blue-600 rounded-r-full"
+                                            />
+                                        )}
+                                        <Icon className={cn(
+                                            "mr-2.5 h-3.5 w-3.5 shrink-0 transition-colors",
+                                            isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-600"
+                                        )} />
+                                        <span className="truncate">{item.name}</span>
+                                    </Link>
+                                );
+                            })}
+                        </nav>
                     </div>
-                    <div className="flex-1 overflow-hidden">
-                        <p className="text-xs font-black text-gray-900 truncate">{profile?.name || "System Admin"}</p>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Root Access</p>
+                ))}
+            </div>
+
+            {/* Footer */}
+            <div className="p-3 border-t border-gray-50">
+                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-gray-50 mb-2">
+                    <div className="h-7 w-7 rounded-lg bg-blue-100 flex items-center justify-center font-black text-blue-700 text-xs shrink-0">
+                        {profile?.name?.charAt(0)?.toUpperCase() || "A"}
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-xs font-bold text-gray-900 truncate">{profile?.name || "Admin"}</p>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">System Admin</p>
                     </div>
                 </div>
-
                 <button
                     onClick={() => logout()}
-                    className="flex w-full items-center justify-center rounded-2xl px-4 py-3.5 text-sm font-bold text-red-500 bg-red-50/50 hover:bg-red-50 transition-all border border-red-100/50"
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
                 >
-                    <LogOut className="mr-3 h-5 w-5" />
-                    Terminate Session
+                    <LogOut className="h-3.5 w-3.5" />
+                    Sign Out
                 </button>
             </div>
         </div>
