@@ -1,53 +1,173 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { collection, getDocs, addDoc, query, where, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { ClipboardList, Plus, FlaskConical, Scan, Pill, UtensilsCrossed, Activity, CheckCircle2, Clock } from "lucide-react";
+import {
+    ClipboardList, Plus, FlaskConical, Scan, Pill, UtensilsCrossed,
+    Activity, CheckCircle2, Clock, CreditCard, AlertCircle
+} from "lucide-react";
 
-type OrderType = "MEDICATION" | "LAB" | "RADIOLOGY" | "NURSING" | "DIET";
+type OrderType = "MEDICATION" | "LAB" | "RADIOLOGY" | "NURSING" | "DIET" | "PROCEDURE";
 
 const ORDER_TYPES: { type: OrderType; label: string; icon: any; color: string; bg: string }[] = [
-    { type: "MEDICATION", label: "Medication", icon: Pill, color: "text-blue-600", bg: "bg-blue-50" },
-    { type: "LAB", label: "Laboratory", icon: FlaskConical, color: "text-amber-600", bg: "bg-amber-50" },
-    { type: "RADIOLOGY", label: "Radiology", icon: Scan, color: "text-purple-600", bg: "bg-purple-50" },
-    { type: "NURSING", label: "Nursing", icon: Activity, color: "text-teal-600", bg: "bg-teal-50" },
-    { type: "DIET", label: "Dietary", icon: UtensilsCrossed, color: "text-green-600", bg: "bg-green-50" },
+    { type: "MEDICATION", label: "Medication", icon: Pill,            color: "text-blue-600",   bg: "bg-blue-50" },
+    { type: "LAB",        label: "Laboratory", icon: FlaskConical,    color: "text-amber-600",  bg: "bg-amber-50" },
+    { type: "RADIOLOGY",  label: "Radiology",  icon: Scan,            color: "text-purple-600", bg: "bg-purple-50" },
+    { type: "NURSING",    label: "Nursing",    icon: Activity,        color: "text-teal-600",   bg: "bg-teal-50" },
+    { type: "DIET",       label: "Dietary",    icon: UtensilsCrossed, color: "text-green-600",  bg: "bg-green-50" },
+    { type: "PROCEDURE",  label: "Procedure",  icon: ClipboardList,   color: "text-rose-600",   bg: "bg-rose-50" },
 ];
 
-const ORDER_SUGGESTIONS: Record<OrderType, string[]> = {
-    MEDICATION: ["Amoxicillin 500mg TDS x7d", "Metformin 500mg BD", "Amlodipine 5mg OD", "Paracetamol 1g PRN", "Omeprazole 20mg OD"],
-    LAB: ["Full Blood Count (FBC)", "Comprehensive Metabolic Panel", "HbA1c", "Lipid Profile", "Thyroid Function Tests", "Blood Culture x2", "Urinalysis"],
-    RADIOLOGY: ["Chest X-Ray PA", "CT Chest+Abdomen (contrast)", "MRI Brain", "Abdominal Ultrasound", "Echocardiogram"],
-    NURSING: ["4-hourly vital signs", "Strict I&O monitoring", "Daily weight", "Wound dressing BD", "IV cannula care", "Patient fall risk assessment"],
-    DIET: ["Low-salt DASH diet", "Diabetic diet 1800 kcal", "Soft diet", "Clear fluids only", "High-protein diet", "Gluten-free diet"],
+const ORDER_SUGGESTIONS: Record<OrderType, { text: string; amount: number }[]> = {
+    MEDICATION: [
+        { text: "Amoxicillin 500mg TDS x7d", amount: 15000 },
+        { text: "Metformin 500mg BD", amount: 8000 },
+        { text: "Amlodipine 5mg OD", amount: 10000 },
+        { text: "Paracetamol 1g PRN", amount: 5000 },
+        { text: "Omeprazole 20mg OD", amount: 12000 },
+        { text: "IV Crystalloids 1L", amount: 20000 },
+    ],
+    LAB: [
+        { text: "Full Blood Count (FBC)", amount: 25000 },
+        { text: "Comprehensive Metabolic Panel", amount: 45000 },
+        { text: "HbA1c", amount: 35000 },
+        { text: "Lipid Profile", amount: 30000 },
+        { text: "Thyroid Function Tests (TFTs)", amount: 40000 },
+        { text: "Blood Culture x2", amount: 50000 },
+        { text: "Urinalysis", amount: 15000 },
+        { text: "Malaria RDT", amount: 10000 },
+    ],
+    RADIOLOGY: [
+        { text: "Chest X-Ray PA", amount: 50000 },
+        { text: "Abdominal X-Ray", amount: 50000 },
+        { text: "CT Chest (with contrast)", amount: 300000 },
+        { text: "CT Brain", amount: 280000 },
+        { text: "MRI Brain", amount: 450000 },
+        { text: "Abdominal Ultrasound", amount: 80000 },
+        { text: "Echocardiogram", amount: 150000 },
+    ],
+    NURSING: [
+        { text: "4-hourly vital signs monitoring", amount: 5000 },
+        { text: "Strict intake and output monitoring", amount: 5000 },
+        { text: "Daily weight", amount: 2000 },
+        { text: "Wound dressing BD", amount: 20000 },
+        { text: "IV cannula insertion and care", amount: 15000 },
+        { text: "Patient fall risk assessment", amount: 2000 },
+        { text: "Catheter insertion and care", amount: 25000 },
+    ],
+    DIET: [
+        { text: "Low-salt DASH diet", amount: 15000 },
+        { text: "Diabetic diet 1800 kcal", amount: 15000 },
+        { text: "Soft diet", amount: 10000 },
+        { text: "Clear fluids only", amount: 8000 },
+        { text: "High-protein diet", amount: 20000 },
+        { text: "Nasogastric tube feeding", amount: 35000 },
+    ],
+    PROCEDURE: [
+        { text: "Suturing (minor wound)", amount: 40000 },
+        { text: "Wound debridement", amount: 60000 },
+        { text: "Pleural aspiration (thoracentesis)", amount: 120000 },
+        { text: "Lumbar puncture", amount: 100000 },
+        { text: "Blood transfusion", amount: 150000 },
+        { text: "Endoscopy (OGD)", amount: 200000 },
+    ],
 };
 
-const recentOrders = [
-    { id: "OR001", patient: "John Mwesiga", type: "MEDICATION", detail: "Metformin 500mg BD", priority: "ROUTINE", status: "ACKNOWLEDGED", time: "09:15" },
-    { id: "OR002", patient: "Grace Nakato", type: "LAB", detail: "FBC, RFTs, LFTs", priority: "URGENT", status: "IN_PROGRESS", time: "09:30" },
-    { id: "OR003", patient: "Patrick Ssemanda", type: "RADIOLOGY", detail: "Chest X-Ray PA", priority: "URGENT", status: "PENDING", time: "09:45" },
-    { id: "OR004", patient: "Sarah Namutebi", type: "NURSING", detail: "4-hourly vital signs", priority: "ROUTINE", status: "COMPLETED", time: "08:00" },
-];
-
-const STATUS_CLASS: Record<string, string> = {
-    PENDING: "badge-yellow",
-    ACKNOWLEDGED: "badge-blue",
-    IN_PROGRESS: "badge-blue",
-    COMPLETED: "badge-green",
-    CANCELLED: "badge-red",
+const STATUS_COLOR: Record<string, string> = {
+    AWAITING_PAYMENT: "bg-amber-50 text-amber-700 border-amber-100",
+    PAID:             "bg-green-50 text-green-700 border-green-100",
+    PENDING:          "bg-gray-50 text-gray-500 border-gray-100",
+    IN_PROGRESS:      "bg-blue-50 text-blue-600 border-blue-100",
+    COMPLETED:        "bg-green-50 text-green-700 border-green-100",
+    CANCELLED:        "bg-red-50 text-red-600 border-red-100",
 };
 
 export default function CPOEPage() {
+    const { profile } = useAuth();
     const [activeType, setActiveType] = useState<OrderType>("MEDICATION");
-    const [selectedPatient, setSelectedPatient] = useState("John Mwesiga");
+    const [patients, setPatients] = useState<any[]>([]);
+    const [selectedPatient, setSelectedPatient] = useState<any>(null);
     const [priority, setPriority] = useState<"ROUTINE" | "URGENT" | "STAT">("ROUTINE");
     const [detail, setDetail] = useState("");
+    const [amount, setAmount] = useState("0");
+    const [notes, setNotes] = useState("");
+    const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+    const [orders, setOrders] = useState<any[]>([]);
+    const [loadingOrders, setLoadingOrders] = useState(true);
 
-    const handleSubmit = () => {
-        setSubmitted(true);
-        setTimeout(() => { setSubmitted(false); setDetail(""); }, 2500);
+    useEffect(() => { fetchPatients(); fetchMyOrders(); }, []);
+
+    const fetchPatients = async () => {
+        try {
+            const snap = await getDocs(query(collection(db, "ipdAdmissions"), where("status", "==", "ADMITTED")));
+            const admitted = snap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+            setPatients(admitted);
+            if (admitted.length > 0) setSelectedPatient(admitted[0]);
+        } catch(e) { console.error(e); }
     };
+
+    const fetchMyOrders = async () => {
+        setLoadingOrders(true);
+        try {
+            const snap = await getDocs(collection(db, "cpoeOrders"));
+            const all = snap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+            setOrders(all.sort((a: any, b: any) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).slice(0, 20));
+        } catch(e) { console.error(e); }
+        finally { setLoadingOrders(false); }
+    };
+
+    const handleSuggestion = (s: { text: string; amount: number }) => {
+        setDetail(s.text);
+        setAmount(s.amount.toString());
+    };
+
+    const handleSubmit = async () => {
+        if (!detail.trim() || !selectedPatient) return;
+        setSubmitting(true);
+        try {
+            const orderRef = await addDoc(collection(db, "cpoeOrders"), {
+                patientName: selectedPatient.patientName,
+                patientEmail: selectedPatient.patientEmail,
+                ward: selectedPatient.ward,
+                orderType: activeType,
+                detail: detail.trim(),
+                amount: parseFloat(amount) || 0,
+                priority,
+                notes: notes.trim(),
+                orderedBy: profile?.name,
+                orderedByUid: profile?.uid,
+                status: "AWAITING_PAYMENT",
+                createdAt: serverTimestamp(),
+            });
+
+            if (parseFloat(amount) > 0) {
+                await addDoc(collection(db, "patientBills"), {
+                    patientName: selectedPatient.patientName,
+                    patientEmail: selectedPatient.patientEmail,
+                    description: detail.trim(),
+                    billType: activeType,
+                    amount: parseFloat(amount),
+                    orderId: orderRef.id,
+                    orderedBy: profile?.name,
+                    status: "PENDING_PAYMENT",
+                    ward: selectedPatient.ward,
+                    createdAt: serverTimestamp(),
+                });
+            }
+
+            setSubmitted(true);
+            setDetail(""); setAmount("0"); setNotes("");
+            setTimeout(() => setSubmitted(false), 3000);
+            fetchMyOrders();
+        } catch(e) { console.error(e); }
+        finally { setSubmitting(false); }
+    };
+
+    const activeTypeCfg = ORDER_TYPES.find(t => t.type === activeType)!;
 
     return (
         <div className="max-w-7xl mx-auto space-y-5">
@@ -55,44 +175,47 @@ export default function CPOEPage() {
                 <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
                     <ClipboardList className="h-6 w-6 text-blue-600" /> CPOE — Physician Order Entry
                 </h1>
-                <p className="text-sm text-gray-500 mt-0.5">Computerized physician order entry with clinical decision support</p>
+                <p className="text-sm text-gray-500 mt-0.5">Orders generate a bill — Cashier must approve payment before the service is delivered</p>
+            </div>
+
+            <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-sm font-semibold text-amber-700">
+                    All orders create a patient bill. The Cashier must confirm payment before Lab / Pharmacy / Radiology can fulfil the order.
+                </p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Order entry form */}
                 <div className="lg:col-span-2 space-y-4">
                     {/* Patient selector */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Patient</label>
-                        <select
-                            value={selectedPatient}
-                            onChange={(e) => setSelectedPatient(e.target.value)}
-                            className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none bg-gray-50"
-                        >
-                            {["John Mwesiga", "Grace Nakato", "Patrick Ssemanda", "Sarah Namutebi"].map(p => (
-                                <option key={p}>{p}</option>
-                            ))}
-                        </select>
+                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Patient (Admitted)</label>
+                        {patients.length === 0 ? (
+                            <p className="text-xs text-gray-400 py-2">No admitted patients found. Admit a patient from IPD first.</p>
+                        ) : (
+                            <select value={selectedPatient?.id || ""}
+                                onChange={e => setSelectedPatient(patients.find(p => p.id === e.target.value) || null)}
+                                className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-900 focus:border-blue-500 outline-none bg-gray-50">
+                                {patients.map(p => (
+                                    <option key={p.id} value={p.id}>{p.patientName} — {p.ward} (Bed {p.bedNumber})</option>
+                                ))}
+                            </select>
+                        )}
                     </div>
 
-                    {/* Order type selector */}
+                    {/* Order type */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
                         <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-3">Order Type</label>
-                        <div className="grid grid-cols-5 gap-2">
-                            {ORDER_TYPES.map((t) => {
+                        <div className="grid grid-cols-6 gap-2">
+                            {ORDER_TYPES.map(t => {
                                 const Icon = t.icon;
                                 return (
-                                    <button
-                                        key={t.type}
-                                        onClick={() => { setActiveType(t.type); setDetail(""); }}
+                                    <button key={t.type} onClick={() => { setActiveType(t.type); setDetail(""); setAmount("0"); }}
                                         className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${
-                                            activeType === t.type
-                                                ? `${t.bg} border-current ${t.color}`
-                                                : "bg-gray-50 border-transparent text-gray-400 hover:bg-gray-100"
-                                        }`}
-                                    >
+                                            activeType === t.type ? `${t.bg} border-current ${t.color}` : "bg-gray-50 border-transparent text-gray-400 hover:bg-gray-100"
+                                        }`}>
                                         <Icon className="h-5 w-5" />
-                                        <span className="text-[10px] font-black uppercase tracking-wider">{t.label}</span>
+                                        <span className="text-[10px] font-black uppercase tracking-wider leading-none text-center">{t.label}</span>
                                     </button>
                                 );
                             })}
@@ -103,56 +226,63 @@ export default function CPOEPage() {
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-3">
                         <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block">Order Details</label>
 
-                        {/* Suggestions */}
                         <div className="flex flex-wrap gap-1.5">
-                            {ORDER_SUGGESTIONS[activeType].map((s) => (
-                                <button key={s} onClick={() => setDetail(s)}
+                            {ORDER_SUGGESTIONS[activeType].map(s => (
+                                <button key={s.text} onClick={() => handleSuggestion(s)}
                                     className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors border border-blue-100">
-                                    {s}
+                                    {s.text}
                                 </button>
                             ))}
                         </div>
 
-                        <textarea
-                            rows={3}
-                            value={detail}
-                            onChange={(e) => setDetail(e.target.value)}
+                        <textarea rows={3} value={detail} onChange={e => setDetail(e.target.value)}
                             placeholder={`Enter ${activeType.toLowerCase()} order details or select a suggestion above...`}
-                            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                        />
+                            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all" />
 
-                        {/* Priority */}
-                        <div>
-                            <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Priority</label>
-                            <div className="flex gap-2">
-                                {(["ROUTINE", "URGENT", "STAT"] as const).map((p) => (
-                                    <button key={p} onClick={() => setPriority(p)}
-                                        className={`flex-1 py-2 rounded-xl text-xs font-black border transition-colors ${
-                                            priority === p
-                                                ? p === "STAT" ? "bg-red-600 text-white border-red-600"
-                                                    : p === "URGENT" ? "bg-amber-500 text-white border-amber-500"
-                                                    : "bg-blue-600 text-white border-blue-600"
-                                                : "bg-gray-50 text-gray-500 border-gray-100 hover:bg-gray-100"
-                                        }`}>{p}</button>
-                                ))}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Amount (UGX)</label>
+                                <div className="relative">
+                                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <input type="number" min="0" value={amount} onChange={e => setAmount(e.target.value)}
+                                        className="w-full h-10 pl-9 pr-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-900 focus:border-blue-500 outline-none bg-gray-50" />
+                                </div>
                             </div>
+                            <div>
+                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Priority</label>
+                                <div className="flex gap-1.5">
+                                    {(["ROUTINE", "URGENT", "STAT"] as const).map(p => (
+                                        <button key={p} onClick={() => setPriority(p)}
+                                            className={`flex-1 h-10 rounded-xl text-xs font-black border transition-colors ${
+                                                priority === p
+                                                    ? p === "STAT" ? "bg-red-600 text-white border-red-600"
+                                                        : p === "URGENT" ? "bg-amber-500 text-white border-amber-500"
+                                                        : "bg-blue-600 text-white border-blue-600"
+                                                    : "bg-gray-50 text-gray-500 border-gray-100 hover:bg-gray-100"
+                                            }`}>{p}</button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Notes (optional)</label>
+                            <input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Additional instructions..."
+                                className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm text-gray-900 focus:border-blue-500 outline-none bg-gray-50" />
                         </div>
 
                         <AnimatePresence>
                             {submitted && (
                                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                                     className="flex items-center gap-2 p-3 rounded-xl bg-green-50 border border-green-100 text-green-700 text-sm font-semibold">
-                                    <CheckCircle2 className="h-4 w-4" /> Order submitted successfully
+                                    <CheckCircle2 className="h-4 w-4" /> Order submitted — bill generated, awaiting cashier payment approval
                                 </motion.div>
                             )}
                         </AnimatePresence>
 
-                        <button
-                            onClick={handleSubmit}
-                            disabled={!detail.trim()}
-                            className="w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors"
-                        >
-                            <Plus className="h-4 w-4" /> Submit Order
+                        <button onClick={handleSubmit} disabled={!detail.trim() || submitting || !selectedPatient}
+                            className="w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors">
+                            {submitting ? <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full"/> : <><Plus className="h-4 w-4" /> Submit Order & Generate Bill</>}
                         </button>
                     </div>
                 </div>
@@ -161,31 +291,45 @@ export default function CPOEPage() {
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="px-4 py-3.5 border-b border-gray-50">
                         <h3 className="font-bold text-gray-900 text-sm">Recent Orders</h3>
+                        <p className="text-[10px] text-gray-400 mt-0.5">Orders awaiting or confirmed payment</p>
                     </div>
-                    <div className="divide-y divide-gray-50">
-                        {recentOrders.map((o) => {
-                            const cfg = ORDER_TYPES.find(t => t.type === o.type);
-                            const Icon = cfg?.icon || ClipboardList;
-                            return (
-                                <div key={o.id} className="p-4 hover:bg-gray-50 transition-colors">
-                                    <div className="flex items-center gap-2 mb-1.5">
-                                        <div className={`p-1.5 rounded-lg ${cfg?.bg}`}>
-                                            <Icon className={`h-3.5 w-3.5 ${cfg?.color}`} />
+                    {loadingOrders ? (
+                        <div className="flex items-center justify-center py-14"><div className="animate-spin h-6 w-6 border-[3px] border-blue-100 border-t-blue-600 rounded-full"/></div>
+                    ) : orders.length === 0 ? (
+                        <div className="py-14 text-center">
+                            <ClipboardList className="h-8 w-8 text-gray-200 mx-auto mb-2"/>
+                            <p className="text-xs text-gray-400">No orders yet</p>
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-gray-50 max-h-[500px] overflow-y-auto">
+                            {orders.map(o => {
+                                const cfg = ORDER_TYPES.find(t => t.type === o.orderType);
+                                const Icon = cfg?.icon || ClipboardList;
+                                return (
+                                    <div key={o.id} className="p-4 hover:bg-gray-50 transition-colors">
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            <div className={`p-1.5 rounded-lg ${cfg?.bg || "bg-gray-50"}`}>
+                                                <Icon className={`h-3.5 w-3.5 ${cfg?.color || "text-gray-500"}`} />
+                                            </div>
+                                            <span className="text-xs font-bold text-gray-600 capitalize">{o.orderType}</span>
+                                            <span className={`ml-auto text-[10px] font-black px-1.5 py-0.5 rounded ${
+                                                o.priority === "STAT" ? "text-red-600 bg-red-50" :
+                                                o.priority === "URGENT" ? "text-amber-600 bg-amber-50" : "text-gray-400"
+                                            }`}>{o.priority}</span>
                                         </div>
-                                        <span className="text-xs font-bold text-gray-600">{o.type}</span>
-                                        <span className="ml-auto text-[10px] text-gray-400 flex items-center gap-0.5">
-                                            <Clock className="h-3 w-3" /> {o.time}
-                                        </span>
+                                        <p className="text-xs font-bold text-gray-900 mb-0.5 truncate">{o.patientName}</p>
+                                        <p className="text-xs text-gray-500 mb-2 line-clamp-2">{o.detail}</p>
+                                        <div className="flex items-center justify-between">
+                                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${STATUS_COLOR[o.status] || STATUS_COLOR["PENDING"]}`}>
+                                                {o.status === "AWAITING_PAYMENT" ? "Awaiting Payment" : o.status.replace("_", " ")}
+                                            </span>
+                                            {o.amount > 0 && <span className="text-xs font-black text-gray-700">UGX {o.amount.toLocaleString()}</span>}
+                                        </div>
                                     </div>
-                                    <p className="text-xs font-bold text-gray-900 mb-0.5">{o.patient}</p>
-                                    <p className="text-xs text-gray-500 mb-2">{o.detail}</p>
-                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_CLASS[o.status]}`}>
-                                        {o.status.replace("_", " ")}
-                                    </span>
-                                </div>
-                            );
-                        })}
-                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

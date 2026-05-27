@@ -27,6 +27,12 @@ import {
     Droplets,
     Settings,
     Wallet,
+    BedDouble,
+    Wrench,
+    Building2,
+    ShieldCheck,
+    AlertOctagon,
+    BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { motion } from "framer-motion";
@@ -67,17 +73,50 @@ const menuGroups = [
             { name: "Pharmacy", href: "/pharmacy/dashboard", icon: Package },
             { name: "Blood Bank", href: "/lab/blood-bank", icon: Droplets },
             { name: "Inventory", href: "/admin/inventory", icon: Package },
+            { name: "CSSD", href: "/cssd/dashboard", icon: Package },
+        ],
+    },
+    {
+        label: "IP Management & ADT",
+        items: [
+            { name: "IPD Dashboard", href: "/ipd/dashboard", icon: BedDouble },
+            { name: "Admissions", href: "/ipd/admissions", icon: BedDouble },
+            { name: "Bed Management", href: "/ipd/beds", icon: BedDouble },
+            { name: "Transfers", href: "/ipd/transfer", icon: BedDouble },
+            { name: "Discharge", href: "/ipd/discharge", icon: BedDouble },
+        ],
+    },
+    {
+        label: "Facilities",
+        items: [
+            { name: "Housekeeping", href: "/housekeeping/dashboard", icon: Home },
+            { name: "Machine Maintenance", href: "/maintenance/dashboard", icon: Wrench },
+            { name: "Fixed Assets", href: "/assets/dashboard", icon: Building2 },
+        ],
+    },
+    {
+        label: "Quality & Safety",
+        items: [
+            { name: "Quality & Infection", href: "/quality/dashboard", icon: ShieldCheck },
+            { name: "Incident Reporting", href: "/incidents/dashboard", icon: AlertOctagon },
         ],
     },
     {
         label: "Finance & Accounts",
         items: [
             { name: "Cashier Dashboard", href: "/cashier/dashboard", icon: Wallet },
+            { name: "Consultation Fees", href: "/cashier/fees", icon: CreditCard },
             { name: "Income", href: "/cashier/income", icon: CreditCard },
             { name: "Expenses", href: "/cashier/expenses", icon: CreditCard },
             { name: "All Transactions", href: "/cashier/transactions", icon: CreditCard },
             { name: "Financial Reports", href: "/cashier/reports", icon: CreditCard },
             { name: "Billing & Revenue", href: "/admin/generate-bill", icon: CreditCard },
+        ],
+    },
+    {
+        label: "Analytics",
+        items: [
+            { name: "MIS Dashboard", href: "/admin/analytics", icon: BarChart3 },
         ],
     },
     {

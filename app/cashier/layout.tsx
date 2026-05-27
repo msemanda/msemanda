@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard, TrendingUp, TrendingDown,
-    ArrowLeftRight, BarChart3,
+    ArrowLeftRight, BarChart3, CreditCard,
 } from "lucide-react";
 
 const sidebarGroups: SidebarGroup[] = [
@@ -16,6 +16,13 @@ const sidebarGroups: SidebarGroup[] = [
         label: "Overview",
         items: [
             { name: "Dashboard", href: "/cashier/dashboard", icon: LayoutDashboard },
+        ],
+    },
+    {
+        label: "Patient Payments",
+        items: [
+            { name: "Consultation Fees", href: "/cashier/fees", icon: CreditCard },
+            { name: "Service Bills", href: "/cashier/bills", icon: CreditCard },
         ],
     },
     {

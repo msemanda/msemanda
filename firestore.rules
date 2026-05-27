@@ -150,6 +150,103 @@ service cloud.firestore {
       allow write: if isAdmin() || hasRole('CASHIER');
     }
 
+    // ── CPOE orders ──────────────────────────────────────────────────────────
+    match /cpoeOrders/{orderId} {
+      allow read:  if isAuth();
+      allow create: if isAdmin() || hasRole('DOCTOR');
+      allow update: if isAdmin() || hasRole('CASHIER') || hasRole('DOCTOR') ||
+                       hasRole('LAB_TECH') || hasRole('PHARMACY') || hasRole('RADIOLOGY_TECH');
+      allow delete: if isAdmin();
+    }
+
+    // ── Patient service bills (from doctor orders) ───────────────────────────
+    match /patientBills/{billId} {
+      allow read:  if isAuth();
+      allow create: if isAdmin() || hasRole('DOCTOR');
+      allow update: if isAdmin() || hasRole('CASHIER');
+      allow delete: if isAdmin();
+    }
+
+    // ── IPD Admissions ───────────────────────────────────────────────────────
+    match /ipdAdmissions/{admId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('DOCTOR') || hasRole('NURSE') || isReceptionist();
+    }
+
+    // ── IPD Transfers ────────────────────────────────────────────────────────
+    match /ipdTransfers/{transferId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('DOCTOR') || hasRole('NURSE');
+    }
+
+    // ── IPD Orders ───────────────────────────────────────────────────────────
+    match /ipdOrders/{orderId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('DOCTOR') || hasRole('NURSE');
+    }
+
+    // ── CSSD ────────────────────────────────────────────────────────────────
+    match /cssdItems/{itemId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('NURSE') || hasRole('DOCTOR');
+    }
+    match /cssdCycles/{cycleId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('NURSE');
+    }
+    match /cssdDispatch/{dispatchId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('NURSE');
+    }
+
+    // ── Housekeeping ─────────────────────────────────────────────────────────
+    match /hkTasks/{taskId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin();
+    }
+    match /hkSchedules/{schedId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // ── Maintenance ──────────────────────────────────────────────────────────
+    match /maintEquipment/{eqId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin();
+    }
+    match /maintRequests/{reqId} {
+      allow read:  if isAuth();
+      allow write: if isAuth();
+    }
+    match /maintAlerts/{alertId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // ── Fixed Assets ─────────────────────────────────────────────────────────
+    match /fixedAssets/{assetId} {
+      allow read:  if isAdmin() || hasRole('CASHIER');
+      allow write: if isAdmin() || hasRole('CASHIER');
+    }
+
+    // ── Quality & Audits ────────────────────────────────────────────────────
+    match /qualityAudits/{auditId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('DOCTOR') || hasRole('NURSE');
+    }
+    match /infectionIncidents/{incId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('DOCTOR') || hasRole('NURSE');
+    }
+
+    // ── Incidents ────────────────────────────────────────────────────────────
+    match /incidents/{incidentId} {
+      allow read:  if isAuth();
+      allow create: if isAuth();
+      allow update: if isAdmin() || hasRole('DOCTOR') || hasRole('NURSE');
+      allow delete: if isAdmin();
+    }
+
     // ── Home care visits ─────────────────────────────────────────────────────
     match /homeCareVisits/{visitId} {
       allow read:  if isAuth();
