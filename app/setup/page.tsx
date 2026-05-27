@@ -58,11 +58,14 @@ const ROLE_COLORS: Record<string, string> = {
     EMERGENCY_STAFF: "bg-red-50 text-red-700 border-red-100",
 };
 
+const SUPERADMIN_EMAIL = "semandamoses91@gmail.com";
+
 type Step = "email" | "setup" | "done";
 
 interface InviteData {
     role: UserRole;
     invitedBy: string;
+    isSuperadmin?: boolean;
 }
 
 export default function SetupPage() {
@@ -79,8 +82,17 @@ export default function SetupPage() {
         e.preventDefault();
         setLoading(true);
         setError("");
+        const normalEmail = email.toLowerCase().trim();
         try {
-            const inviteSnap = await getDoc(doc(db, "invites", email.toLowerCase().trim()));
+            // Superadmin bootstrap — no invite needed
+            if (normalEmail === SUPERADMIN_EMAIL) {
+                setInvite({ role: "ADMIN", invitedBy: "System", isSuperadmin: true });
+                setName("System Administrator");
+                setStep("setup");
+                return;
+            }
+
+            const inviteSnap = await getDoc(doc(db, "invites", normalEmail));
             if (!inviteSnap.exists()) {
                 setError("No invitation found for this email. Please contact your administrator.");
             } else if (inviteSnap.data().used) {
@@ -126,11 +138,13 @@ export default function SetupPage() {
             };
 
             await setDoc(doc(db, "users", user.uid), profile);
-            await updateDoc(doc(db, "invites", email.toLowerCase().trim()), {
-                used: true,
-                usedAt: serverTimestamp(),
-                uid: user.uid,
-            });
+            if (!invite.isSuperadmin) {
+                await updateDoc(doc(db, "invites", email.toLowerCase().trim()), {
+                    used: true,
+                    usedAt: serverTimestamp(),
+                    uid: user.uid,
+                });
+            }
 
             setStep("done");
             setTimeout(() => {
@@ -241,16 +255,24 @@ export default function SetupPage() {
                         animate={{ opacity: 1, x: 0 }}
                         className="bg-white rounded-3xl shadow-premium border border-gray-100 p-8"
                     >
-                        <div className="mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Invitation for</p>
-                            <p className="text-sm font-bold text-gray-900">{email}</p>
-                            <div className="mt-2 flex items-center gap-2">
-                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${ROLE_COLORS[invite?.role || "PATIENT"]}`}>
-                                    {ROLE_LABELS[invite?.role || "PATIENT"]}
-                                </span>
-                                <span className="text-[10px] text-gray-400">by {invite?.invitedBy}</span>
+                        {invite?.isSuperadmin ? (
+                            <div className="mb-6 p-4 bg-purple-50 rounded-2xl border border-purple-100">
+                                <p className="text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-1">System Bootstrap</p>
+                                <p className="text-sm font-bold text-purple-900">{email}</p>
+                                <p className="text-xs text-purple-600 mt-1">Setting up the superadmin account — no invitation required.</p>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Invitation for</p>
+                                <p className="text-sm font-bold text-gray-900">{email}</p>
+                                <div className="mt-2 flex items-center gap-2">
+                                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${ROLE_COLORS[invite?.role || "PATIENT"]}`}>
+                                        {ROLE_LABELS[invite?.role || "PATIENT"]}
+                                    </span>
+                                    <span className="text-[10px] text-gray-400">by {invite?.invitedBy}</span>
+                                </div>
+                            </div>
+                        )}
 
                         <form onSubmit={handleSetup} className="space-y-4">
                             <div className="space-y-1.5">
