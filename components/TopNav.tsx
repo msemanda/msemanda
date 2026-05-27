@@ -36,7 +36,7 @@ export function TopNav({ role }: TopNavProps) {
                     <div className="p-1.5 bg-blue-600 rounded-lg group-hover:scale-105 transition-transform">
                         <HeartPulse className="h-4 w-4 text-white" />
                     </div>
-                    <span className="text-sm font-black text-gray-900 tracking-tight">E-HEALTH</span>
+                    <span className="text-sm font-black text-gray-900 tracking-tight">RHONA</span>
                 </Link>
                 <div className="h-4 w-px bg-gray-200" />
                 <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${roleColor}`}>

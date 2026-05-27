@@ -159,7 +159,7 @@ export default function DoctorRegistrationPage() {
                                     <Input
                                         type="email"
                                         required
-                                        placeholder="dr.smith@e-health.com"
+                                        placeholder="dr.smith@rhonamedical.com"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                     />

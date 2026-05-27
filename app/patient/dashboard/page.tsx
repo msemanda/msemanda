@@ -146,7 +146,7 @@ export default function PatientDashboard() {
                             <div className="space-y-8 flex-1">
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Medical ID</p>
-                                    <p className="text-lg font-mono font-bold tracking-tighter text-cyan-50">E-HEALTH-{profile?.uid.substring(0, 12).toUpperCase()}</p>
+                                    <p className="text-lg font-mono font-bold tracking-tighter text-cyan-50">RMC-{profile?.uid.substring(0, 12).toUpperCase()}</p>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Primary Condition</p>

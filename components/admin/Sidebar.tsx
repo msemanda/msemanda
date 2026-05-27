@@ -91,7 +91,7 @@ export function Sidebar() {
                         <HeartPulse className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                        <span className="text-sm font-black text-gray-900 tracking-tight">E-HEALTH</span>
+                        <span className="text-sm font-black text-gray-900 tracking-tight">RHONA</span>
                         <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Admin Console</p>
                     </div>
                 </Link>

@@ -6,8 +6,8 @@ import { AuthProvider } from "@/context/AuthContext";
 const outfit = Outfit({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "E-Health | Modern Healthcare Management",
-  description: "Experience the future of digital healthcare with our premium management system.",
+  title: "Rhona Medical Center | Healthcare Management",
+  description: "Rhona Medical Center — comprehensive digital healthcare management for modern medical institutions.",
 };
 
 export default function RootLayout({

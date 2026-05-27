@@ -42,7 +42,7 @@ export function RoleSidebar({ groups, roleLabel, accentColor = "blue" }: RoleSid
                         <HeartPulse className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                        <span className="text-sm font-black text-gray-900 tracking-tight">E-HEALTH</span>
+                        <span className="text-sm font-black text-gray-900 tracking-tight">RHONA</span>
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{roleLabel}</p>
                     </div>
                 </Link>

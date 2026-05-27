@@ -72,7 +72,7 @@ export default function LandingPage() {
           <div className="p-2.5 bg-gradient-to-br from-cyan-600 to-teal-600 rounded-2xl shadow-premium group-hover:rotate-12 transition-transform duration-500">
             <HeartPulse className="h-6 w-6 text-white" />
           </div>
-          <span className="ml-4 text-2xl font-black text-gray-900 tracking-tighter uppercase italic">E-HEALTH</span>
+          <span className="ml-4 text-2xl font-black text-gray-900 tracking-tighter uppercase italic">RHONA</span>
         </motion.div>
 
         <nav className="hidden lg:flex gap-10 items-center">
@@ -340,7 +340,7 @@ export default function LandingPage() {
                   ))}
                 </div>
                 <h2 className="text-6xl lg:text-8xl font-black text-white leading-none tracking-tighter uppercase italic">Ready to <br /><span className="text-gradient-cyan">Modernize?</span></h2>
-                <p className="text-slate-400 text-xl font-medium max-w-xl">Join hundreds of medical institutions already using E-Health to redefine patient care standards.</p>
+                <p className="text-slate-400 text-xl font-medium max-w-xl">Join hundreds of medical institutions already using Rhona Medical Center to redefine patient care standards.</p>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button size="lg" className="h-20 px-16 rounded-[32px] bg-white text-slate-900 hover:bg-cyan-50 font-black text-lg transition-all shadow-[0_20px_40px_-10px_rgba(255,255,255,0.2)]">
                     Create Institution Account
@@ -359,7 +359,7 @@ export default function LandingPage() {
               <div className="p-3 bg-slate-900 rounded-[20px] shadow-lg group-hover:rotate-12 transition-transform duration-500">
                 <HeartPulse className="h-6 w-6 text-white" />
               </div>
-              <span className="ml-5 text-3xl font-black text-slate-900 tracking-tighter uppercase italic">E-HEALTH</span>
+              <span className="ml-5 text-3xl font-black text-slate-900 tracking-tighter uppercase italic">RHONA MEDICAL CENTER</span>
             </div>
             <div className="flex gap-12 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
               <Link href="#" className="hover:text-cyan-600 transition-colors">Privacy</Link>
@@ -387,7 +387,7 @@ export default function LandingPage() {
             ))}
           </div>
           <div className="mt-32 flex flex-col sm:flex-row justify-between items-center text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 gap-8">
-            <p>© 2026 E-Health Enterprise Group • Kampala • SF • Nairobi</p>
+            <p>© 2026 Rhona Medical Center Enterprise Group • Kampala • SF • Nairobi</p>
             <p className="flex items-center gap-4">
               <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse" /> Platform Status: Global Online
             </p>

@@ -128,7 +128,7 @@ export default function AdminRegistrationPage() {
 
                 <div className="text-center mb-16 space-y-4">
                     <h1 className="text-5xl font-black tracking-tight text-gray-900">System <span className="text-gradient-cyan">Administrator</span></h1>
-                    <p className="text-lg text-gray-500 font-medium max-w-xl mx-auto leading-relaxed">Initialize the core administration layer of the E-Health platform.</p>
+                    <p className="text-lg text-gray-500 font-medium max-w-xl mx-auto leading-relaxed">Initialize the core administration layer of Rhona Medical Center.</p>
                 </div>
                 <div className="bg-glass rounded-[40px] shadow-premium p-10 lg:p-12 border border-white/60">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -151,7 +151,7 @@ export default function AdminRegistrationPage() {
                                     <Input
                                         type="email"
                                         required
-                                        placeholder="admin@e-health.com"
+                                        placeholder="admin@rhonamedical.com"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                     />

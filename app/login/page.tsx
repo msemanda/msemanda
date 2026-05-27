@@ -136,9 +136,9 @@ export default function LoginPage() {
                         <div className="p-2.5 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl shadow-lg shadow-blue-600/20 group-hover:scale-105 transition-transform">
                             <HeartPulse className="h-6 w-6 text-white" />
                         </div>
-                        <span className="ml-3 text-2xl font-black text-gray-900 tracking-tighter">E-HEALTH</span>
+                        <span className="ml-3 text-2xl font-black text-gray-900 tracking-tighter">RHONA</span>
                     </Link>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">Staff Portal</h1>
+                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">Rhona Medical Center</h1>
                     <p className="text-gray-500 mt-2 font-medium text-sm">Sign in to your clinical workspace</p>
                 </div>
 

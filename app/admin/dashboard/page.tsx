@@ -98,7 +98,7 @@ export default function AdminDashboard() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-1">
                     <h1 className="text-5xl font-black text-slate-900 tracking-tighter leading-none">Intelligence <span className="text-gradient-cyan">Ledger.</span></h1>
-                    <p className="text-slate-500 font-medium italic">Autonomous monitoring of the E-Health medical network.</p>
+                    <p className="text-slate-500 font-medium italic">Autonomous monitoring of the Rhona Medical Center network.</p>
                 </div>
                 <div className="flex items-center gap-4">
                     <button className="h-14 w-14 rounded-[20px] bg-white/40 backdrop-blur-md border border-white flex items-center justify-center text-slate-400 hover:text-cyan-600 hover:border-cyan-100 transition-all shadow-premium group">
