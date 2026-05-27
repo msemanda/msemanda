@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Stethoscope, User, CalendarDays, Clock,
-    CheckCircle2, ShieldCheck, ArrowRight, ChevronDown
+    CheckCircle2, ShieldCheck, ArrowRight, Search
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 
@@ -17,12 +17,18 @@ const TIME_SLOTS = [
     "15:30", "16:00", "16:30",
 ];
 
-type DoctorOption = { uid: string; name: string; specialization: string };
+type DoctorOption = {
+    uid: string;
+    name: string;
+    specialization: string;
+    todayCount: number;
+};
 
 export default function BookAppointmentPage() {
     const { profile } = useAuth();
     const [doctors, setDoctors] = useState<DoctorOption[]>([]);
     const [loadingDoctors, setLoadingDoctors] = useState(true);
+    const [search, setSearch] = useState("");
     const [selectedDoctor, setSelectedDoctor] = useState<DoctorOption | null>(null);
 
     const [form, setForm] = useState({
@@ -40,25 +46,30 @@ export default function BookAppointmentPage() {
     useEffect(() => {
         const fetchDoctors = async () => {
             try {
-                const q = query(
-                    collection(db, "appointments"),
-                    where("status", "==", "COMPLETED")
-                );
-                const snap = await getDocs(q);
-                const seen = new Set<string>();
-                const unique: DoctorOption[] = [];
-                snap.docs.forEach(d => {
-                    const data = d.data();
-                    if (data.doctorId && !seen.has(data.doctorId)) {
-                        seen.add(data.doctorId);
-                        unique.push({
-                            uid: data.doctorId,
-                            name: data.doctorName || "Unknown Doctor",
-                            specialization: data.specialization || "General",
-                        });
-                    }
+                const today = new Date().toISOString().split("T")[0];
+
+                const [doctorSnap, apptSnap] = await Promise.all([
+                    getDocs(query(collection(db, "users"), where("role", "==", "DOCTOR"))),
+                    getDocs(query(collection(db, "appointments"), where("date", "==", today))),
+                ]);
+
+                const countMap: Record<string, number> = {};
+                apptSnap.docs.forEach(d => {
+                    const did = d.data().doctorId;
+                    if (did) countMap[did] = (countMap[did] || 0) + 1;
                 });
-                setDoctors(unique);
+
+                setDoctors(
+                    doctorSnap.docs.map(d => {
+                        const data = d.data();
+                        return {
+                            uid: d.id,
+                            name: data.name || "Unknown",
+                            specialization: data.specialization || "General",
+                            todayCount: countMap[d.id] || 0,
+                        };
+                    })
+                );
             } catch (err) {
                 console.error(err);
             } finally {
@@ -68,16 +79,15 @@ export default function BookAppointmentPage() {
         fetchDoctors();
     }, []);
 
-    const handleDoctorChange = (uid: string) => {
-        setSelectedDoctor(doctors.find(d => d.uid === uid) || null);
-    };
+    const filtered = doctors.filter(d =>
+        !search ||
+        d.name.toLowerCase().includes(search.toLowerCase()) ||
+        d.specialization.toLowerCase().includes(search.toLowerCase())
+    );
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedDoctor) {
-            setError("Please select a doctor.");
-            return;
-        }
+        if (!selectedDoctor) { setError("Please select a doctor."); return; }
         setSubmitting(true);
         setError("");
         try {
@@ -120,7 +130,7 @@ export default function BookAppointmentPage() {
                     </div>
                     <h2 className="text-2xl font-black text-gray-900 mb-2">Appointment Booked</h2>
                     <p className="text-sm text-gray-500">
-                        <span className="font-bold">{form.patientName}</span> has been booked with{" "}
+                        <span className="font-bold">{form.patientName}</span> booked with{" "}
                         <span className="font-bold">{selectedDoctor?.name}</span> on {form.date} at {form.time}.
                     </p>
                     <button onClick={reset}
@@ -140,58 +150,89 @@ export default function BookAppointmentPage() {
             </div>
 
             {/* Doctor selection */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                 <h2 className="text-base font-black text-gray-900 mb-4 flex items-center gap-2">
-                    <Stethoscope className="h-4.5 w-4.5 text-blue-600" /> Select Doctor
+                    <Stethoscope className="h-4 w-4 text-blue-600" /> Select Doctor
                 </h2>
 
+                <div className="relative mb-4">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input placeholder="Search by name or specialization..."
+                        className="pl-9" value={search}
+                        onChange={e => setSearch(e.target.value)} />
+                </div>
+
                 {loadingDoctors ? (
-                    <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center justify-center py-10">
                         <div className="animate-spin h-6 w-6 border-[3px] border-blue-100 border-t-blue-600 rounded-full" />
                     </div>
-                ) : doctors.length === 0 ? (
-                    <p className="text-sm text-gray-400 text-center py-6">No doctors with completed appointments found.</p>
+                ) : filtered.length === 0 ? (
+                    <p className="text-sm text-gray-400 text-center py-8">
+                        {doctors.length === 0 ? "No doctors registered in the system yet." : "No doctors match your search."}
+                    </p>
                 ) : (
-                    <div className="space-y-3">
-                        <div className="relative">
-                            <Stethoscope className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                            <select
-                                value={selectedDoctor?.uid || ""}
-                                onChange={e => handleDoctorChange(e.target.value)}
-                                className="w-full h-11 pl-10 pr-10 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all appearance-none cursor-pointer"
-                            >
-                                <option value="">— Select a doctor —</option>
-                                {doctors.map(d => (
-                                    <option key={d.uid} value={d.uid}>
-                                        {d.name} · {d.specialization}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {selectedDoctor && (
-                            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                                className="flex items-center gap-3 p-3.5 bg-blue-50 rounded-xl border border-blue-100">
-                                <div className="h-9 w-9 rounded-xl bg-blue-100 flex items-center justify-center font-black text-blue-700 text-xs shrink-0">
-                                    {selectedDoctor.name.charAt(0)}
-                                </div>
-                                <div>
-                                    <p className="text-sm font-black text-gray-900">{selectedDoctor.name}</p>
-                                    <p className="text-xs text-gray-500">{selectedDoctor.specialization}</p>
-                                </div>
-                                <CheckCircle2 className="h-4 w-4 text-blue-600 ml-auto" />
-                            </motion.div>
-                        )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+                        {filtered.map(doctor => {
+                            const isSelected = selectedDoctor?.uid === doctor.uid;
+                            const isBusy = doctor.todayCount >= 8;
+                            return (
+                                <button key={doctor.uid} type="button"
+                                    onClick={() => setSelectedDoctor(doctor)}
+                                    className={`text-left p-3.5 rounded-xl border transition-all flex items-center gap-3 ${
+                                        isSelected
+                                            ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20"
+                                            : "border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+                                    }`}>
+                                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-black text-sm shrink-0 ${
+                                        isSelected ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-600"
+                                    }`}>
+                                        {doctor.name.charAt(0)}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-sm font-black text-gray-900 truncate">{doctor.name}</p>
+                                        <p className="text-[11px] text-gray-400 truncate">{doctor.specialization}</p>
+                                    </div>
+                                    <div className="shrink-0 flex flex-col items-end gap-1">
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                            isBusy
+                                                ? "bg-red-50 text-red-600 border border-red-100"
+                                                : "bg-green-50 text-green-600 border border-green-100"
+                                        }`}>
+                                            {isBusy ? "Busy" : "Available"}
+                                        </span>
+                                        <span className="text-[10px] text-gray-400">
+                                            {doctor.todayCount} today
+                                        </span>
+                                    </div>
+                                    {isSelected && <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0 -ml-1" />}
+                                </button>
+                            );
+                        })}
                     </div>
                 )}
             </div>
 
             {/* Patient & time details */}
-            <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
                 <h2 className="text-base font-black text-gray-900 flex items-center gap-2">
-                    <User className="h-4.5 w-4.5 text-blue-600" /> Patient & Schedule
+                    <User className="h-4 w-4 text-blue-600" /> Patient & Schedule
                 </h2>
+
+                {selectedDoctor && (
+                    <div className="flex items-center gap-2.5 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                        <div className="h-7 w-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0">
+                            {selectedDoctor.name.charAt(0)}
+                        </div>
+                        <div>
+                            <p className="text-xs font-black text-gray-900">{selectedDoctor.name}</p>
+                            <p className="text-[10px] text-gray-500">{selectedDoctor.specialization}</p>
+                        </div>
+                        <button type="button" onClick={() => setSelectedDoctor(null)}
+                            className="ml-auto text-[10px] text-blue-600 font-bold hover:underline">
+                            Change
+                        </button>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">

@@ -92,8 +92,9 @@ service cloud.firestore {
     match /consultationFees/{feeId} {
       allow read:   if isAuth();
       allow create: if isAdmin() || isReceptionist();
+      // Patient can update only their own fee's payment fields (no nested get needed)
       allow update: if isAdmin() || isReceptionist() || (
-        hasRole('PATIENT') &&
+        isAuth() &&
         resource.data.patientEmail == request.auth.token.email &&
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['status', 'paymentMethod', 'paymentReference', 'patientPaidAt'])
