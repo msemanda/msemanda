@@ -2,43 +2,44 @@
 
 import React, { useEffect, useState } from "react";
 import {
-    collection,
-    getDocs,
-    query,
-    where,
-    doc,
-    setDoc,
-    serverTimestamp
+    collection, getDocs, query, where,
+    doc, setDoc, serverTimestamp
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Search, ShieldCheck } from "lucide-react";
+import {
+    Search, ShieldCheck, User, Mail,
+    FileText, CheckCircle2, ChevronDown, Percent
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+
+const CATEGORIES = [
+    { value: "General",         label: "General Patient" },
+    { value: "Student",         label: "Student" },
+    { value: "Senior",          label: "Senior Citizen (60+)" },
+    { value: "Insurance",       label: "Insurance / Covered" },
+    { value: "Emergency",       label: "Emergency Case" },
+    { value: "Staff",           label: "Staff / Employee" },
+];
 
 export default function ValidatePatientPage() {
     const [patients, setPatients] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState("");
     const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
-    const [validationData, setValidationData] = useState({
-        category: "General",
-        concession: "0",
-    });
+    const [form, setForm] = useState({ category: "General", concession: "0" });
     const [processing, setProcessing] = useState(false);
+    const [success, setSuccess] = useState(false);
 
-    useEffect(() => {
-        fetchPatients();
-    }, []);
+    useEffect(() => { fetchPatients(); }, []);
 
     const fetchPatients = async () => {
         setLoading(true);
         try {
-            const q = query(collection(db, "users"), where("role", "==", "PATIENT"));
-            const snapshot = await getDocs(q);
-            setPatients(snapshot.docs.map(doc => ({ ...doc.data(), uid: doc.id })));
-        } catch (error) {
-            console.error("Error fetching patients:", error);
+            const snap = await getDocs(query(collection(db, "users"), where("role", "==", "PATIENT")));
+            setPatients(snap.docs.map(d => ({ ...d.data(), uid: d.id })));
+        } catch (err) {
+            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -47,190 +48,233 @@ export default function ValidatePatientPage() {
     const handleValidate = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedPatient) return;
-
         setProcessing(true);
         try {
-            // Store validation in a 'categories' collection as in legacy logic
             await setDoc(doc(db, "categories", selectedPatient.uid), {
                 patientId: selectedPatient.uid,
-                name: selectedPatient.name,
-                age: selectedPatient.age,
-                problem: selectedPatient.problem,
-                category: validationData.category,
-                concession: parseInt(validationData.concession),
+                name: selectedPatient.name || selectedPatient.email,
+                age: selectedPatient.age || null,
+                problem: selectedPatient.problem || "",
+                category: form.category,
+                concession: parseInt(form.concession) || 0,
                 validatedAt: serverTimestamp(),
             });
-
-            alert("Patient Validated Successfully!");
-            setSelectedPatient(null);
-        } catch (error) {
-            console.error("Error validating patient:", error);
+            setSuccess(true);
+        } catch (err) {
+            console.error(err);
         } finally {
             setProcessing(false);
         }
     };
 
+    const handleSelect = (p: any) => {
+        setSelectedPatient(p);
+        setSuccess(false);
+        setForm({ category: "General", concession: "0" });
+    };
+
+    const filtered = patients.filter(p => {
+        if (!search) return true;
+        const q = search.toLowerCase();
+        return (
+            (p.name || "").toLowerCase().includes(q) ||
+            (p.email || "").toLowerCase().includes(q)
+        );
+    });
+
+    const displayName = (p: any) => p.name && p.name !== p.email ? p.name : p.email;
+
     return (
-        <div className="space-y-12 pb-24">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-                <div className="space-y-1">
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tight">Clinical <span className="text-gradient-cyan">Validation</span></h1>
-                    <p className="text-gray-500 font-medium">Categorize patient profiles and optimize concession parameters.</p>
-                </div>
+        <div className="space-y-6 pb-10">
+            <div>
+                <h1 className="text-2xl font-black text-gray-900">Patient Validation</h1>
+                <p className="text-sm text-gray-500 mt-0.5">Assign a care category and fee concession to each patient</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+                {/* Patient list */}
                 <div className="lg:col-span-4">
-                    <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="bg-glass rounded-[40px] shadow-premium border border-white h-[700px] flex flex-col overflow-hidden"
-                    >
-                        <div className="p-8 border-b border-gray-100 bg-gray-900/5">
-                            <div className="relative group">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-cyan-500 transition-colors" />
-                                <Input
-                                    placeholder="Search patient node..."
-                                    className="pl-12 h-14 rounded-2xl bg-white border-gray-100 focus:border-cyan-200 transition-all font-bold text-sm"
-                                />
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col h-[680px]">
+                        <div className="p-4 border-b border-gray-50">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <Input placeholder="Search by name or email..."
+                                    className="pl-9"
+                                    value={search}
+                                    onChange={e => setSearch(e.target.value)} />
                             </div>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                        <div className="flex-1 overflow-y-auto p-2 space-y-1">
                             {loading ? (
-                                <div className="flex flex-col items-center justify-center py-20">
-                                    <div className="animate-spin h-6 w-6 border-2 border-cyan-100 border-t-cyan-600 rounded-full mb-4" />
-                                    <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest text-center">Syncing Registry</p>
+                                <div className="flex items-center justify-center py-16">
+                                    <div className="animate-spin h-6 w-6 border-[3px] border-blue-100 border-t-blue-600 rounded-full" />
                                 </div>
+                            ) : filtered.length === 0 ? (
+                                <p className="text-center text-sm text-gray-400 py-12">No patients found.</p>
                             ) : (
-                                patients.map((p, idx) => (
+                                filtered.map((p, i) => (
                                     <motion.button
                                         key={p.uid}
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: idx * 0.03 }}
-                                        onClick={() => setSelectedPatient(p)}
-                                        className={cn(
-                                            "w-full text-left p-6 rounded-3xl transition-all group relative overflow-hidden",
+                                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
+                                        onClick={() => handleSelect(p)}
+                                        className={`w-full text-left px-3.5 py-3 rounded-xl transition-all flex items-center gap-3 ${
                                             selectedPatient?.uid === p.uid
-                                                ? "bg-gradient-to-br from-cyan-600 to-teal-600 text-white shadow-lg shadow-cyan-600/20"
-                                                : "bg-white border border-gray-50 hover:border-cyan-100 hover:shadow-sm"
-                                        )}
+                                                ? "bg-blue-600 text-white"
+                                                : "hover:bg-gray-50 text-gray-900"
+                                        }`}
                                     >
-                                        <div className="relative z-10 flex items-center justify-between">
-                                            <div>
-                                                <div className="font-black text-lg leading-tight mb-1">{p.name}</div>
-                                                <div className={cn("text-[9px] font-black uppercase tracking-widest", selectedPatient?.uid === p.uid ? "text-cyan-100/70" : "text-gray-300")}>Node: {p.uid.substring(0, 12).toUpperCase()}</div>
-                                            </div>
-                                            {selectedPatient?.uid === p.uid && (
-                                                <div className="h-8 w-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md">
-                                                    <ShieldCheck className="h-4 w-4" />
-                                                </div>
-                                            )}
+                                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${
+                                            selectedPatient?.uid === p.uid ? "bg-white/20 text-white" : "bg-blue-50 text-blue-600"
+                                        }`}>
+                                            {(p.name || p.email || "?").charAt(0).toUpperCase()}
                                         </div>
+                                        <div className="min-w-0">
+                                            <p className={`text-sm font-bold truncate ${selectedPatient?.uid === p.uid ? "text-white" : "text-gray-900"}`}>
+                                                {displayName(p)}
+                                            </p>
+                                            <p className={`text-[10px] truncate ${selectedPatient?.uid === p.uid ? "text-blue-100" : "text-gray-400"}`}>
+                                                {p.age ? `Age ${p.age}` : "Age not set"} · {p.status === "true" ? "Scheduled" : "Unscheduled"}
+                                            </p>
+                                        </div>
+                                        {selectedPatient?.uid === p.uid && (
+                                            <CheckCircle2 className="h-4 w-4 text-white/80 shrink-0 ml-auto" />
+                                        )}
                                     </motion.button>
                                 ))
                             )}
                         </div>
-                    </motion.div>
+                    </div>
                 </div>
 
+                {/* Detail + form */}
                 <div className="lg:col-span-8">
                     <AnimatePresence mode="wait">
-                        {selectedPatient ? (
-                            <motion.div
-                                key={selectedPatient.uid}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                className="bg-glass rounded-[48px] shadow-premium border border-white overflow-hidden"
-                            >
-                                <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-12 text-white relative overflow-hidden group">
-                                    <div className="absolute top-0 right-0 p-12 opacity-5 scale-150 rotate-12 group-hover:scale-175 transition-transform duration-1000">
-                                        <ShieldCheck className="h-48 w-48" />
-                                    </div>
-                                    <div className="relative z-10">
-                                        <div className="flex items-center gap-6 mb-6">
-                                            <div className="h-16 w-16 bg-gradient-to-br from-cyan-400 to-teal-400 rounded-2xl flex items-center justify-center text-2xl font-black shadow-lg">
-                                                {selectedPatient.name.charAt(0)}
-                                            </div>
-                                            <div>
-                                                <h2 className="text-3xl font-black tracking-tight">{selectedPatient.name}</h2>
-                                                <p className="text-cyan-400/80 font-black uppercase tracking-widest text-xs mt-1">Identity Verified Security Class A</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-wrap gap-4">
-                                            <span className="bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-300">Age: {selectedPatient.age} Solar Years</span>
-                                            <span className="bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-300">Origin: {(selectedPatient.address || "Unknown").split(',')[0]}</span>
-                                        </div>
-                                    </div>
+                        {!selectedPatient ? (
+                            <motion.div key="empty"
+                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                className="h-[680px] flex flex-col items-center justify-center bg-white rounded-2xl border border-dashed border-gray-200 text-center p-10">
+                                <div className="h-16 w-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-4">
+                                    <User className="h-8 w-8 text-gray-300" />
                                 </div>
-
-                                <form onSubmit={handleValidate} className="p-12 space-y-12">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-                                        <div className="space-y-6">
-                                            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
-                                                <div className="h-1.5 w-1.5 bg-cyan-500 rounded-full" /> Legacy Intelligence
-                                            </h3>
-                                            <div className="bg-cyan-50/30 p-8 rounded-[32px] border border-cyan-100/50 group/item">
-                                                <p className="text-[9px] font-black text-cyan-700 uppercase tracking-widest mb-3 opacity-60">Reported Condition</p>
-                                                <p className="text-lg font-black text-cyan-900 leading-relaxed italic">"{selectedPatient.problem}"</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-10">
-                                            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
-                                                <div className="h-1.5 w-1.5 bg-teal-500 rounded-full" /> Optimization Parameters
-                                            </h3>
-                                            <div className="space-y-8">
-                                                <div className="space-y-3">
-                                                    <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest ml-1">Classification Category</label>
-                                                    <select
-                                                        className="w-full h-16 rounded-2xl border border-gray-100 bg-white px-6 text-sm font-black transition-all focus:border-cyan-200 focus:ring-8 focus:ring-cyan-500/5 outline-none shadow-sm"
-                                                        value={validationData.category}
-                                                        onChange={(e) => setValidationData({ ...validationData, category: e.target.value })}
-                                                    >
-                                                        <option>General</option>
-                                                        <option>HalfYear</option>
-                                                        <option>Senior</option>
-                                                        <option>Emergency Elite</option>
-                                                    </select>
-                                                </div>
-                                                <div className="space-y-3">
-                                                    <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest ml-1">Economic Concession (%)</label>
-                                                    <div className="relative group">
-                                                        <Input
-                                                            type="number"
-                                                            className="h-16 rounded-2xl border-gray-100 bg-white px-6 font-black text-xl pr-20"
-                                                            value={validationData.concession}
-                                                            onChange={(e) => setValidationData({ ...validationData, concession: e.target.value })}
-                                                        />
-                                                        <div className="absolute right-6 top-1/2 -translate-y-1/2 font-black text-gray-300 group-focus-within:text-cyan-500 transition-colors">%</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex justify-between items-center pt-10 border-t border-gray-50">
-                                        <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.15em] max-w-[240px]">Confirming this validation will update universal node access permissions.</p>
-                                        <Button type="submit" className="h-20 px-16 text-xl font-black rounded-[28px] shadow-heavy group/btn" disabled={processing}>
-                                            {processing ? "Syncing..." : "Finalize Validation"}
-                                            <ShieldCheck className="ml-4 h-6 w-6 group-hover/btn:scale-110 transition-transform" />
-                                        </Button>
-                                    </div>
-                                </form>
+                                <p className="text-base font-black text-gray-900 mb-1">No patient selected</p>
+                                <p className="text-sm text-gray-400 max-w-xs">Select a patient from the list on the left to validate their profile.</p>
                             </motion.div>
                         ) : (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.98 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="h-[700px] flex flex-col items-center justify-center text-center p-20 bg-white/40 rounded-[48px] border-2 border-dashed border-gray-100 shadow-inner"
-                            >
-                                <div className="h-32 w-32 bg-white rounded-[40px] shadow-premium flex items-center justify-center mb-10 group-hover:rotate-3 transition-transform">
-                                    <Search className="h-12 w-12 text-cyan-200 animate-pulse" />
+                            <motion.div key={selectedPatient.uid}
+                                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                                className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+
+                                {/* Patient header */}
+                                <div className="p-6 border-b border-gray-50 flex items-center gap-4">
+                                    <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center font-black text-blue-600 text-lg shrink-0">
+                                        {(selectedPatient.name || selectedPatient.email || "?").charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h2 className="text-lg font-black text-gray-900 truncate">{displayName(selectedPatient)}</h2>
+                                        <p className="text-xs text-gray-400">{selectedPatient.email}</p>
+                                    </div>
+                                    <div className="ml-auto flex gap-2 shrink-0">
+                                        {selectedPatient.age && (
+                                            <span className="px-2.5 py-1 rounded-lg bg-gray-50 border border-gray-100 text-xs font-bold text-gray-600">
+                                                Age: {selectedPatient.age}
+                                            </span>
+                                        )}
+                                        <span className={`px-2.5 py-1 rounded-lg border text-xs font-bold ${
+                                            selectedPatient.status === "true"
+                                                ? "bg-green-50 border-green-100 text-green-700"
+                                                : "bg-amber-50 border-amber-100 text-amber-700"
+                                        }`}>
+                                            {selectedPatient.status === "true" ? "Scheduled" : "Not Scheduled"}
+                                        </span>
+                                    </div>
                                 </div>
-                                <h3 className="text-3xl font-black text-gray-900 mb-4 tracking-tighter">Null Selection Detected</h3>
-                                <p className="text-gray-400 font-medium max-w-sm mx-auto leading-relaxed">Initialize the validation sequence by selecting a patient node from the primary registry on the left.</p>
+
+                                <div className="p-6 space-y-6">
+                                    {/* Patient info */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                                <FileText className="h-3 w-3" /> Reported Condition
+                                            </p>
+                                            <p className="text-sm font-semibold text-gray-700">
+                                                {selectedPatient.problem || <span className="text-gray-400 italic">Not provided</span>}
+                                            </p>
+                                        </div>
+                                        <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                                <Mail className="h-3 w-3" /> Contact
+                                            </p>
+                                            <p className="text-sm font-semibold text-gray-700 truncate">{selectedPatient.email}</p>
+                                            {selectedPatient.phone && (
+                                                <p className="text-xs text-gray-400 mt-0.5">{selectedPatient.phone}</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Validation form */}
+                                    <form onSubmit={handleValidate} className="space-y-5">
+                                        <div className="border-t border-gray-50 pt-5">
+                                            <p className="text-xs font-black text-gray-500 uppercase tracking-wider mb-4">Validation Details</p>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Patient Category</label>
+                                                    <div className="relative">
+                                                        <ShieldCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                                                        <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                                                        <select
+                                                            value={form.category}
+                                                            onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
+                                                            className="w-full h-11 pl-10 pr-10 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all appearance-none cursor-pointer"
+                                                        >
+                                                            {CATEGORIES.map(c => (
+                                                                <option key={c.value} value={c.value}>{c.label}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Discount / Concession (%)</label>
+                                                    <div className="relative">
+                                                        <Percent className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                                        <Input
+                                                            type="number"
+                                                            min="0"
+                                                            max="100"
+                                                            className="pl-10"
+                                                            value={form.concession}
+                                                            onChange={e => setForm(p => ({ ...p, concession: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                    <p className="text-[10px] text-gray-400 ml-1">0 = full price · 100 = free</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <AnimatePresence>
+                                            {success && (
+                                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                                                    className="p-3.5 bg-green-50 border border-green-100 rounded-xl flex items-center gap-2.5 text-green-700 text-sm font-semibold">
+                                                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                                                    Patient validated successfully. You can update again or select another patient.
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+
+                                        <div className="flex items-center justify-between pt-2">
+                                            <p className="text-xs text-gray-400">
+                                                This sets the billing category used when generating invoices.
+                                            </p>
+                                            <button type="submit" disabled={processing}
+                                                className="h-10 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-bold flex items-center gap-2 transition-colors shadow-sm shadow-blue-600/20 shrink-0 ml-4">
+                                                {processing
+                                                    ? <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full" />
+                                                    : <><ShieldCheck className="h-4 w-4" /> Validate Patient</>}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
