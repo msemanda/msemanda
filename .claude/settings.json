@@ -4,7 +4,8 @@
       "Bash(git commit -m ' *)",
       "Bash(firebase --version)",
       "Bash(firebase projects:list)",
-      "Bash(firebase use *)"
+      "Bash(firebase use *)",
+      "Read(//d/Sema/Projects/Rhona/e-health-next/**)"
     ]
   }
 }
