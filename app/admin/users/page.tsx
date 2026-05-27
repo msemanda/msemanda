@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, deleteDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { UserProfile, UserRole } from "@/types";
 import { ALL_PERMISSIONS, PERMISSION_CATEGORIES, SPECIALIZATIONS } from "@/lib/permissions";
@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Users, Search, ChevronDown, ChevronUp, Pencil,
     CheckCircle2, X, Save, Stethoscope, Settings2,
-    Trash2, Shield
+    Trash2, Shield, UserPlus, Phone, Mail, RefreshCw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/Input";
@@ -29,6 +29,21 @@ const ROLE_TABS: { value: UserRole | "ALL"; label: string }[] = [
     { value: "PATIENT", label: "Patients" },
 ];
 
+const ALL_ROLES: { value: UserRole; label: string }[] = [
+    { value: "ADMIN", label: "System Administrator" },
+    { value: "DOCTOR", label: "Doctor" },
+    { value: "NURSE", label: "Nurse" },
+    { value: "RECEPTIONIST", label: "Receptionist" },
+    { value: "PHARMACY", label: "Pharmacist" },
+    { value: "LAB_TECH", label: "Lab Technician" },
+    { value: "RADIOLOGY_TECH", label: "Radiology Technician" },
+    { value: "PHYSIOTHERAPIST", label: "Physiotherapist" },
+    { value: "DENTIST", label: "Dentist" },
+    { value: "DIETITIAN", label: "Dietitian" },
+    { value: "EMERGENCY_STAFF", label: "Emergency Staff" },
+    { value: "PATIENT", label: "Patient" },
+];
+
 const ROLE_COLORS: Record<string, string> = {
     ADMIN: "bg-purple-50 text-purple-700 border-purple-100",
     PATIENT: "bg-blue-50 text-blue-700 border-blue-100",
@@ -45,10 +60,22 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 interface EditState {
+    name: string;
+    phone: string;
+    role: UserRole;
     title: string;
     specialization: string;
     permissions: string[];
 }
+
+interface CreateForm {
+    name: string;
+    email: string;
+    phone: string;
+    role: UserRole;
+}
+
+const EMPTY_CREATE: CreateForm = { name: "", email: "", phone: "", role: "DOCTOR" };
 
 export default function UserManagementPage() {
     const [users, setUsers] = useState<UserProfile[]>([]);
@@ -59,6 +86,10 @@ export default function UserManagementPage() {
     const [editState, setEditState] = useState<EditState | null>(null);
     const [saving, setSaving] = useState(false);
     const [savedUid, setSavedUid] = useState<string | null>(null);
+    const [showCreate, setShowCreate] = useState(false);
+    const [createForm, setCreateForm] = useState<CreateForm>(EMPTY_CREATE);
+    const [creating, setCreating] = useState(false);
+    const [createError, setCreateError] = useState("");
 
     useEffect(() => { fetchUsers(); }, []);
 
@@ -78,8 +109,8 @@ export default function UserManagementPage() {
         const roleMatch = roleFilter === "ALL" || u.role === roleFilter;
         const q = search.toLowerCase();
         const searchMatch = !q ||
-            u.name.toLowerCase().includes(q) ||
-            u.email.toLowerCase().includes(q) ||
+            u.name?.toLowerCase().includes(q) ||
+            u.email?.toLowerCase().includes(q) ||
             ((u as any).title || "").toLowerCase().includes(q) ||
             ((u as any).specialization || "").toLowerCase().includes(q);
         return roleMatch && searchMatch;
@@ -93,6 +124,9 @@ export default function UserManagementPage() {
         }
         setExpandedUid(user.uid);
         setEditState({
+            name: user.name || "",
+            phone: (user as any).phone || "",
+            role: user.role,
             title: (user as any).title || "",
             specialization: (user as any).specialization || "",
             permissions: user.permissions || [],
@@ -112,12 +146,15 @@ export default function UserManagementPage() {
         setSaving(true);
         try {
             await updateDoc(doc(db, "users", user.uid), {
+                name: editState.name,
+                phone: editState.phone,
+                role: editState.role,
                 title: editState.title,
                 specialization: editState.specialization,
                 permissions: editState.permissions,
             });
             setUsers(prev => prev.map(u =>
-                u.uid === user.uid ? { ...u, ...editState } as any : u
+                u.uid === user.uid ? { ...u, ...editState } as UserProfile : u
             ));
             setSavedUid(user.uid);
             setTimeout(() => setSavedUid(null), 2500);
@@ -131,12 +168,38 @@ export default function UserManagementPage() {
     };
 
     const handleDelete = async (user: UserProfile) => {
-        if (!confirm(`Remove ${user.name} from the system? This only removes their profile — their auth account remains.`)) return;
+        if (!confirm(`Remove ${user.name} from the system? This removes their profile — their login account remains.`)) return;
         try {
             await deleteDoc(doc(db, "users", user.uid));
             setUsers(prev => prev.filter(u => u.uid !== user.uid));
         } catch (err) {
             console.error(err);
+        }
+    };
+
+    const handleCreate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setCreating(true);
+        setCreateError("");
+        const email = createForm.email.toLowerCase().trim();
+        try {
+            // Create invite so user can activate at /setup
+            await setDoc(doc(db, "invites", email), {
+                email,
+                role: createForm.role,
+                name: createForm.name,
+                phone: createForm.phone,
+                invitedBy: "Administrator",
+                invitedAt: serverTimestamp(),
+                used: false,
+            });
+            setShowCreate(false);
+            setCreateForm(EMPTY_CREATE);
+            alert(`Profile created. Share /setup with ${email} to activate their account.`);
+        } catch (err: any) {
+            setCreateError(err.message || "Failed to create user.");
+        } finally {
+            setCreating(false);
         }
     };
 
@@ -146,14 +209,83 @@ export default function UserManagementPage() {
                 <div>
                     <h1 className="text-2xl font-black text-gray-900">User Management</h1>
                     <p className="text-sm text-gray-500 mt-0.5">
-                        Configure titles, specializations, and module access for every staff member
+                        Manage staff profiles, roles, and module access permissions
                     </p>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-400 bg-white border border-gray-100 rounded-xl px-3 py-2 shadow-sm">
-                    <Users className="h-3.5 w-3.5" />
-                    <span className="font-bold">{users.length} registered users</span>
+                <div className="flex items-center gap-2">
+                    <button onClick={fetchUsers}
+                        className="h-9 w-9 rounded-xl border border-gray-100 bg-white shadow-sm text-gray-400 hover:text-blue-600 hover:border-blue-100 flex items-center justify-center transition-colors">
+                        <RefreshCw className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => setShowCreate(true)}
+                        className="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-2 transition-colors shadow-sm shadow-blue-600/20">
+                        <UserPlus className="h-4 w-4" /> Add User
+                    </button>
+                    <div className="flex items-center gap-2 text-xs text-gray-400 bg-white border border-gray-100 rounded-xl px-3 py-2 shadow-sm">
+                        <Users className="h-3.5 w-3.5" />
+                        <span className="font-bold">{users.length} users</span>
+                    </div>
                 </div>
             </div>
+
+            {/* Create modal */}
+            <AnimatePresence>
+                {showCreate && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4"
+                        onClick={e => e.target === e.currentTarget && setShowCreate(false)}>
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-md p-6">
+                            <div className="flex items-center justify-between mb-5">
+                                <div>
+                                    <h2 className="text-base font-black text-gray-900">Add New User</h2>
+                                    <p className="text-xs text-gray-400 mt-0.5">Creates an invite — user activates at /setup</p>
+                                </div>
+                                <button onClick={() => setShowCreate(false)} className="h-8 w-8 rounded-xl border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-50">
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+                            <form onSubmit={handleCreate} className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Full Name</label>
+                                    <Input placeholder="e.g. Dr. Jane Nakato" required value={createForm.name}
+                                        onChange={e => setCreateForm(p => ({ ...p, name: e.target.value }))} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1 flex items-center gap-1"><Mail className="h-3 w-3" /> Email Address</label>
+                                    <Input type="email" placeholder="staff@hospital.com" required value={createForm.email}
+                                        onChange={e => setCreateForm(p => ({ ...p, email: e.target.value }))} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1 flex items-center gap-1"><Phone className="h-3 w-3" /> Phone</label>
+                                    <Input type="tel" placeholder="+256 700 000000" value={createForm.phone}
+                                        onChange={e => setCreateForm(p => ({ ...p, phone: e.target.value }))} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Role</label>
+                                    <select value={createForm.role} onChange={e => setCreateForm(p => ({ ...p, role: e.target.value as UserRole }))}
+                                        className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all cursor-pointer">
+                                        {ALL_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                                    </select>
+                                </div>
+                                {createError && (
+                                    <p className="text-xs font-semibold text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{createError}</p>
+                                )}
+                                <div className="flex gap-2 pt-1">
+                                    <button type="button" onClick={() => setShowCreate(false)}
+                                        className="flex-1 h-10 rounded-xl border border-gray-200 text-gray-600 text-sm font-bold hover:bg-gray-50 transition-colors">
+                                        Cancel
+                                    </button>
+                                    <button type="submit" disabled={creating}
+                                        className="flex-1 h-10 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-bold flex items-center justify-center gap-2 transition-colors">
+                                        {creating ? <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full" /> : <><UserPlus className="h-4 w-4" /> Create</>}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Role tabs */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-2 overflow-x-auto">
@@ -259,11 +391,47 @@ export default function UserManagementPage() {
                                             className="overflow-hidden border-t border-gray-50">
                                             <div className="p-5 space-y-6 bg-gray-50/30">
 
+                                                {/* Core identity */}
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                                    <div className="space-y-1.5">
+                                                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1 flex items-center gap-1.5">
+                                                            <Pencil className="h-3 w-3" /> Full Name
+                                                        </label>
+                                                        <Input
+                                                            placeholder="Full name"
+                                                            value={editState.name}
+                                                            onChange={e => setEditState(p => p ? { ...p, name: e.target.value } : p)}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1 flex items-center gap-1.5">
+                                                            <Phone className="h-3 w-3" /> Phone
+                                                        </label>
+                                                        <Input
+                                                            type="tel"
+                                                            placeholder="+256 700 000000"
+                                                            value={editState.phone}
+                                                            onChange={e => setEditState(p => p ? { ...p, phone: e.target.value } : p)}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1 flex items-center gap-1.5">
+                                                            <Shield className="h-3 w-3" /> Role
+                                                        </label>
+                                                        <select
+                                                            value={editState.role}
+                                                            onChange={e => setEditState(p => p ? { ...p, role: e.target.value as UserRole } : p)}
+                                                            className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all cursor-pointer">
+                                                            {ALL_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                                                        </select>
+                                                    </div>
+                                                </div>
+
                                                 {/* Title & Specialization */}
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                     <div className="space-y-1.5">
                                                         <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1 flex items-center gap-1.5">
-                                                            <Pencil className="h-3 w-3" /> Job Title / Display Name
+                                                            <Pencil className="h-3 w-3" /> Job Title
                                                         </label>
                                                         <Input
                                                             placeholder="e.g. Senior Consultant, Head of Pediatrics"
@@ -273,7 +441,7 @@ export default function UserManagementPage() {
                                                     </div>
                                                     <div className="space-y-1.5">
                                                         <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1 flex items-center gap-1.5">
-                                                            <Stethoscope className="h-3 w-3" /> Specialization / Category
+                                                            <Stethoscope className="h-3 w-3" /> Specialization
                                                         </label>
                                                         <select
                                                             value={editState.specialization}

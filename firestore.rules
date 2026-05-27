@@ -136,6 +136,12 @@ service cloud.firestore {
       allow write: if isAdmin() || hasRole('LAB_TECH');
     }
 
+    // ── Home care visits ─────────────────────────────────────────────────────
+    match /homeCareVisits/{visitId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('NURSE') || hasRole('DOCTOR');
+    }
+
     // ── Emergency cases ──────────────────────────────────────────────────────
     match /emergencyCases/{caseId} {
       allow read:  if isAuth();
