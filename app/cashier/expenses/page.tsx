@@ -132,7 +132,7 @@ export default function ExpensesPage() {
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Category *</label>
-                                        <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
+                                        <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value as typeof EXPENSE_CATEGORIES[number] }))}
                                             className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-400/20 outline-none transition-all cursor-pointer">
                                             {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                                         </select>

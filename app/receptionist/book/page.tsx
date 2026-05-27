@@ -7,10 +7,9 @@ import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Stethoscope, User, CalendarDays, Clock,
-    CheckCircle2, ShieldCheck, ArrowRight, Search
+    CheckCircle2, ShieldCheck, ArrowRight, ChevronDown
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
-import { DoctorProfile } from "@/types";
 
 const TIME_SLOTS = [
     "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
@@ -18,12 +17,13 @@ const TIME_SLOTS = [
     "15:30", "16:00", "16:30",
 ];
 
+type DoctorOption = { uid: string; name: string; specialization: string };
+
 export default function BookAppointmentPage() {
     const { profile } = useAuth();
-    const [doctors, setDoctors] = useState<DoctorProfile[]>([]);
+    const [doctors, setDoctors] = useState<DoctorOption[]>([]);
     const [loadingDoctors, setLoadingDoctors] = useState(true);
-    const [doctorSearch, setDoctorSearch] = useState("");
-    const [selectedDoctor, setSelectedDoctor] = useState<DoctorProfile | null>(null);
+    const [selectedDoctor, setSelectedDoctor] = useState<DoctorOption | null>(null);
 
     const [form, setForm] = useState({
         patientName: "",
@@ -41,12 +41,24 @@ export default function BookAppointmentPage() {
         const fetchDoctors = async () => {
             try {
                 const q = query(
-                    collection(db, "users"),
-                    where("role", "==", "DOCTOR"),
-                    where("approved", "==", true)
+                    collection(db, "appointments"),
+                    where("status", "==", "COMPLETED")
                 );
                 const snap = await getDocs(q);
-                setDoctors(snap.docs.map(d => d.data() as DoctorProfile));
+                const seen = new Set<string>();
+                const unique: DoctorOption[] = [];
+                snap.docs.forEach(d => {
+                    const data = d.data();
+                    if (data.doctorId && !seen.has(data.doctorId)) {
+                        seen.add(data.doctorId);
+                        unique.push({
+                            uid: data.doctorId,
+                            name: data.doctorName || "Unknown Doctor",
+                            specialization: data.specialization || "General",
+                        });
+                    }
+                });
+                setDoctors(unique);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -56,11 +68,9 @@ export default function BookAppointmentPage() {
         fetchDoctors();
     }, []);
 
-    const filteredDoctors = doctors.filter(d =>
-        !doctorSearch ||
-        d.name.toLowerCase().includes(doctorSearch.toLowerCase()) ||
-        (d.specialization || "").toLowerCase().includes(doctorSearch.toLowerCase())
-    );
+    const handleDoctorChange = (uid: string) => {
+        setSelectedDoctor(doctors.find(d => d.uid === uid) || null);
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -134,41 +144,45 @@ export default function BookAppointmentPage() {
                 <h2 className="text-base font-black text-gray-900 mb-4 flex items-center gap-2">
                     <Stethoscope className="h-4.5 w-4.5 text-blue-600" /> Select Doctor
                 </h2>
-                <div className="relative mb-4">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input placeholder="Search by name or specialization..."
-                        className="pl-10" value={doctorSearch}
-                        onChange={e => setDoctorSearch(e.target.value)} />
-                </div>
+
                 {loadingDoctors ? (
                     <div className="flex items-center justify-center py-8">
                         <div className="animate-spin h-6 w-6 border-[3px] border-blue-100 border-t-blue-600 rounded-full" />
                     </div>
-                ) : filteredDoctors.length === 0 ? (
-                    <p className="text-sm text-gray-400 text-center py-6">No approved doctors found.</p>
+                ) : doctors.length === 0 ? (
+                    <p className="text-sm text-gray-400 text-center py-6">No doctors with completed appointments found.</p>
                 ) : (
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {filteredDoctors.map(doctor => (
-                            <button key={doctor.uid}
-                                type="button"
-                                onClick={() => setSelectedDoctor(doctor)}
-                                className={`w-full text-left p-3.5 rounded-xl border transition-all flex items-center gap-3 ${
-                                    selectedDoctor?.uid === doctor.uid
-                                        ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20"
-                                        : "border-gray-100 hover:border-gray-200 hover:bg-gray-50"
-                                }`}>
-                                <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center font-black text-blue-600 text-xs shrink-0">
-                                    {doctor.name.charAt(0)}
+                    <div className="space-y-3">
+                        <div className="relative">
+                            <Stethoscope className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                            <select
+                                value={selectedDoctor?.uid || ""}
+                                onChange={e => handleDoctorChange(e.target.value)}
+                                className="w-full h-11 pl-10 pr-10 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all appearance-none cursor-pointer"
+                            >
+                                <option value="">— Select a doctor —</option>
+                                {doctors.map(d => (
+                                    <option key={d.uid} value={d.uid}>
+                                        {d.name} · {d.specialization}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {selectedDoctor && (
+                            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                                className="flex items-center gap-3 p-3.5 bg-blue-50 rounded-xl border border-blue-100">
+                                <div className="h-9 w-9 rounded-xl bg-blue-100 flex items-center justify-center font-black text-blue-700 text-xs shrink-0">
+                                    {selectedDoctor.name.charAt(0)}
                                 </div>
                                 <div>
-                                    <p className="text-sm font-black text-gray-900">{doctor.name}</p>
-                                    <p className="text-xs text-gray-400">{doctor.specialization || "General"}</p>
+                                    <p className="text-sm font-black text-gray-900">{selectedDoctor.name}</p>
+                                    <p className="text-xs text-gray-500">{selectedDoctor.specialization}</p>
                                 </div>
-                                {selectedDoctor?.uid === doctor.uid && (
-                                    <CheckCircle2 className="h-4 w-4 text-blue-600 ml-auto" />
-                                )}
-                            </button>
-                        ))}
+                                <CheckCircle2 className="h-4 w-4 text-blue-600 ml-auto" />
+                            </motion.div>
+                        )}
                     </div>
                 )}
             </div>

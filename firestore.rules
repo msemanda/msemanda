@@ -90,8 +90,15 @@ service cloud.firestore {
 
     // ── Consultation fees ────────────────────────────────────────────────────
     match /consultationFees/{feeId} {
-      allow read:  if isAuth();
-      allow write: if isAdmin() || isReceptionist();
+      allow read:   if isAuth();
+      allow create: if isAdmin() || isReceptionist();
+      allow update: if isAdmin() || isReceptionist() || (
+        hasRole('PATIENT') &&
+        resource.data.patientEmail == request.auth.token.email &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'paymentMethod', 'paymentReference', 'patientPaidAt'])
+      );
+      allow delete: if isAdmin();
     }
 
     // ── Diagnostics ──────────────────────────────────────────────────────────

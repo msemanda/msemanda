@@ -16,14 +16,14 @@ export default function PatientLayout({
     const router = useRouter();
 
     useEffect(() => {
-        if (!loading && (!profile || profile.role !== "PATIENT")) {
+        if (!loading && (!profile || (profile.role !== "PATIENT" && profile.role !== "ADMIN"))) {
             router.push("/login");
         }
     }, [profile, loading, router]);
 
     if (loading) return <LoadingScreen label="Loading Patient Portal" />;
 
-    if (!profile || profile.role !== "PATIENT") return null;
+    if (!profile || (profile.role !== "PATIENT" && profile.role !== "ADMIN")) return null;
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
