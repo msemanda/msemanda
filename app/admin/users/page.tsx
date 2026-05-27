@@ -41,6 +41,7 @@ const ALL_ROLES: { value: UserRole; label: string }[] = [
     { value: "DENTIST", label: "Dentist" },
     { value: "DIETITIAN", label: "Dietitian" },
     { value: "EMERGENCY_STAFF", label: "Emergency Staff" },
+    { value: "CASHIER", label: "Cashier / Accounts" },
     { value: "PATIENT", label: "Patient" },
 ];
 

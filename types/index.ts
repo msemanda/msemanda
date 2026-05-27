@@ -10,7 +10,8 @@ export type UserRole =
     | "DENTIST"
     | "DIETITIAN"
     | "EMERGENCY_STAFF"
-    | "RECEPTIONIST";
+    | "RECEPTIONIST"
+    | "CASHIER";
 
 export interface UserProfile {
     uid: string;
@@ -314,5 +315,47 @@ export interface BloodBankRecord {
     donorId?: string;
     expiryDate: any;
     status: "AVAILABLE" | "RESERVED" | "USED" | "EXPIRED";
+    notes?: string;
+}
+
+export type TransactionType = "INCOME" | "EXPENSE";
+export type PaymentMethod = "CASH" | "MOBILE_MONEY" | "BANK_TRANSFER" | "INSURANCE";
+
+export const INCOME_CATEGORIES = [
+    "Consultation Fee",
+    "Laboratory Fee",
+    "Radiology Fee",
+    "Pharmacy Sales",
+    "Admission Fee",
+    "Procedure Fee",
+    "Insurance Claim",
+    "Other Income",
+] as const;
+
+export const EXPENSE_CATEGORIES = [
+    "Salaries & Wages",
+    "Medical Supplies",
+    "Drugs & Pharmaceuticals",
+    "Utilities",
+    "Equipment & Maintenance",
+    "Rent & Facilities",
+    "Transport & Logistics",
+    "Administrative",
+    "Other Expense",
+] as const;
+
+export interface Transaction {
+    id: string;
+    type: TransactionType;
+    category: string;
+    description: string;
+    amount: number;
+    paymentMethod: PaymentMethod;
+    date: any;
+    recordedBy: string;
+    recordedAt: any;
+    patientId?: string;
+    patientName?: string;
+    reference?: string;
     notes?: string;
 }

@@ -26,6 +26,7 @@ import {
     Package,
     Droplets,
     Settings,
+    Wallet,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { motion } from "framer-motion";
@@ -69,9 +70,19 @@ const menuGroups = [
         ],
     },
     {
-        label: "Finance & Security",
+        label: "Finance & Accounts",
         items: [
+            { name: "Cashier Dashboard", href: "/cashier/dashboard", icon: Wallet },
+            { name: "Income", href: "/cashier/income", icon: CreditCard },
+            { name: "Expenses", href: "/cashier/expenses", icon: CreditCard },
+            { name: "All Transactions", href: "/cashier/transactions", icon: CreditCard },
+            { name: "Financial Reports", href: "/cashier/reports", icon: CreditCard },
             { name: "Billing & Revenue", href: "/admin/generate-bill", icon: CreditCard },
+        ],
+    },
+    {
+        label: "Security & Config",
+        items: [
             { name: "Access Logs", href: "/admin/sessions", icon: Shield },
             { name: "System Config", href: "/admin/config", icon: Settings },
         ],

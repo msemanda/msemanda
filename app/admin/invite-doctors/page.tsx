@@ -27,6 +27,7 @@ const STAFF_ROLES: { value: UserRole; label: string }[] = [
     { value: "DIETITIAN", label: "Dietitian" },
     { value: "EMERGENCY_STAFF", label: "Emergency Staff" },
     { value: "PHARMACY", label: "Pharmacist" },
+    { value: "CASHIER", label: "Cashier / Accounts" },
 ];
 
 const ROLE_COLORS: Record<string, string> = {

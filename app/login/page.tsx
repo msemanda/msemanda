@@ -32,6 +32,7 @@ function getRoleDashboard(role: UserRole): string {
         case "DIETITIAN": return "/dietary/dashboard";
         case "EMERGENCY_STAFF": return "/emergency/dashboard";
         case "RECEPTIONIST": return "/receptionist/dashboard";
+        case "CASHIER": return "/cashier/dashboard";
         default: return "/login";
     }
 }
