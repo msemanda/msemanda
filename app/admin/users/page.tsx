@@ -1,202 +1,382 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { collection, query, getDocs, doc, deleteDoc, updateDoc } from "firebase/firestore";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { User, Shield, Trash2, Search, Filter, Mail, MapPin, UserCheck, UserPlus } from "lucide-react";
+import { UserProfile, UserRole } from "@/types";
+import { ALL_PERMISSIONS, PERMISSION_CATEGORIES, SPECIALIZATIONS } from "@/lib/permissions";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+    Users, Search, ChevronDown, ChevronUp, Pencil,
+    CheckCircle2, X, Save, Stethoscope, Settings2,
+    Trash2, Shield
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { UserProfile } from "@/types";
+import { Input } from "@/components/ui/Input";
+
+const ROLE_TABS: { value: UserRole | "ALL"; label: string }[] = [
+    { value: "ALL", label: "All Users" },
+    { value: "DOCTOR", label: "Doctors" },
+    { value: "RECEPTIONIST", label: "Receptionists" },
+    { value: "NURSE", label: "Nurses" },
+    { value: "LAB_TECH", label: "Lab Tech" },
+    { value: "RADIOLOGY_TECH", label: "Radiology" },
+    { value: "PHYSIOTHERAPIST", label: "Physio" },
+    { value: "DENTIST", label: "Dentists" },
+    { value: "DIETITIAN", label: "Dietitians" },
+    { value: "EMERGENCY_STAFF", label: "Emergency" },
+    { value: "PHARMACY", label: "Pharmacy" },
+    { value: "PATIENT", label: "Patients" },
+];
+
+const ROLE_COLORS: Record<string, string> = {
+    ADMIN: "bg-purple-50 text-purple-700 border-purple-100",
+    PATIENT: "bg-blue-50 text-blue-700 border-blue-100",
+    DOCTOR: "bg-teal-50 text-teal-700 border-teal-100",
+    RECEPTIONIST: "bg-indigo-50 text-indigo-700 border-indigo-100",
+    NURSE: "bg-green-50 text-green-700 border-green-100",
+    LAB_TECH: "bg-amber-50 text-amber-700 border-amber-100",
+    RADIOLOGY_TECH: "bg-violet-50 text-violet-700 border-violet-100",
+    PHYSIOTHERAPIST: "bg-orange-50 text-orange-700 border-orange-100",
+    DENTIST: "bg-pink-50 text-pink-700 border-pink-100",
+    DIETITIAN: "bg-emerald-50 text-emerald-700 border-emerald-100",
+    EMERGENCY_STAFF: "bg-red-50 text-red-700 border-red-100",
+    PHARMACY: "bg-sky-50 text-sky-700 border-sky-100",
+};
+
+interface EditState {
+    title: string;
+    specialization: string;
+    permissions: string[];
+}
 
 export default function UserManagementPage() {
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [roleFilter, setRoleFilter] = useState("all");
+    const [roleFilter, setRoleFilter] = useState<UserRole | "ALL">("ALL");
+    const [search, setSearch] = useState("");
+    const [expandedUid, setExpandedUid] = useState<string | null>(null);
+    const [editState, setEditState] = useState<EditState | null>(null);
+    const [saving, setSaving] = useState(false);
+    const [savedUid, setSavedUid] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const q = query(collection(db, "users"));
-                const querySnapshot = await getDocs(q);
-                const usersList = querySnapshot.docs.map(doc => ({
-                    uid: doc.id,
-                    ...doc.data()
-                })) as UserProfile[];
-                setUsers(usersList);
-            } catch (error) {
-                console.error("Error fetching users:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+    useEffect(() => { fetchUsers(); }, []);
 
-        fetchUsers();
-    }, []);
-
-    const handleDeleteUser = async (uid: string) => {
-        if (window.confirm("Are you sure you want to terminate this user node? This action is irreversible.")) {
-            try {
-                await deleteDoc(doc(db, "users", uid));
-                setUsers(users.filter(u => u.uid !== uid));
-            } catch (error) {
-                console.error("Error deleting user:", error);
-            }
+    const fetchUsers = async () => {
+        setLoading(true);
+        try {
+            const snap = await getDocs(collection(db, "users"));
+            setUsers(snap.docs.map(d => ({ uid: d.id, ...d.data() } as UserProfile)));
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const filteredUsers = users.filter(user => {
-        const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesRole = roleFilter === "all" || user.role === roleFilter;
-        return matchesSearch && matchesRole;
-    });
+    const filtered = useMemo(() => users.filter(u => {
+        const roleMatch = roleFilter === "ALL" || u.role === roleFilter;
+        const q = search.toLowerCase();
+        const searchMatch = !q ||
+            u.name.toLowerCase().includes(q) ||
+            u.email.toLowerCase().includes(q) ||
+            ((u as any).title || "").toLowerCase().includes(q) ||
+            ((u as any).specialization || "").toLowerCase().includes(q);
+        return roleMatch && searchMatch;
+    }), [users, roleFilter, search]);
 
-    const getRoleColor = (role: string) => {
-        switch (role) {
-            case "admin": return "text-red-600 bg-red-50 border-red-100";
-            case "doctor": return "text-cyan-600 bg-cyan-50 border-cyan-100";
-            case "pharmacy": return "text-teal-600 bg-teal-50 border-teal-100";
-            case "patient": return "text-indigo-600 bg-indigo-50 border-indigo-100";
-            default: return "text-gray-600 bg-gray-50 border-gray-100";
+    const openEdit = (user: UserProfile) => {
+        if (expandedUid === user.uid) {
+            setExpandedUid(null);
+            setEditState(null);
+            return;
+        }
+        setExpandedUid(user.uid);
+        setEditState({
+            title: (user as any).title || "",
+            specialization: (user as any).specialization || "",
+            permissions: user.permissions || [],
+        });
+    };
+
+    const togglePermission = (key: string) => {
+        setEditState(prev => {
+            if (!prev) return prev;
+            const has = prev.permissions.includes(key);
+            return { ...prev, permissions: has ? prev.permissions.filter(p => p !== key) : [...prev.permissions, key] };
+        });
+    };
+
+    const handleSave = async (user: UserProfile) => {
+        if (!editState) return;
+        setSaving(true);
+        try {
+            await updateDoc(doc(db, "users", user.uid), {
+                title: editState.title,
+                specialization: editState.specialization,
+                permissions: editState.permissions,
+            });
+            setUsers(prev => prev.map(u =>
+                u.uid === user.uid ? { ...u, ...editState } as any : u
+            ));
+            setSavedUid(user.uid);
+            setTimeout(() => setSavedUid(null), 2500);
+            setExpandedUid(null);
+            setEditState(null);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDelete = async (user: UserProfile) => {
+        if (!confirm(`Remove ${user.name} from the system? This only removes their profile — their auth account remains.`)) return;
+        try {
+            await deleteDoc(doc(db, "users", user.uid));
+            setUsers(prev => prev.filter(u => u.uid !== user.uid));
+        } catch (err) {
+            console.error(err);
         }
     };
 
     return (
-        <div className="space-y-12 pb-24">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-                <div className="space-y-1">
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tight">User <span className="text-gradient-cyan">Management</span></h1>
-                    <p className="text-gray-700 font-medium">Control and oversee all active nodes in the medical network.</p>
+        <div className="space-y-6 pb-10">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-black text-gray-900">User Management</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                        Configure titles, specializations, and module access for every staff member
+                    </p>
                 </div>
-                <div className="flex items-center gap-4">
-                    <div className="h-12 px-6 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-xs font-black text-gray-400 uppercase tracking-widest shadow-sm">
-                        Total Capacity: {users.length} Nodes
-                    </div>
+                <div className="flex items-center gap-2 text-xs text-gray-400 bg-white border border-gray-100 rounded-xl px-3 py-2 shadow-sm">
+                    <Users className="h-3.5 w-3.5" />
+                    <span className="font-bold">{users.length} registered users</span>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
-                <div className="lg:col-span-1 space-y-8">
-                    <div className="bg-glass p-8 rounded-[40px] shadow-premium border border-white sticky top-12 space-y-10">
-                        <div className="space-y-4">
-                            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Registry Search</h3>
-                            <div className="relative group">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-cyan-500 transition-colors" />
-                                <Input
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder="Name or Email..."
-                                    className="pl-12 h-14 rounded-2xl bg-white border-gray-100 focus:border-cyan-200 transition-all font-bold text-sm"
-                                />
-                            </div>
-                        </div>
+            {/* Role tabs */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-2 overflow-x-auto">
+                <div className="flex gap-1 min-w-max">
+                    {ROLE_TABS.map(t => (
+                        <button key={t.value} onClick={() => setRoleFilter(t.value)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                                roleFilter === t.value ? "bg-blue-600 text-white shadow-sm" : "text-gray-600 hover:bg-gray-50"
+                            }`}>
+                            {t.label}
+                            {t.value !== "ALL" && (
+                                <span className="ml-1.5 text-[10px] opacity-60">
+                                    {users.filter(u => u.role === t.value).length}
+                                </span>
+                            )}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
-                        <div className="space-y-4">
-                            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Role Categorization</h3>
-                            <div className="space-y-2">
-                                {["all", "admin", "doctor", "patient", "pharmacy"].map((role) => (
-                                    <button
-                                        key={role}
-                                        onClick={() => setRoleFilter(role)}
-                                        className={cn(
-                                            "w-full text-left px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border",
-                                            roleFilter === role
-                                                ? "bg-cyan-600 text-white border-cyan-500 shadow-lg shadow-cyan-600/20"
-                                                : "bg-white text-gray-400 border-gray-50 hover:border-cyan-100 hover:text-cyan-600"
+            {/* Search */}
+            <div className="relative max-w-sm">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input placeholder="Search name, email, title or specialization..."
+                    className="pl-10" value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+
+            {/* User list */}
+            {loading ? (
+                <div className="flex items-center justify-center py-20 bg-white rounded-2xl border border-gray-100">
+                    <div className="animate-spin h-8 w-8 border-[3px] border-blue-100 border-t-blue-600 rounded-full" />
+                </div>
+            ) : filtered.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-gray-200 text-center">
+                    <Users className="h-10 w-10 text-gray-200 mb-3" />
+                    <p className="text-sm font-black text-gray-900">No users found</p>
+                </div>
+            ) : (
+                <div className="space-y-2">
+                    {filtered.map((user, idx) => {
+                        const isExpanded = expandedUid === user.uid;
+                        const wasSaved = savedUid === user.uid;
+                        const roleColor = ROLE_COLORS[user.role] || "bg-gray-50 text-gray-700 border-gray-100";
+                        const permCount = user.permissions?.length ?? null;
+                        const spec = (user as any).specialization;
+                        const title = (user as any).title;
+
+                        return (
+                            <motion.div key={user.uid}
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: Math.min(idx * 0.02, 0.3) }}
+                                className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+
+                                {/* Row */}
+                                <div className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-gray-50/50 transition-colors select-none"
+                                    onClick={() => openEdit(user)}>
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center font-black text-white text-xs shrink-0">
+                                            {user.name?.charAt(0)?.toUpperCase() || "?"}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <p className="text-sm font-black text-gray-900">{user.name}</p>
+                                                {title && <span className="text-[10px] text-gray-400 italic">— {title}</span>}
+                                            </div>
+                                            <p className="text-xs text-gray-400 truncate">
+                                                {user.email}
+                                                {spec && <span className="ml-2 text-blue-500 font-semibold">· {spec}</span>}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 shrink-0 ml-3">
+                                        <span className={`hidden sm:inline text-[10px] font-bold px-2.5 py-1 rounded-full border ${roleColor}`}>
+                                            {user.role.replace(/_/g, " ")}
+                                        </span>
+                                        {wasSaved ? (
+                                            <span className="text-[10px] font-bold text-green-600 bg-green-50 border border-green-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                <CheckCircle2 className="h-3 w-3" /> Saved
+                                            </span>
+                                        ) : permCount !== null ? (
+                                            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+                                                {permCount} perms
+                                            </span>
+                                        ) : (
+                                            <span className="text-[10px] font-bold text-gray-300 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-full">
+                                                full access
+                                            </span>
                                         )}
-                                    >
-                                        {role}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                        {isExpanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
+                                    </div>
+                                </div>
 
-                <div className="lg:col-span-3">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-glass rounded-[40px] shadow-premium border border-white overflow-hidden"
-                    >
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-gray-50/50">
-                                        <th className="px-10 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">User Identity</th>
-                                        <th className="px-10 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Role Status</th>
-                                        <th className="px-10 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-right">Operational Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-50">
-                                    {loading ? (
-                                        <tr><td colSpan={3} className="px-10 py-20 text-center"><div className="animate-spin h-10 w-10 border-4 border-cyan-100 border-t-cyan-600 rounded-full mx-auto" /></td></tr>
-                                    ) : filteredUsers.length === 0 ? (
-                                        <tr><td colSpan={3} className="px-10 py-24 text-center text-gray-400 font-bold uppercase tracking-widest italic text-sm">No network nodes matched the criteria.</td></tr>
-                                    ) : (
-                                        <AnimatePresence>
-                                            {filteredUsers.map((user, idx) => (
-                                                <motion.tr
-                                                    key={user.uid}
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    exit={{ opacity: 0, x: -20 }}
-                                                    className="group hover:bg-gray-50/50 transition-colors"
-                                                >
-                                                    <td className="px-10 py-8">
-                                                        <div className="flex items-center gap-5">
-                                                            <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-cyan-400 to-teal-400 flex items-center justify-center text-white text-xl font-black shadow-lg">
-                                                                {user.name.charAt(0)}
-                                                            </div>
-                                                            <div>
-                                                                <div className="text-lg font-black text-gray-900 group-hover:text-cyan-600 transition-colors">{user.name}</div>
-                                                                <div className="flex items-center gap-3 text-sm font-bold text-gray-700">
-                                                                    <Mail className="h-3.5 w-3.5 text-gray-400" /> {user.email}
+                                {/* Expand panel */}
+                                <AnimatePresence>
+                                    {isExpanded && editState && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: "auto", opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="overflow-hidden border-t border-gray-50">
+                                            <div className="p-5 space-y-6 bg-gray-50/30">
+
+                                                {/* Title & Specialization */}
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    <div className="space-y-1.5">
+                                                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1 flex items-center gap-1.5">
+                                                            <Pencil className="h-3 w-3" /> Job Title / Display Name
+                                                        </label>
+                                                        <Input
+                                                            placeholder="e.g. Senior Consultant, Head of Pediatrics"
+                                                            value={editState.title}
+                                                            onChange={e => setEditState(p => p ? { ...p, title: e.target.value } : p)}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1 flex items-center gap-1.5">
+                                                            <Stethoscope className="h-3 w-3" /> Specialization / Category
+                                                        </label>
+                                                        <select
+                                                            value={editState.specialization}
+                                                            onChange={e => setEditState(p => p ? { ...p, specialization: e.target.value } : p)}
+                                                            className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all cursor-pointer">
+                                                            <option value="">— Select specialization —</option>
+                                                            {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                {/* Permissions */}
+                                                <div>
+                                                    <div className="flex items-center justify-between mb-3">
+                                                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                                                            <Settings2 className="h-3 w-3" /> Module Access Permissions
+                                                        </label>
+                                                        <div className="flex gap-3">
+                                                            <button type="button"
+                                                                onClick={() => setEditState(p => p ? { ...p, permissions: ALL_PERMISSIONS.map(x => x.key) } : p)}
+                                                                className="text-[10px] font-bold text-blue-600 hover:underline">
+                                                                Grant All
+                                                            </button>
+                                                            <span className="text-gray-200">|</span>
+                                                            <button type="button"
+                                                                onClick={() => setEditState(p => p ? { ...p, permissions: [] } : p)}
+                                                                className="text-[10px] font-bold text-red-400 hover:underline">
+                                                                Revoke All
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-5">
+                                                        {PERMISSION_CATEGORIES.map(cat => {
+                                                            const catPerms = ALL_PERMISSIONS.filter(p => p.category === cat);
+                                                            return (
+                                                                <div key={cat}>
+                                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                                                        <Shield className="h-3 w-3" /> {cat}
+                                                                    </p>
+                                                                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                                                                        {catPerms.map(perm => {
+                                                                            const checked = editState.permissions.includes(perm.key);
+                                                                            return (
+                                                                                <button key={perm.key} type="button"
+                                                                                    onClick={() => togglePermission(perm.key)}
+                                                                                    className={cn(
+                                                                                        "flex items-start gap-2.5 p-3 rounded-xl border text-left transition-all",
+                                                                                        checked
+                                                                                            ? "bg-blue-50 border-blue-200 ring-1 ring-blue-100"
+                                                                                            : "bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+                                                                                    )}>
+                                                                                    <div className={cn(
+                                                                                        "h-4 w-4 rounded-md border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all",
+                                                                                        checked ? "bg-blue-600 border-blue-600" : "border-gray-300 bg-white"
+                                                                                    )}>
+                                                                                        {checked && <CheckCircle2 className="h-2.5 w-2.5 text-white" />}
+                                                                                    </div>
+                                                                                    <div className="min-w-0">
+                                                                                        <p className={cn("text-xs font-bold leading-tight truncate", checked ? "text-blue-700" : "text-gray-700")}>
+                                                                                            {perm.label}
+                                                                                        </p>
+                                                                                        <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">{perm.description}</p>
+                                                                                    </div>
+                                                                                </button>
+                                                                            );
+                                                                        })}
+                                                                    </div>
                                                                 </div>
-                                                                <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">Node ID: {user.uid.substring(0, 16)}...</div>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-10 py-8">
-                                                        <div className={cn(
-                                                            "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border w-fit",
-                                                            getRoleColor(user.role)
-                                                        )}>
-                                                            {user.role} Class Node
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-10 py-8 text-right">
-                                                        <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                className="h-10 px-4 rounded-xl border-gray-100 text-gray-400 hover:text-cyan-600 hover:border-cyan-100"
-                                                            >
-                                                                Initialize Sync
-                                                            </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() => handleDeleteUser(user.uid)}
-                                                                className="h-10 w-10 p-0 rounded-xl text-red-100 hover:text-red-600 hover:bg-red-50"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </div>
-                                                    </td>
-                                                </motion.tr>
-                                            ))}
-                                        </AnimatePresence>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+
+                                                {/* Actions */}
+                                                <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                                                    <button type="button" onClick={() => handleDelete(user)}
+                                                        className="h-9 px-3 rounded-xl border border-red-100 text-red-400 hover:bg-red-50 text-xs font-bold flex items-center gap-1.5 transition-colors">
+                                                        <Trash2 className="h-3.5 w-3.5" /> Remove Profile
+                                                    </button>
+                                                    <div className="flex gap-2">
+                                                        <button type="button"
+                                                            onClick={() => { setExpandedUid(null); setEditState(null); }}
+                                                            className="h-10 px-4 rounded-xl border border-gray-200 text-gray-600 text-sm font-bold hover:bg-gray-50 transition-colors flex items-center gap-2">
+                                                            <X className="h-4 w-4" /> Cancel
+                                                        </button>
+                                                        <button type="button" onClick={() => handleSave(user)} disabled={saving}
+                                                            className="h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-bold flex items-center gap-2 transition-colors shadow-sm shadow-blue-600/20">
+                                                            {saving
+                                                                ? <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full" />
+                                                                : <><Save className="h-4 w-4" /> Save Changes</>}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </motion.div>
                                     )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </motion.div>
+                                </AnimatePresence>
+                            </motion.div>
+                        );
+                    })}
                 </div>
-            </div>
+            )}
         </div>
     );
 }

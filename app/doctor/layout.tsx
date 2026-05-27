@@ -22,23 +22,17 @@ const sidebarGroups: SidebarGroup[] = [
     {
         label: "Patient Care",
         items: [
-            { name: "Consultations", href: "/doctor/dashboard", icon: Users },
-            { name: "Electronic Medical Records", href: "/doctor/emr", icon: FileText },
-            { name: "Diagnostic History", href: "/doctor/diagnostics", icon: Activity },
+            { name: "My Patients", href: "/doctor/patients", icon: UserCheck },
+            { name: "Electronic Medical Records", href: "/doctor/emr", icon: FileText, permission: "emr" },
+            { name: "Diagnostic History", href: "/doctor/diagnostics", icon: Activity, permission: "diagnostics" },
         ],
     },
     {
         label: "Clinical Tools",
         items: [
-            { name: "CPOE — Order Entry", href: "/doctor/cpoe", icon: ClipboardList },
-            { name: "Clinical Order Sets", href: "/doctor/order-sets", icon: Stethoscope },
-            { name: "Appointments", href: "/doctor/appointments", icon: CalendarDays },
-        ],
-    },
-    {
-        label: "Teams",
-        items: [
-            { name: "My Patients", href: "/doctor/patients", icon: UserCheck },
+            { name: "CPOE — Order Entry", href: "/doctor/cpoe", icon: ClipboardList, permission: "cpoe" },
+            { name: "Clinical Order Sets", href: "/doctor/order-sets", icon: Stethoscope, permission: "order_sets" },
+            { name: "Appointments", href: "/doctor/appointments", icon: CalendarDays, permission: "appointments" },
         ],
     },
 ];

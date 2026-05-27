@@ -11,6 +11,7 @@ export interface SidebarItem {
     name: string;
     href: string;
     icon: LucideIcon;
+    permission?: string; // if set, hidden unless profile.permissions includes this key
 }
 
 export interface SidebarGroup {
@@ -27,6 +28,12 @@ interface RoleSidebarProps {
 export function RoleSidebar({ groups, roleLabel, accentColor = "blue" }: RoleSidebarProps) {
     const pathname = usePathname();
     const { logout, profile } = useAuth();
+
+    const canSee = (item: SidebarItem) => {
+        if (!item.permission) return true;
+        if (!profile?.permissions) return true; // no permissions set → show all
+        return profile.permissions.includes(item.permission);
+    };
 
     const activeClass = `bg-${accentColor}-50 text-${accentColor}-700`;
     const hoverClass = `hover:bg-gray-50 hover:text-${accentColor}-600`;
@@ -50,11 +57,14 @@ export function RoleSidebar({ groups, roleLabel, accentColor = "blue" }: RoleSid
 
             {/* Navigation */}
             <div className="flex-1 overflow-y-auto py-3 px-3">
-                {groups.map((group) => (
+                {groups.map((group) => {
+                    const visibleItems = group.items.filter(canSee);
+                    if (visibleItems.length === 0) return null;
+                    return (
                     <div key={group.label}>
                         <p className="module-header">{group.label}</p>
                         <nav className="space-y-0.5 mb-1">
-                            {group.items.map((item) => {
+                            {visibleItems.map((item) => {
                                 const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
                                 const Icon = item.icon;
                                 return (
@@ -84,7 +94,8 @@ export function RoleSidebar({ groups, roleLabel, accentColor = "blue" }: RoleSid
                             })}
                         </nav>
                     </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* Footer */}

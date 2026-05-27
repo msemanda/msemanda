@@ -17,11 +17,13 @@ export interface UserProfile {
     email: string;
     role: UserRole;
     name: string;
+    title?: string;
     address?: string;
     dob?: string;
     gender?: string;
     phone?: string;
     createdAt: any;
+    permissions?: string[];
 }
 
 export interface DoctorProfile extends UserProfile {
