@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { UserRole, UserProfile } from "@/types";
@@ -127,8 +127,20 @@ export default function SetupPage() {
         setLoading(true);
         setError("");
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
+            let user;
+
+            try {
+                const cred = await createUserWithEmailAndPassword(auth, email, password);
+                user = cred.user;
+            } catch (createErr: any) {
+                if (createErr.code === "auth/email-already-in-use") {
+                    // Auth account exists but no Firestore profile — sign in instead
+                    const cred = await signInWithEmailAndPassword(auth, email, password);
+                    user = cred.user;
+                } else {
+                    throw createErr;
+                }
+            }
 
             const profile: UserProfile = {
                 uid: user.uid,
@@ -138,7 +150,7 @@ export default function SetupPage() {
                 createdAt: serverTimestamp(),
             };
 
-            await setDoc(doc(db, "users", user.uid), profile);
+            await setDoc(doc(db, "users", user.uid), profile, { merge: true });
             if (!invite.isSuperadmin) {
                 await updateDoc(doc(db, "invites", email.toLowerCase().trim()), {
                     used: true,
@@ -152,8 +164,8 @@ export default function SetupPage() {
                 window.location.href = getRoleDashboard(invite.role);
             }, 2000);
         } catch (err: any) {
-            if (err.code === "auth/email-already-in-use") {
-                setError("An account with this email already exists. Please sign in instead.");
+            if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
+                setError("Incorrect password for this account. Please try again.");
             } else {
                 setError(err.message || "Failed to create account. Please try again.");
             }
