@@ -1,7 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-// Analytics only works in the browser
 import { getAnalytics, isSupported } from "firebase/analytics";
 
 const firebaseConfig = {
@@ -14,19 +13,14 @@ const firebaseConfig = {
   measurementId: "G-6RP6EGHGRR"
 };
 
-// Initialize Firebase
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const googleProvider = new GoogleAuthProvider();
 
-// Initialize Analytics conditionally
 if (typeof window !== "undefined") {
   isSupported().then((supported) => {
-    if (supported) {
-      getAnalytics(app);
-    }
+    if (supported) getAnalytics(app);
   });
 }
 
-export { app, auth, db, googleProvider };
+export { app, auth, db };

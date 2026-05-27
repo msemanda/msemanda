@@ -20,6 +20,7 @@ const ROLE_COLORS: Record<string, string> = {
     DENTIST: "bg-pink-50 text-pink-700 border-pink-100",
     DIETITIAN: "bg-lime-50 text-lime-700 border-lime-100",
     EMERGENCY_STAFF: "bg-red-50 text-red-700 border-red-100",
+    RECEPTIONIST: "bg-indigo-50 text-indigo-700 border-indigo-100",
     ADMIN: "bg-gray-50 text-gray-700 border-gray-200",
 };
 

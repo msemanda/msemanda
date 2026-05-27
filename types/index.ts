@@ -9,7 +9,8 @@ export type UserRole =
     | "PHYSIOTHERAPIST"
     | "DENTIST"
     | "DIETITIAN"
-    | "EMERGENCY_STAFF";
+    | "EMERGENCY_STAFF"
+    | "RECEPTIONIST";
 
 export interface UserProfile {
     uid: string;
@@ -91,6 +92,24 @@ export interface EmergencyStaffProfile extends UserProfile {
     designation?: string;
     qualification?: string;
     zone?: string;
+}
+
+export interface ReceptionistProfile extends UserProfile {
+    department?: string;
+    shift?: "MORNING" | "EVENING" | "NIGHT";
+}
+
+export interface PatientAdmission {
+    id: string;
+    patientEmail: string;
+    patientName: string;
+    phone?: string;
+    problem: string;
+    assignedDoctorId?: string;
+    admittedBy: string;
+    admittedAt: any;
+    inviteSent: boolean;
+    status: "ADMITTED" | "REGISTERED" | "DISCHARGED";
 }
 
 // --- Clinical Module Data Models ---
