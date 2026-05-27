@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -6,8 +6,8 @@ import { Users, Search } from "lucide-react";
 
 const patients = [
     { id: "P001", name: "John Mwesiga", age: 45, ward: "A-01", condition: "Type 2 DM + Hypertension", bmi: 29.4, hasPlan: true, lastAssessment: "2026-05-22" },
-    { id: "P004", name: "Sarah Namutebi", age: 29, ward: "B-03", condition: "Pneumonia — nutritional support", bmi: 18.2, hasPlan: true, lastAssessment: "2026-05-25" },
-    { id: "P006", name: "Alice Nakirya", age: 38, ward: "C-04", condition: "CKD Stage 3 — renal diet", bmi: 22.1, hasPlan: true, lastAssessment: "2026-05-21" },
+    { id: "P004", name: "Sarah Namutebi", age: 29, ward: "B-03", condition: "Pneumonia â€” nutritional support", bmi: 18.2, hasPlan: true, lastAssessment: "2026-05-25" },
+    { id: "P006", name: "Alice Nakirya", age: 38, ward: "C-04", condition: "CKD Stage 3 â€” renal diet", bmi: 22.1, hasPlan: true, lastAssessment: "2026-05-21" },
     { id: "P007", name: "Robert Mugisha", age: 61, ward: "D-02", condition: "Pre-cardiac surgery prep", bmi: 27.8, hasPlan: false, lastAssessment: null },
     { id: "P009", name: "Mary Nakato", age: 52, ward: "E-01", condition: "Diabetes education", bmi: 31.5, hasPlan: false, lastAssessment: null },
 ];
@@ -31,6 +31,7 @@ export default function DietaryPatients() {
                     placeholder="Search patient..." />
             </div>
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto rounded-xl">
                 <table className="w-full">
                     <thead className="bg-gray-50 border-b border-gray-100">
                         <tr>{["Patient", "Ward", "Condition", "BMI", "Diet Plan", "Last Assessment"].map(h => (
@@ -54,11 +55,11 @@ export default function DietaryPatients() {
                                 <td className="px-4 py-3 text-xs text-gray-600 max-w-[180px]">{p.condition}</td>
                                 <td className="px-4 py-3 text-xs font-bold text-gray-700">{p.bmi} <span className={`ml-1 text-[10px] ${p.bmi > 30 ? "text-red-500" : p.bmi < 20 ? "text-amber-500" : "text-green-600"}`}>{p.bmi > 30 ? "Obese" : p.bmi < 20 ? "Underweight" : "Normal"}</span></td>
                                 <td className="px-4 py-3"><span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${p.hasPlan ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-600"}`}>{p.hasPlan ? "Active" : "Pending"}</span></td>
-                                <td className="px-4 py-3 text-xs text-gray-400">{p.lastAssessment || "—"}</td>
+                                <td className="px-4 py-3 text-xs text-gray-400">{p.lastAssessment || "â€”"}</td>
                             </motion.tr>
                         ))}
                     </tbody>
-                </table>
+                </table></div>
             </div>
         </div>
     );

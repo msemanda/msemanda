@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
@@ -66,7 +66,7 @@ export default function IpdDashboard() {
                             <div className={`h-10 w-10 rounded-xl ${c.color} flex items-center justify-center mb-3`}>
                                 <Icon className="h-5 w-5" />
                             </div>
-                            <p className="text-2xl font-black text-gray-900">{loading ? "—" : c.value}</p>
+                            <p className="text-2xl font-black text-gray-900">{loading ? "â€”" : c.value}</p>
                             <p className="text-xs text-gray-500 mt-0.5 font-medium">{c.label}</p>
                         </motion.div>
                     );
@@ -77,7 +77,7 @@ export default function IpdDashboard() {
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                 <div className="flex items-center justify-between mb-3">
                     <p className="text-sm font-black text-gray-900 flex items-center gap-2"><Activity className="h-4 w-4 text-blue-600"/>Bed Occupancy</p>
-                    <span className="text-sm font-black text-gray-900">{loading ? "—" : occupancy}%</span>
+                    <span className="text-sm font-black text-gray-900">{loading ? "â€”" : occupancy}%</span>
                 </div>
                 <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
                     <motion.div initial={{ width: 0 }} animate={{ width: `${occupancy}%` }} transition={{ delay: 0.3, duration: 0.8 }}
@@ -101,6 +101,7 @@ export default function IpdDashboard() {
                         <p className="text-xs text-gray-400 mt-1">Admitted patients appear here.</p>
                     </div>
                 ) : (
+                    <div className="overflow-x-auto rounded-xl">
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>{["Patient", "Ward", "Bed", "Doctor", "Admitted On", "Days"].map(h => (
@@ -117,17 +118,17 @@ export default function IpdDashboard() {
                                             <p className="text-xs text-gray-400">{p.patientEmail}</p>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${WARD_BADGE[p.ward] || "bg-gray-50 text-gray-600 border-gray-100"}`}>{p.ward || "—"}</span>
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${WARD_BADGE[p.ward] || "bg-gray-50 text-gray-600 border-gray-100"}`}>{p.ward || "â€”"}</span>
                                         </td>
-                                        <td className="px-4 py-3 text-sm font-bold text-gray-700">{p.bedNumber || "—"}</td>
-                                        <td className="px-4 py-3 text-xs text-gray-500">{p.doctorName || "—"}</td>
-                                        <td className="px-4 py-3 text-xs text-gray-500">{p.admittedAt?.seconds ? new Date(p.admittedAt.seconds*1000).toLocaleDateString() : "—"}</td>
+                                        <td className="px-4 py-3 text-sm font-bold text-gray-700">{p.bedNumber || "â€”"}</td>
+                                        <td className="px-4 py-3 text-xs text-gray-500">{p.doctorName || "â€”"}</td>
+                                        <td className="px-4 py-3 text-xs text-gray-500">{p.admittedAt?.seconds ? new Date(p.admittedAt.seconds*1000).toLocaleDateString() : "â€”"}</td>
                                         <td className="px-4 py-3 text-xs font-bold text-gray-700">{days}d</td>
                                     </tr>
                                 );
                             })}
                         </tbody>
-                    </table>
+                    </table></div>
                 )}
             </div>
         </div>

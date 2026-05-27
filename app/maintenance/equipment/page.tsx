@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
@@ -181,6 +181,7 @@ export default function MaintenanceEquipmentPage() {
                 </div>
             ) : (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto rounded-xl">
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>{["Equipment", "Category", "Location", "Serial No", "Condition", "Next Service"].map(h => (
@@ -199,13 +200,13 @@ export default function MaintenanceEquipmentPage() {
                                         </td>
                                         <td className="px-4 py-3 text-xs text-gray-500">{eq.category}</td>
                                         <td className="px-4 py-3 text-xs text-gray-500">{eq.location}</td>
-                                        <td className="px-4 py-3 text-xs font-mono text-gray-400">{eq.serialNo || "—"}</td>
+                                        <td className="px-4 py-3 text-xs font-mono text-gray-400">{eq.serialNo || "â€”"}</td>
                                         <td className="px-4 py-3">
                                             <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${c.color}`}>{c.label}</span>
                                         </td>
                                         <td className="px-4 py-3">
                                             <span className={`text-xs font-bold ${isOverdue ? "text-red-500" : "text-gray-700"}`}>
-                                                {eq.nextServiceDate || "—"}
+                                                {eq.nextServiceDate || "â€”"}
                                             </span>
                                             {isOverdue && <span className="ml-1 text-[10px] text-red-500">Overdue</span>}
                                         </td>
@@ -213,7 +214,7 @@ export default function MaintenanceEquipmentPage() {
                                 );
                             })}
                         </tbody>
-                    </table>
+                    </table></div>
                 </div>
             )}
         </div>

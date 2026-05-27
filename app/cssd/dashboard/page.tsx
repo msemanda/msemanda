@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { collection, query, getDocs, where } from "firebase/firestore";
@@ -50,7 +50,7 @@ export default function CssdDashboard() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-black text-gray-900">CSSD Dashboard</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">Central Sterile Services Department — sterilization tracking</p>
+                    <p className="text-sm text-gray-500 mt-0.5">Central Sterile Services Department â€” sterilization tracking</p>
                 </div>
                 <Link href="/cssd/items" className="h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold flex items-center gap-2 transition-colors shadow-sm">
                     <ClipboardList className="h-4 w-4" /> New Item Request
@@ -66,7 +66,7 @@ export default function CssdDashboard() {
                             <div className={`h-10 w-10 rounded-xl ${c.color} flex items-center justify-center mb-3`}>
                                 <Icon className="h-5 w-5" />
                             </div>
-                            <p className="text-2xl font-black text-gray-900">{loading ? "—" : c.value}</p>
+                            <p className="text-2xl font-black text-gray-900">{loading ? "â€”" : c.value}</p>
                             <p className="text-xs text-gray-500 mt-0.5 font-medium">{c.label}</p>
                         </motion.div>
                     );
@@ -87,6 +87,7 @@ export default function CssdDashboard() {
                         <p className="text-xs text-gray-400 mt-1">Add item requests to get started.</p>
                     </div>
                 ) : (
+                    <div className="overflow-x-auto rounded-xl">
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>{["Item", "Type", "Ward / Dept", "Submitted By", "Status"].map(h => (
@@ -97,18 +98,18 @@ export default function CssdDashboard() {
                             {recent.map(item => (
                                 <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                                     <td className="px-4 py-3 text-sm font-bold text-gray-900">{item.itemName}</td>
-                                    <td className="px-4 py-3 text-xs text-gray-500">{item.itemType || "—"}</td>
-                                    <td className="px-4 py-3 text-xs text-gray-500">{item.ward || "—"}</td>
-                                    <td className="px-4 py-3 text-xs text-gray-500">{item.submittedBy || "—"}</td>
+                                    <td className="px-4 py-3 text-xs text-gray-500">{item.itemType || "â€”"}</td>
+                                    <td className="px-4 py-3 text-xs text-gray-500">{item.ward || "â€”"}</td>
+                                    <td className="px-4 py-3 text-xs text-gray-500">{item.submittedBy || "â€”"}</td>
                                     <td className="px-4 py-3">
                                         <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${STATUS_BADGE[item.status] || "bg-gray-50 text-gray-600 border-gray-100"}`}>
-                                            {item.status?.replace(/_/g," ") || "—"}
+                                            {item.status?.replace(/_/g," ") || "â€”"}
                                         </span>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
-                    </table>
+                    </table></div>
                 )}
             </div>
         </div>

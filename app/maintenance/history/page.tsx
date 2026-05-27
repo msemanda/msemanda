@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
@@ -77,6 +77,7 @@ export default function MaintenanceHistoryPage() {
                 </div>
             ) : (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto rounded-xl">
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>{["Equipment", "Location", "Issue", "Priority", "Assigned To", "Resolved"].map(h => (
@@ -97,14 +98,14 @@ export default function MaintenanceHistoryPage() {
                                     <td className="px-4 py-3">
                                         <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${PRIORITY_COLOR[r.priority] || "bg-gray-50 text-gray-500 border-gray-100"}`}>{r.priority}</span>
                                     </td>
-                                    <td className="px-4 py-3 text-xs text-gray-500">{r.assignedTo || "—"}</td>
+                                    <td className="px-4 py-3 text-xs text-gray-500">{r.assignedTo || "â€”"}</td>
                                     <td className="px-4 py-3 text-xs text-gray-400">
-                                        {r.updatedAt?.seconds ? new Date(r.updatedAt.seconds * 1000).toLocaleDateString() : "—"}
+                                        {r.updatedAt?.seconds ? new Date(r.updatedAt.seconds * 1000).toLocaleDateString() : "â€”"}
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
-                    </table>
+                    </table></div>
                 </div>
             )}
         </div>

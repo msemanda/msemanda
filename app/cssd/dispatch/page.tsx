@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
@@ -149,6 +149,7 @@ export default function CssdDispatchPage() {
                 </div>
             ) : (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto rounded-xl">
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>{["Item", "Qty", "Destination", "Received By", "Dispatched By", "Date"].map(h => (
@@ -167,12 +168,12 @@ export default function CssdDispatchPage() {
                                     <td className="px-4 py-3 text-xs text-gray-500">{r.receivedBy}</td>
                                     <td className="px-4 py-3 text-xs text-gray-500">{r.dispatchedBy}</td>
                                     <td className="px-4 py-3 text-xs text-gray-400">
-                                        {r.dispatchedAt?.seconds ? new Date(r.dispatchedAt.seconds * 1000).toLocaleDateString() : "—"}
+                                        {r.dispatchedAt?.seconds ? new Date(r.dispatchedAt.seconds * 1000).toLocaleDateString() : "â€”"}
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
-                    </table>
+                    </table></div>
                 </div>
             )}
         </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
@@ -41,9 +41,9 @@ export default function AssetsDashboard() {
 
             <div className="grid grid-cols-3 gap-4">
                 {[
-                    { label: "Total Assets", value: loading ? "—" : stats.total.toString(), icon: Building2, color: "bg-blue-50 text-blue-600", border: "border-blue-100" },
-                    { label: "Total Value (UGX)", value: loading ? "—" : stats.totalValue.toLocaleString(), icon: FileText, color: "bg-green-50 text-green-600", border: "border-green-100" },
-                    { label: "Asset Categories", value: loading ? "—" : stats.categories.toString(), icon: TrendingDown, color: "bg-purple-50 text-purple-600", border: "border-purple-100" },
+                    { label: "Total Assets", value: loading ? "â€”" : stats.total.toString(), icon: Building2, color: "bg-blue-50 text-blue-600", border: "border-blue-100" },
+                    { label: "Total Value (UGX)", value: loading ? "â€”" : stats.totalValue.toLocaleString(), icon: FileText, color: "bg-green-50 text-green-600", border: "border-green-100" },
+                    { label: "Asset Categories", value: loading ? "â€”" : stats.categories.toString(), icon: TrendingDown, color: "bg-purple-50 text-purple-600", border: "border-purple-100" },
                 ].map((c, i) => {
                     const Icon = c.icon;
                     return (
@@ -73,6 +73,7 @@ export default function AssetsDashboard() {
                         <p className="text-xs text-gray-400 mt-1">Add fixed assets from the register.</p>
                     </div>
                 ) : (
+                    <div className="overflow-x-auto rounded-xl">
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>{["Asset", "Category", "Location", "Purchase Value", "Purchase Date"].map(h => (
@@ -89,11 +90,11 @@ export default function AssetsDashboard() {
                                     <td className="px-4 py-3 text-xs text-gray-500">{a.category}</td>
                                     <td className="px-4 py-3 text-xs text-gray-500">{a.location}</td>
                                     <td className="px-4 py-3 text-sm font-bold text-gray-700">UGX {(a.purchaseValue || 0).toLocaleString()}</td>
-                                    <td className="px-4 py-3 text-xs text-gray-400">{a.purchaseDate || "—"}</td>
+                                    <td className="px-4 py-3 text-xs text-gray-400">{a.purchaseDate || "â€”"}</td>
                                 </tr>
                             ))}
                         </tbody>
-                    </table>
+                    </table></div>
                 )}
             </div>
         </div>

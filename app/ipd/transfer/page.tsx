@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
@@ -143,6 +143,7 @@ export default function IpdTransferPage() {
                 </div>
             ) : (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto rounded-xl">
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>{["Patient", "From", "To", "Reason", "Transferred By", "Date"].map(h => (
@@ -158,12 +159,12 @@ export default function IpdTransferPage() {
                                     <td className="px-4 py-3 text-xs text-gray-500 max-w-[160px] truncate">{t.reason}</td>
                                     <td className="px-4 py-3 text-xs text-gray-500">{t.transferredBy}</td>
                                     <td className="px-4 py-3 text-xs text-gray-400">
-                                        {t.transferredAt?.seconds ? new Date(t.transferredAt.seconds * 1000).toLocaleDateString() : "—"}
+                                        {t.transferredAt?.seconds ? new Date(t.transferredAt.seconds * 1000).toLocaleDateString() : "â€”"}
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
-                    </table>
+                    </table></div>
                 </div>
             )}
         </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
@@ -139,6 +139,7 @@ export default function HousekeepingSchedulePage() {
                 </div>
             ) : (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto rounded-xl">
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>{["Task", "Location", "Frequency", "Assigned To", "Next Due"].map(h => (
@@ -157,14 +158,14 @@ export default function HousekeepingSchedulePage() {
                                         </td>
                                         <td className="px-4 py-3 text-xs text-gray-500">{s.assignedTo}</td>
                                         <td className="px-4 py-3">
-                                            <span className={`text-xs font-bold ${isOverdue ? "text-red-500" : "text-gray-700"}`}>{s.nextDue || "—"}</span>
+                                            <span className={`text-xs font-bold ${isOverdue ? "text-red-500" : "text-gray-700"}`}>{s.nextDue || "â€”"}</span>
                                             {isOverdue && <span className="ml-2 text-[10px] font-bold text-red-500">Overdue</span>}
                                         </td>
                                     </tr>
                                 );
                             })}
                         </tbody>
-                    </table>
+                    </table></div>
                 </div>
             )}
         </div>

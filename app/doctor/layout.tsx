@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { RoleSidebar, SidebarGroup } from "@/components/ui/RoleSidebar";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
@@ -30,7 +30,7 @@ const sidebarGroups: SidebarGroup[] = [
     {
         label: "Clinical Tools",
         items: [
-            { name: "CPOE — Order Entry", href: "/doctor/cpoe", icon: ClipboardList, permission: "cpoe" },
+            { name: "CPOE â€” Order Entry", href: "/doctor/cpoe", icon: ClipboardList, permission: "cpoe" },
             { name: "Clinical Order Sets", href: "/doctor/order-sets", icon: Stethoscope, permission: "order_sets" },
             { name: "Appointments", href: "/doctor/appointments", icon: CalendarDays, permission: "appointments" },
         ],
@@ -60,7 +60,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.25 }}
-                        className="flex-1 p-6"
+                        className="flex-1 p-4 pt-14 md:p-6"
                     >
                         {children}
                     </motion.main>

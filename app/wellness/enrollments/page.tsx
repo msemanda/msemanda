@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -39,6 +39,7 @@ export default function WellnessEnrollments() {
                     placeholder="Search patient or program..." />
             </div>
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto rounded-xl">
                 <table className="w-full">
                     <thead className="bg-gray-50 border-b border-gray-100">
                         <tr>{["Patient", "Program", "Enrolled", "Attendance", "Progress", "Status"].map(h => (
@@ -57,7 +58,7 @@ export default function WellnessEnrollments() {
                             </motion.tr>
                         ))}
                     </tbody>
-                </table>
+                </table></div>
             </div>
         </div>
     );

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
@@ -172,6 +172,7 @@ export default function IpdAdmissionsPage() {
                 </div>
             ) : (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto rounded-xl">
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>{["Patient", "Ward", "Bed", "Doctor", "Diagnosis", "Admitted", "Days"].map(h => (
@@ -190,18 +191,18 @@ export default function IpdAdmissionsPage() {
                                         <td className="px-4 py-3">
                                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${WARD_BADGE[a.ward] || "bg-gray-50 text-gray-600 border-gray-100"}`}>{a.ward}</span>
                                         </td>
-                                        <td className="px-4 py-3 text-sm font-bold text-gray-700">{a.bedNumber || "—"}</td>
+                                        <td className="px-4 py-3 text-sm font-bold text-gray-700">{a.bedNumber || "â€”"}</td>
                                         <td className="px-4 py-3 text-xs text-gray-500">{a.doctorName}</td>
                                         <td className="px-4 py-3 text-xs text-gray-500 max-w-[140px] truncate">{a.diagnosis}</td>
                                         <td className="px-4 py-3 text-xs text-gray-400">
-                                            {a.admittedAt?.seconds ? new Date(a.admittedAt.seconds * 1000).toLocaleDateString() : "—"}
+                                            {a.admittedAt?.seconds ? new Date(a.admittedAt.seconds * 1000).toLocaleDateString() : "â€”"}
                                         </td>
                                         <td className="px-4 py-3 text-xs font-bold text-gray-700">{days}d</td>
                                     </tr>
                                 );
                             })}
                         </tbody>
-                    </table>
+                    </table></div>
                 </div>
             )}
         </div>

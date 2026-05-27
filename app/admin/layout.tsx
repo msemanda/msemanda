@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Sidebar } from "@/components/admin/Sidebar";
 import { useAuth } from "@/context/AuthContext";
@@ -54,7 +54,7 @@ export default function AdminLayout({
         <div className="flex h-screen bg-mesh overflow-hidden">
             <Sidebar />
             <div className="flex-1 flex flex-col min-w-0">
-                <main className="flex-1 overflow-y-auto px-10 py-10 scrollbar-hide">
+                <main className="flex-1 overflow-y-auto px-4 pt-14 pb-4 md:px-6 md:py-6 lg:px-10 lg:py-10 scrollbar-hide">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={profile?.uid}

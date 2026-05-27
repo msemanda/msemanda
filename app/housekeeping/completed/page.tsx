@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
@@ -74,6 +74,7 @@ export default function HousekeepingCompletedPage() {
                 </div>
             ) : (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto rounded-xl">
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>{["Task", "Location", "Priority", "Completed By", "Date"].map(h => (
@@ -97,12 +98,12 @@ export default function HousekeepingCompletedPage() {
                                     </td>
                                     <td className="px-4 py-3 text-xs text-gray-500">{t.assignedTo}</td>
                                     <td className="px-4 py-3 text-xs text-gray-400">
-                                        {t.updatedAt?.seconds ? new Date(t.updatedAt.seconds * 1000).toLocaleDateString() : "—"}
+                                        {t.updatedAt?.seconds ? new Date(t.updatedAt.seconds * 1000).toLocaleDateString() : "â€”"}
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
-                    </table>
+                    </table></div>
                 </div>
             )}
         </div>

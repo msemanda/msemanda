@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { RoleSidebar, SidebarGroup } from "@/components/ui/RoleSidebar";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
@@ -45,7 +45,7 @@ export default function RadiologyLayout({ children }: { children: React.ReactNod
             <RoleSidebar groups={sidebarGroups} roleLabel="Radiology" />
             <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
                 <AnimatePresence mode="wait">
-                    <motion.main key={profile?.uid} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="flex-1 p-6">
+                    <motion.main key={profile?.uid} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="flex-1 p-4 pt-14 md:p-6">
                         {children}
                     </motion.main>
                 </AnimatePresence>

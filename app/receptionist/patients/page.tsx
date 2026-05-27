@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -9,8 +9,8 @@ const patients = [
     { id: "P002", name: "Grace Nakato", age: 67, gender: "F", phone: "+256 702 345 678", email: "g.nakato@email.com", admittedOn: "2026-05-23", doctor: "Dr. Ssekibala", status: "ADMITTED", ward: "A-02" },
     { id: "P003", name: "Patrick Ssemanda", age: 32, gender: "M", phone: "+256 703 456 789", email: "p.ssemanda@email.com", admittedOn: "2026-05-24", doctor: "Dr. Namubiru", status: "ADMITTED", ward: "B-01" },
     { id: "P004", name: "Sarah Namutebi", age: 29, gender: "F", phone: "+256 704 567 890", email: "s.namutebi@email.com", admittedOn: "2026-05-25", doctor: "Dr. Bwire", status: "ADMITTED", ward: "B-03" },
-    { id: "P007", name: "Robert Mugisha", age: 61, gender: "M", phone: "+256 707 890 123", email: "r.mugisha@email.com", admittedOn: "2026-05-18", doctor: "Dr. Katongo", status: "DISCHARGED", ward: "—" },
-    { id: "P008", name: "Agnes Nantale", age: 44, gender: "F", phone: "+256 708 901 234", email: "a.nantale@email.com", admittedOn: "2026-05-15", doctor: "Dr. Namubiru", status: "DISCHARGED", ward: "—" },
+    { id: "P007", name: "Robert Mugisha", age: 61, gender: "M", phone: "+256 707 890 123", email: "r.mugisha@email.com", admittedOn: "2026-05-18", doctor: "Dr. Katongo", status: "DISCHARGED", ward: "â€”" },
+    { id: "P008", name: "Agnes Nantale", age: 44, gender: "F", phone: "+256 708 901 234", email: "a.nantale@email.com", admittedOn: "2026-05-15", doctor: "Dr. Namubiru", status: "DISCHARGED", ward: "â€”" },
 ];
 
 const STATUS_BADGE: Record<string, string> = {
@@ -53,6 +53,7 @@ export default function PatientSearch() {
                 </div>
             </div>
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto rounded-xl">
                 <table className="w-full">
                     <thead className="bg-gray-50 border-b border-gray-100">
                         <tr>{["Patient", "Contact", "Doctor", "Ward", "Admitted", "Status"].map(h => (
@@ -64,7 +65,7 @@ export default function PatientSearch() {
                             <motion.tr key={p.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }} className="hover:bg-gray-50/50">
                                 <td className="px-4 py-3">
                                     <p className="text-sm font-bold text-gray-900">{p.name}</p>
-                                    <p className="text-[10px] text-gray-400">{p.id} · {p.age}y / {p.gender}</p>
+                                    <p className="text-[10px] text-gray-400">{p.id} Â· {p.age}y / {p.gender}</p>
                                 </td>
                                 <td className="px-4 py-3 text-xs text-gray-500">
                                     <p className="flex items-center gap-1"><Phone className="h-3 w-3" />{p.phone}</p>
@@ -76,7 +77,7 @@ export default function PatientSearch() {
                             </motion.tr>
                         ))}
                     </tbody>
-                </table>
+                </table></div>
             </div>
         </div>
     );

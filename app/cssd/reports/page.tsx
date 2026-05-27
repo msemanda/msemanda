@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
@@ -57,7 +57,7 @@ export default function CssdReportsPage() {
                             <div className={`h-9 w-9 rounded-xl ${c.color} flex items-center justify-center mb-3`}>
                                 <Icon className="h-4 w-4" />
                             </div>
-                            <p className="text-2xl font-black text-gray-900">{loading ? "—" : c.value}</p>
+                            <p className="text-2xl font-black text-gray-900">{loading ? "â€”" : c.value}</p>
                             <p className="text-xs text-gray-500 mt-0.5 font-medium">{c.label}</p>
                         </div>
                     );
@@ -80,6 +80,7 @@ export default function CssdReportsPage() {
                         <p className="text-xs text-gray-400 mt-1">Sterilization cycles will appear here.</p>
                     </div>
                 ) : (
+                    <div className="overflow-x-auto rounded-xl">
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>{["Cycle No", "Machine", "Method", "Items", "Operator", "Status"].map(h => (
@@ -104,7 +105,7 @@ export default function CssdReportsPage() {
                                 </tr>
                             ))}
                         </tbody>
-                    </table>
+                    </table></div>
                 )}
             </div>
         </div>

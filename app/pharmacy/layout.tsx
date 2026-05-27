@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { TopNav } from "@/components/TopNav";
 import { useAuth } from "@/context/AuthContext";

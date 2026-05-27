@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
@@ -165,6 +165,7 @@ export default function CssdItemsPage() {
                 </div>
             ) : (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto rounded-xl">
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>{["Item", "Type", "Qty", "Department", "Requested By", "Status"].map(h => (
@@ -184,7 +185,7 @@ export default function CssdItemsPage() {
                                         <td className="px-4 py-3 text-xs text-gray-500">{item.itemType}</td>
                                         <td className="px-4 py-3 text-sm font-bold text-gray-700">{item.quantity}</td>
                                         <td className="px-4 py-3 text-xs text-gray-500">{item.department}</td>
-                                        <td className="px-4 py-3 text-xs text-gray-500">{item.requestedBy || "—"}</td>
+                                        <td className="px-4 py-3 text-xs text-gray-500">{item.requestedBy || "â€”"}</td>
                                         <td className="px-4 py-3">
                                             <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border flex items-center gap-1 w-fit ${s.color}`}>
                                                 <StatusIcon className="h-3 w-3" /> {s.label}
@@ -194,7 +195,7 @@ export default function CssdItemsPage() {
                                 );
                             })}
                         </tbody>
-                    </table>
+                    </table></div>
                 </div>
             )}
         </div>
