@@ -26,7 +26,7 @@ export default function HomeCareLayout({ children }: { children: React.ReactNode
     const router = useRouter();
 
     useEffect(() => {
-        if (!loading && (!profile || (profile.role !== "NURSE" && profile.role !== "DOCTOR"))) {
+        if (!loading && (!profile || (profile.role !== "NURSE" && profile.role !== "DOCTOR" && profile.role !== "ADMIN"))) {
             router.push("/login");
         }
     }, [profile, loading, router]);

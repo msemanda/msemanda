@@ -44,13 +44,13 @@ export default function LabLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
 
     useEffect(() => {
-        if (!loading && (!profile || profile.role !== "LAB_TECH")) {
+        if (!loading && (!profile || (profile.role !== "LAB_TECH" && profile.role !== "ADMIN"))) {
             router.push("/login");
         }
     }, [profile, loading, router]);
 
     if (loading) return <LoadingScreen label="Loading Lab Workspace" />;
-    if (!profile || profile.role !== "LAB_TECH") return null;
+    if (!profile || (profile.role !== "LAB_TECH" && profile.role !== "ADMIN")) return null;
 
     return (
         <div className="flex h-screen bg-gray-50 overflow-hidden">

@@ -42,13 +42,13 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
     const router = useRouter();
 
     useEffect(() => {
-        if (!loading && (!profile || profile.role !== "DOCTOR")) {
+        if (!loading && (!profile || (profile.role !== "DOCTOR" && profile.role !== "ADMIN"))) {
             router.push("/login");
         }
     }, [profile, loading, router]);
 
     if (loading) return <LoadingScreen label="Initializing Physician Workspace" />;
-    if (!profile || profile.role !== "DOCTOR") return null;
+    if (!profile || (profile.role !== "DOCTOR" && profile.role !== "ADMIN")) return null;
 
     return (
         <div className="flex h-screen bg-gray-50 overflow-hidden">

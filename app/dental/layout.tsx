@@ -26,11 +26,11 @@ export default function DentalLayout({ children }: { children: React.ReactNode }
     const router = useRouter();
 
     useEffect(() => {
-        if (!loading && (!profile || profile.role !== "DENTIST")) router.push("/login");
+        if (!loading && (!profile || (profile.role !== "DENTIST" && profile.role !== "ADMIN"))) router.push("/login");
     }, [profile, loading, router]);
 
     if (loading) return <LoadingScreen label="Loading Dental Workspace" />;
-    if (!profile || profile.role !== "DENTIST") return null;
+    if (!profile || (profile.role !== "DENTIST" && profile.role !== "ADMIN")) return null;
 
     return (
         <div className="flex h-screen bg-gray-50 overflow-hidden">

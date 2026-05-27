@@ -53,13 +53,13 @@ export default function ReceptionistLayout({ children }: { children: React.React
     const router = useRouter();
 
     useEffect(() => {
-        if (!loading && (!profile || profile.role !== "RECEPTIONIST")) {
+        if (!loading && (!profile || (profile.role !== "RECEPTIONIST" && profile.role !== "ADMIN"))) {
             router.push("/login");
         }
     }, [profile, loading, router]);
 
     if (loading) return <LoadingScreen label="Loading Reception Workspace" />;
-    if (!profile || profile.role !== "RECEPTIONIST") return null;
+    if (!profile || (profile.role !== "RECEPTIONIST" && profile.role !== "ADMIN")) return null;
 
     return (
         <div className="flex h-screen bg-gray-50 overflow-hidden">

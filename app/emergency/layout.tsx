@@ -26,11 +26,11 @@ export default function EmergencyLayout({ children }: { children: React.ReactNod
     const router = useRouter();
 
     useEffect(() => {
-        if (!loading && (!profile || profile.role !== "EMERGENCY_STAFF")) router.push("/login");
+        if (!loading && (!profile || (profile.role !== "EMERGENCY_STAFF" && profile.role !== "ADMIN"))) router.push("/login");
     }, [profile, loading, router]);
 
     if (loading) return <LoadingScreen label="Loading Emergency Workspace" />;
-    if (!profile || profile.role !== "EMERGENCY_STAFF") return null;
+    if (!profile || (profile.role !== "EMERGENCY_STAFF" && profile.role !== "ADMIN")) return null;
 
     return (
         <div className="flex h-screen bg-gray-50 overflow-hidden">

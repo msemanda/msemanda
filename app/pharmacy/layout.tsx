@@ -16,7 +16,7 @@ export default function PharmacyLayout({
     const router = useRouter();
 
     useEffect(() => {
-        if (!loading && (!profile || profile.role !== "PHARMACY")) {
+        if (!loading && (!profile || (profile.role !== "PHARMACY" && profile.role !== "ADMIN"))) {
             router.push("/login");
         }
     }, [profile, loading, router]);
@@ -48,7 +48,7 @@ export default function PharmacyLayout({
         );
     }
 
-    if (!profile || profile.role !== "PHARMACY") return null;
+    if (!profile || (profile.role !== "PHARMACY" && profile.role !== "ADMIN")) return null;
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">

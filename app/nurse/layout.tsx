@@ -51,13 +51,13 @@ export default function NurseLayout({ children }: { children: React.ReactNode })
     const router = useRouter();
 
     useEffect(() => {
-        if (!loading && (!profile || profile.role !== "NURSE")) {
+        if (!loading && (!profile || (profile.role !== "NURSE" && profile.role !== "ADMIN"))) {
             router.push("/login");
         }
     }, [profile, loading, router]);
 
     if (loading) return <LoadingScreen label="Loading Nurse Workspace" />;
-    if (!profile || profile.role !== "NURSE") return null;
+    if (!profile || (profile.role !== "NURSE" && profile.role !== "ADMIN")) return null;
 
     return (
         <div className="flex h-screen bg-gray-50 overflow-hidden">

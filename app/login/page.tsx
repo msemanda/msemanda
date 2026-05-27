@@ -13,27 +13,10 @@ import {
     Mail,
     Lock,
     ShieldCheck,
-    UserCircle,
     ArrowRight,
     Sparkles,
-    ChevronDown
 } from "lucide-react";
 import Link from "next/link";
-
-const ROLES: { value: UserRole; label: string }[] = [
-    { value: "ADMIN", label: "System Administrator" },
-    { value: "PATIENT", label: "Patient" },
-    { value: "DOCTOR", label: "Medical Practitioner" },
-    { value: "RECEPTIONIST", label: "Receptionist" },
-    { value: "PHARMACY", label: "Pharmacist" },
-    { value: "NURSE", label: "Nurse" },
-    { value: "LAB_TECH", label: "Laboratory Technician" },
-    { value: "RADIOLOGY_TECH", label: "Radiology Technician" },
-    { value: "PHYSIOTHERAPIST", label: "Physiotherapist" },
-    { value: "DENTIST", label: "Dentist" },
-    { value: "DIETITIAN", label: "Dietitian" },
-    { value: "EMERGENCY_STAFF", label: "Emergency Staff" },
-];
 
 function getRoleDashboard(role: UserRole): string {
     switch (role) {
@@ -56,7 +39,6 @@ function getRoleDashboard(role: UserRole): string {
 export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [role, setRole] = useState<UserRole>("PATIENT");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -78,12 +60,7 @@ export default function LoginPage() {
             const docSnap = await getDoc(doc(db, "users", user.uid));
             if (docSnap.exists()) {
                 const userData = docSnap.data();
-                if (userData.role === role) {
-                    router.push(getRoleDashboard(role));
-                } else {
-                    setError(`Role mismatch. This account is registered as ${userData.role}.`);
-                    await auth.signOut();
-                }
+                router.push(getRoleDashboard(userData.role as UserRole));
             } else {
                 setError("No profile found. Please contact your administrator.");
                 await auth.signOut();
@@ -115,23 +92,6 @@ export default function LoginPage() {
 
                 <div className="bg-white rounded-3xl shadow-premium border border-gray-100 p-8">
                     <form onSubmit={handleLogin} className="space-y-4">
-                        <div className="space-y-1.5">
-                            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Your Role</label>
-                            <div className="relative">
-                                <UserCircle className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-blue-500 z-10" />
-                                <select
-                                    value={role}
-                                    onChange={(e) => setRole(e.target.value as UserRole)}
-                                    className="w-full h-11 pl-10 pr-10 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 appearance-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all cursor-pointer"
-                                >
-                                    {ROLES.map(r => (
-                                        <option key={r.value} value={r.value}>{r.label}</option>
-                                    ))}
-                                </select>
-                                <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                            </div>
-                        </div>
-
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Email Address</label>
                             <div className="relative">

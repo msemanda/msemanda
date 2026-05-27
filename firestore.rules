@@ -70,6 +70,12 @@ service cloud.firestore {
       allow write: if isAdmin() || isReceptionist();
     }
 
+    // ── System configuration ─────────────────────────────────────────────────
+    match /system/{docId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+
     // ── Sessions (telemetry) ─────────────────────────────────────────────────
     match /sessions/{sessionId} {
       allow create: if isAuth();
