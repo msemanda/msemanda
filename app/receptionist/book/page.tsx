@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { collection, query, where, getDocs, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Stethoscope, User, CalendarDays, Clock,
-    CheckCircle2, ShieldCheck, ArrowRight, Search
+    CheckCircle2, ShieldCheck, ArrowRight, Search, UserCheck, X,
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 
@@ -24,6 +24,13 @@ type DoctorOption = {
     todayCount: number;
 };
 
+interface KnownPatient {
+    uid: string;
+    name: string;
+    email: string;
+    phone?: string;
+}
+
 export default function BookAppointmentPage() {
     const { profile } = useAuth();
     const [doctors, setDoctors] = useState<DoctorOption[]>([]);
@@ -39,6 +46,13 @@ export default function BookAppointmentPage() {
         notes: "",
     });
 
+    // Patient combobox
+    const [patients, setPatients] = useState<KnownPatient[]>([]);
+    const [nameQuery, setNameQuery] = useState("");
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [pickedPatient, setPickedPatient] = useState<KnownPatient | null>(null);
+    const nameRef = useRef<HTMLDivElement>(null);
+
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
@@ -48,9 +62,10 @@ export default function BookAppointmentPage() {
             try {
                 const today = new Date().toISOString().split("T")[0];
 
-                const [doctorSnap, apptSnap] = await Promise.all([
+                const [doctorSnap, apptSnap, patientSnap] = await Promise.all([
                     getDocs(query(collection(db, "users"), where("role", "==", "DOCTOR"))),
                     getDocs(query(collection(db, "appointments"), where("date", "==", today))),
+                    getDocs(query(collection(db, "users"), where("role", "==", "PATIENT"))),
                 ]);
 
                 const countMap: Record<string, number> = {};
@@ -70,6 +85,15 @@ export default function BookAppointmentPage() {
                         };
                     })
                 );
+
+                setPatients(
+                    patientSnap.docs
+                        .map(d => {
+                            const data = d.data() as any;
+                            return { uid: d.id, name: data.name || "", email: data.email || "", phone: data.phone || "" };
+                        })
+                        .filter(p => p.name)
+                );
             } catch (err) {
                 console.error(err);
             } finally {
@@ -79,11 +103,47 @@ export default function BookAppointmentPage() {
         fetchDoctors();
     }, []);
 
+    // Close patient dropdown on outside click
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (nameRef.current && !nameRef.current.contains(e.target as Node))
+                setDropdownOpen(false);
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, []);
+
     const filtered = doctors.filter(d =>
         !search ||
         d.name.toLowerCase().includes(search.toLowerCase()) ||
         d.specialization.toLowerCase().includes(search.toLowerCase())
     );
+
+    const patientSuggestions = patients.filter(p =>
+        nameQuery.length >= 1 &&
+        (p.name.toLowerCase().includes(nameQuery.toLowerCase()) ||
+         p.email.toLowerCase().includes(nameQuery.toLowerCase()))
+    ).slice(0, 8);
+
+    const handleNameChange = (val: string) => {
+        setNameQuery(val);
+        setForm(prev => ({ ...prev, patientName: val, patientEmail: "" }));
+        setPickedPatient(null);
+        setDropdownOpen(true);
+    };
+
+    const pickPatient = (p: KnownPatient) => {
+        setPickedPatient(p);
+        setNameQuery(p.name);
+        setForm(prev => ({ ...prev, patientName: p.name, patientEmail: p.email }));
+        setDropdownOpen(false);
+    };
+
+    const clearPick = () => {
+        setPickedPatient(null);
+        setNameQuery("");
+        setForm(prev => ({ ...prev, patientName: "", patientEmail: "" }));
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -95,6 +155,7 @@ export default function BookAppointmentPage() {
             await setDoc(doc(db, "appointments", apptId), {
                 patientName: form.patientName.trim(),
                 patientEmail: form.patientEmail.toLowerCase().trim(),
+                patientId: pickedPatient?.uid || null,
                 doctorId: selectedDoctor.uid,
                 doctorName: selectedDoctor.name,
                 specialization: selectedDoctor.specialization,
@@ -117,6 +178,8 @@ export default function BookAppointmentPage() {
     const reset = () => {
         setSuccess(false);
         setSelectedDoctor(null);
+        setPickedPatient(null);
+        setNameQuery("");
         setForm({ patientName: "", patientEmail: "", date: "", time: TIME_SLOTS[0], notes: "" });
     };
 
@@ -234,17 +297,72 @@ export default function BookAppointmentPage() {
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Patient Name</label>
-                        <Input required placeholder="Full name" value={form.patientName}
-                            onChange={e => setForm(p => ({ ...p, patientName: e.target.value }))} />
+                {/* Patient combobox */}
+                <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Patient</label>
+                    <div ref={nameRef} className="relative">
+                        {pickedPatient ? (
+                            <div className="flex items-center gap-2 h-11 px-3 rounded-xl border border-blue-300 bg-blue-50">
+                                <UserCheck className="h-4 w-4 text-blue-600 shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-bold text-blue-900 truncate">{pickedPatient.name}</p>
+                                    <p className="text-[10px] text-blue-500 truncate">{pickedPatient.email}</p>
+                                </div>
+                                <button type="button" onClick={clearPick}
+                                    className="h-5 w-5 rounded-full bg-blue-200 hover:bg-blue-300 flex items-center justify-center shrink-0 transition-colors">
+                                    <X className="h-3 w-3 text-blue-700" />
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                                <input
+                                    required
+                                    value={nameQuery}
+                                    onChange={e => handleNameChange(e.target.value)}
+                                    onFocus={() => nameQuery.length >= 1 && setDropdownOpen(true)}
+                                    placeholder="Search patient by name or email…"
+                                    className="h-11 w-full pl-9 pr-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-700 placeholder:text-gray-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                                />
+                            </div>
+                        )}
+
+                        <AnimatePresence>
+                            {dropdownOpen && patientSuggestions.length > 0 && !pickedPatient && (
+                                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                                    className="absolute z-50 top-full left-0 right-0 mt-1 bg-white rounded-xl border border-gray-100 shadow-xl overflow-hidden">
+                                    <p className="px-3 pt-2 pb-1 text-[10px] font-black text-gray-400 uppercase tracking-widest">Existing patients</p>
+                                    {patientSuggestions.map(p => (
+                                        <button key={p.uid} type="button" onMouseDown={() => pickPatient(p)}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 transition-colors text-left">
+                                            <div className="h-7 w-7 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                                                <span className="text-[10px] font-black text-blue-700">{p.name.charAt(0).toUpperCase()}</span>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-xs font-bold text-gray-900 truncate">{p.name}</p>
+                                                <p className="text-[10px] text-gray-400 truncate">{p.email}</p>
+                                            </div>
+                                            <UserCheck className="h-3.5 w-3.5 text-blue-400 shrink-0 ml-auto" />
+                                        </button>
+                                    ))}
+                                    <div className="px-3 py-2 border-t border-gray-50">
+                                        <p className="text-[10px] text-gray-400">Not listed? Keep typing to book for a new patient.</p>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
-                    <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Patient Email</label>
-                        <Input type="email" required placeholder="patient@email.com" value={form.patientEmail}
-                            onChange={e => setForm(p => ({ ...p, patientEmail: e.target.value }))} />
-                    </div>
+                    {nameQuery.length > 0 && !pickedPatient && (
+                        <p className="text-[10px] text-amber-600 font-semibold ml-1">New patient — enter their email below</p>
+                    )}
+                </div>
+
+                {/* Email — read-only when patient is picked */}
+                <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Patient Email</label>
+                    <Input type="email" required placeholder="patient@email.com" value={form.patientEmail}
+                        readOnly={!!pickedPatient}
+                        onChange={e => setForm(p => ({ ...p, patientEmail: e.target.value }))} />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

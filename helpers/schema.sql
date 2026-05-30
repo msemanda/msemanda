@@ -341,6 +341,16 @@ CREATE TABLE IF NOT EXISTS dispensing_records (
 CREATE INDEX IF NOT EXISTS idx_dispense_drug_id      ON dispensing_records ((data->>'drugId'));
 CREATE INDEX IF NOT EXISTS idx_dispense_patient_name ON dispensing_records ((data->>'patientName'));
 
+-- ── Fee schedule (cashier-managed price list for all services) ───────────────
+CREATE TABLE IF NOT EXISTS fee_schedule (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_fee_category ON fee_schedule ((data->>'category'));
+CREATE INDEX IF NOT EXISTS idx_fee_active   ON fee_schedule ((data->>'active'));
+
 -- ============================================================
 -- Done. Run this file against the ehealth database:
 --   psql -U postgres -d ehealth -f schema.sql

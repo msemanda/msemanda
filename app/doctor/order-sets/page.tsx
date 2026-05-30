@@ -86,9 +86,9 @@ export default function OrderSetsPage() {
                 {filtered.map((os, i) => (
                     <motion.div key={os.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                         className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                        <button
+                        <div
                             onClick={() => setExpanded(expanded === os.id ? null : os.id)}
-                            className="w-full px-5 py-4 flex items-center gap-4 hover:bg-gray-50 transition-colors text-left"
+                            className="w-full px-5 py-4 flex items-center gap-4 hover:bg-gray-50 transition-colors cursor-pointer"
                         >
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
@@ -106,7 +106,7 @@ export default function OrderSetsPage() {
                                 </button>
                                 <ChevronRight className={`h-4 w-4 text-gray-400 transition-transform ${expanded === os.id ? "rotate-90" : ""}`} />
                             </div>
-                        </button>
+                        </div>
                         {expanded === os.id && (
                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="border-t border-gray-50 px-5 py-4 bg-gray-50/50">
                                 <ul className="space-y-1.5">

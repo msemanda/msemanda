@@ -2,13 +2,14 @@
  * Single document route: /api/db/[collection]/[id]
  * GET    → fetch one document
  * PATCH  → partial update (merges into data jsonb)
+ * PUT    → upsert (?merge=true merges, ?merge=false replaces)
  * DELETE → remove document
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/postgres";
 
-type Params = { params: { collection: string; id: string } };
+type Params = { params: Promise<{ collection: string; id: string }> };
 
 const ALLOWED = new Set([
     "users", "invites", "admissions", "system", "sessions",
@@ -21,7 +22,7 @@ const ALLOWED = new Set([
     "maintEquipment", "maintRequests", "maintAlerts",
     "fixedAssets", "qualityAudits", "infectionIncidents",
     "incidents", "homeCareVisits", "emergencyCases",
-    "pharmacyStock", "dispensingRecords",
+    "pharmacyStock", "dispensingRecords", "categories",
 ]);
 
 function tableName(col: string) {
@@ -29,7 +30,7 @@ function tableName(col: string) {
 }
 
 export async function GET(_req: NextRequest, { params }: Params) {
-    const { collection: col, id } = params;
+    const { collection: col, id } = await params;
     if (!ALLOWED.has(col)) return NextResponse.json({ error: "Unknown collection" }, { status: 404 });
 
     const client = await pool.connect();
@@ -47,13 +48,12 @@ export async function GET(_req: NextRequest, { params }: Params) {
 }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
-    const { collection: col, id } = params;
+    const { collection: col, id } = await params;
     if (!ALLOWED.has(col)) return NextResponse.json({ error: "Unknown collection" }, { status: 404 });
 
     const body = await req.json();
     const client = await pool.connect();
     try {
-        // Merge patch into existing jsonb data
         await client.query(
             `UPDATE ${tableName(col)} SET data = data || $1::jsonb, updated_at = NOW() WHERE id = $2`,
             [JSON.stringify(body), id]
@@ -64,8 +64,38 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 }
 
+export async function PUT(req: NextRequest, { params }: Params) {
+    const { collection: col, id } = await params;
+    if (!ALLOWED.has(col)) return NextResponse.json({ error: "Unknown collection" }, { status: 404 });
+
+    const { searchParams } = new URL(req.url);
+    const merge = searchParams.get("merge") === "true";
+    const body = await req.json();
+    const table = tableName(col);
+
+    const client = await pool.connect();
+    try {
+        if (merge) {
+            await client.query(
+                `INSERT INTO ${table} (id, data, created_at) VALUES ($1, $2::jsonb, NOW())
+                 ON CONFLICT (id) DO UPDATE SET data = ${table}.data || $2::jsonb, updated_at = NOW()`,
+                [id, JSON.stringify(body)]
+            );
+        } else {
+            await client.query(
+                `INSERT INTO ${table} (id, data, created_at) VALUES ($1, $2::jsonb, NOW())
+                 ON CONFLICT (id) DO UPDATE SET data = $2::jsonb, updated_at = NOW()`,
+                [id, JSON.stringify(body)]
+            );
+        }
+        return NextResponse.json({ id });
+    } finally {
+        client.release();
+    }
+}
+
 export async function DELETE(_req: NextRequest, { params }: Params) {
-    const { collection: col, id } = params;
+    const { collection: col, id } = await params;
     if (!ALLOWED.has(col)) return NextResponse.json({ error: "Unknown collection" }, { status: 404 });
 
     const client = await pool.connect();

@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/postgres";
 
-type Params = { params: { collection: string } };
+type Params = { params: Promise<{ collection: string }> };
 
 // Whitelist of allowed collection names (mirrors Firestore collections)
 const ALLOWED = new Set([
@@ -21,7 +21,8 @@ const ALLOWED = new Set([
     "maintEquipment", "maintRequests", "maintAlerts",
     "fixedAssets", "qualityAudits", "infectionIncidents",
     "incidents", "homeCareVisits", "emergencyCases",
-    "pharmacyStock", "dispensingRecords",
+    "pharmacyStock", "dispensingRecords", "categories",
+    "feeSchedule",
 ]);
 
 function tableName(col: string) {
@@ -30,7 +31,7 @@ function tableName(col: string) {
 }
 
 export async function GET(req: NextRequest, { params }: Params) {
-    const col = params.collection;
+    const { collection: col } = await params;
     if (!ALLOWED.has(col)) return NextResponse.json({ error: "Unknown collection" }, { status: 404 });
 
     const table = tableName(col);
@@ -53,7 +54,12 @@ export async function GET(req: NextRequest, { params }: Params) {
                 conditions.push(`data->>'${f.field}' != $${values.length}`);
             } else if (["<", "<=", ">", ">="].includes(f.op)) {
                 values.push(f.value);
-                conditions.push(`(data->>'${f.field}')::numeric ${f.op} $${values.length}`);
+                if (typeof f.value === "number") {
+                    conditions.push(`(data->>'${f.field}')::numeric ${f.op} $${values.length}`);
+                } else {
+                    // ISO date strings and other text — lexicographic comparison (ISO dates are sortable)
+                    conditions.push(`data->>'${f.field}' ${f.op} $${values.length}`);
+                }
             }
         }
     }
@@ -84,7 +90,7 @@ export async function GET(req: NextRequest, { params }: Params) {
 }
 
 export async function POST(req: NextRequest, { params }: Params) {
-    const col = params.collection;
+    const { collection: col } = await params;
     if (!ALLOWED.has(col)) return NextResponse.json({ error: "Unknown collection" }, { status: 404 });
 
     const table = tableName(col);
