@@ -73,8 +73,8 @@ export default function PharmacyDispensePage() {
         try {
             const [ordSnap, drugSnap, recSnap] = await Promise.all([
                 getDocs(query(collection(db, "cpoeOrders"),
-                    where("type", "==", "MEDICATION"),
-                    where("status", "==", "PAID"))),
+                    where("orderType", "==", "MEDICATION"),
+                    where("status", "==", "PENDING"))),
                 getDocs(query(collection(db, "pharmacyStock"), orderBy("drugName"))),
                 getDocs(query(collection(db, "dispensingRecords"), orderBy("dispensedAt", "desc"))),
             ]);

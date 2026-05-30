@@ -1,172 +1,235 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import {
-    collection,
-    query,
-    where,
-    getDocs
-} from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { collection, query, where, getDocs, updateDoc, doc, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import {
-    Users,
-    Calendar,
-    Clock,
-    ChevronRight,
-    ClipboardList,
-    FileText,
-    Activity
+    Users, Calendar, Clock, ChevronRight,
+    ClipboardList, FileText, Activity, RefreshCw,
+    CheckCircle2, Loader2,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
+interface QueueEntry {
+    id: string;
+    patientName: string;
+    patientEmail: string;
+    patientId?: string;
+    time: string;
+    notes: string;
+    status: string;
+}
+
+const STATUS_STYLE: Record<string, string> = {
+    SCHEDULED: "bg-gray-50 text-gray-500",
+    CALLED:    "bg-amber-50 text-amber-700",
+    COMPLETED: "bg-green-50 text-green-700",
+    CANCELLED: "bg-red-50 text-red-500",
+};
+
 export default function DoctorDashboard() {
     const { profile } = useAuth();
-    const [patients, setPatients] = useState<any[]>([]);
+    const [queue, setQueue] = useState<QueueEntry[]>([]);
     const [loading, setLoading] = useState(true);
+    const [completing, setCompleting] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (profile) {
-            fetchPatients();
-        }
-    }, [profile]);
+    const today = new Date().toISOString().split("T")[0];
 
-    const fetchPatients = async () => {
+    const load = async () => {
+        if (!profile?.uid) return;
         setLoading(true);
         try {
-            const q = query(
-                collection(db, "users"),
-                where("assignedDoctorId", "==", profile?.uid)
+            const snap = await getDocs(
+                query(
+                    collection(db, "appointments"),
+                    where("doctorId", "==", profile.uid),
+                    where("date", "==", today),
+                    orderBy("time"),
+                )
             );
-            const querySnapshot = await getDocs(q);
-            setPatients(querySnapshot.docs.map(doc => ({ ...doc.data(), uid: doc.id })));
-        } catch (error) {
-            console.error("Error fetching patients:", error);
-        } finally {
-            setLoading(false);
-        }
+            setQueue(snap.docs.map(d => {
+                const data = d.data() as Record<string, string>;
+                return {
+                    id: d.id,
+                    patientName: data.patientName || "Unknown",
+                    patientEmail: data.patientEmail || "",
+                    patientId: data.patientId || "",
+                    time: data.time || "",
+                    notes: data.notes || "",
+                    status: data.status || "SCHEDULED",
+                };
+            }));
+        } catch (e) { console.error(e); }
+        finally { setLoading(false); }
     };
+
+    useEffect(() => { load(); }, [profile?.uid]);
+
+    const markDone = async (id: string) => {
+        setCompleting(id);
+        try {
+            await updateDoc(doc(db, "appointments", id), { status: "COMPLETED" });
+            setQueue(prev => prev.map(q => q.id === id ? { ...q, status: "COMPLETED" } : q));
+        } catch (e) { console.error(e); }
+        finally { setCompleting(null); }
+    };
+
+    const active = queue.filter(q => q.status !== "COMPLETED" && q.status !== "CANCELLED");
+    const done   = queue.filter(q => q.status === "COMPLETED").length;
 
     return (
         <div className="max-w-7xl mx-auto space-y-6 pb-10">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-xl font-black text-gray-900">
-                        Welcome, <span className="text-cyan-600">{profile?.name?.split(" ")[0]}</span>
+                        Welcome, <span className="text-cyan-600">{profile?.name?.split(" ")[0] || "Doctor"}</span>
                     </h1>
-                    <p className="text-sm text-gray-500 mt-0.5">You have <span className="text-cyan-600 font-black">{patients.length}</span> patients scheduled today.</p>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                        You have <span className="text-cyan-600 font-black">{active.length}</span> patient{active.length !== 1 ? "s" : ""} scheduled today.
+                    </p>
                 </div>
-                <div className="flex bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden shrink-0">
-                    <div className="px-5 py-3 border-r border-gray-100 text-center">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Today</p>
-                        <p className="text-lg font-black text-cyan-600">08</p>
-                    </div>
-                    <div className="px-5 py-3 text-center">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Pending</p>
-                        <p className="text-lg font-black text-orange-500">{patients.length}</p>
+                <div className="flex items-center gap-3">
+                    <button onClick={load} disabled={loading}
+                        className="h-9 w-9 rounded-xl border border-gray-100 bg-white shadow-sm flex items-center justify-center text-gray-400 hover:text-cyan-600 transition-colors disabled:opacity-50">
+                        <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                    </button>
+                    <div className="flex bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
+                        <div className="px-5 py-3 border-r border-gray-100 text-center">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Today</p>
+                            <p className="text-lg font-black text-cyan-600">{String(queue.length).padStart(2, "0")}</p>
+                        </div>
+                        <div className="px-5 py-3 text-center">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Done</p>
+                            <p className="text-lg font-black text-green-500">{String(done).padStart(2, "0")}</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Consultation queue */}
                 <div className="lg:col-span-8">
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                         <div className="px-5 py-4 border-b border-gray-50 flex justify-between items-center">
                             <h2 className="text-sm font-black text-gray-900 flex items-center gap-2">
-                                <Users className="h-4 w-4 text-cyan-600" /> Consultation Queue
+                                <Users className="h-4 w-4 text-cyan-600" /> Today's Consultation Queue
                             </h2>
-                            <Button variant="ghost" size="sm" className="text-cyan-600 font-bold hover:bg-cyan-50 rounded-xl text-xs px-4">Live Schedule</Button>
+                            <Link href="/doctor/appointments"
+                                className="text-xs font-bold text-cyan-600 hover:underline">
+                                All Appointments
+                            </Link>
                         </div>
 
-                        <div className="divide-y divide-gray-50">
-                            {loading ? (
-                                <div className="py-16 text-center">
-                                    <div className="animate-spin h-8 w-8 border-[3px] border-cyan-100 border-t-cyan-600 rounded-full mx-auto mb-4" />
-                                    <p className="text-gray-400 font-bold text-xs uppercase tracking-widest">Loading</p>
+                        {loading ? (
+                            <div className="py-16 flex items-center justify-center gap-2 text-gray-400 text-sm">
+                                <Loader2 className="h-5 w-5 animate-spin" /> Loading your queue…
+                            </div>
+                        ) : queue.length === 0 ? (
+                            <div className="py-16 text-center">
+                                <div className="h-14 w-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <Calendar className="h-7 w-7 text-gray-200" />
                                 </div>
-                            ) : patients.length === 0 ? (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    className="py-16 text-center"
-                                >
-                                    <div className="h-16 w-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <Calendar className="h-8 w-8 text-gray-200" />
-                                    </div>
-                                    <p className="text-sm text-gray-400">Queue is empty.</p>
-                                </motion.div>
-                            ) : (
-                                patients.map((patient, idx) => (
-                                    <motion.div
-                                        key={patient.uid}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.07 }}
-                                        className="p-4 hover:bg-cyan-50/30 transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-cyan-100 to-teal-50 flex items-center justify-center text-cyan-700 font-black text-sm group-hover:scale-105 transition-transform shadow-sm shrink-0">
-                                                {patient.name.charAt(0)}
+                                <p className="text-sm font-bold text-gray-500">No appointments for today.</p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                    The receptionist books appointments via{" "}
+                                    <span className="font-mono font-bold">/receptionist/book</span>.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-gray-50">
+                                {queue.map((entry, idx) => (
+                                    <motion.div key={entry.id}
+                                        initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}
+                                        className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${entry.status === "COMPLETED" ? "opacity-40" : "hover:bg-cyan-50/20"}`}>
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-cyan-100 to-teal-50 flex items-center justify-center text-cyan-700 font-black text-sm shrink-0">
+                                                {entry.patientName.charAt(0).toUpperCase()}
                                             </div>
                                             <div className="min-w-0">
-                                                <h3 className="text-sm font-black text-gray-900 truncate">{patient.name}</h3>
-                                                <div className="flex items-center gap-4">
-                                                    <div className="flex items-center text-xs font-bold text-gray-600 uppercase tracking-tighter">
-                                                        <Clock className="h-3.5 w-3.5 mr-1.5 text-cyan-500" /> {patient.visitDate || "TBA"}
-                                                    </div>
-                                                    <div className="h-1 w-1 bg-gray-300 rounded-full" />
-                                                    <div className="flex items-center text-xs font-bold text-gray-600 uppercase tracking-tighter">
-                                                        <Activity className="h-3.5 w-3.5 mr-1.5 text-teal-500" /> Routine Checkup
-                                                    </div>
+                                                <p className="text-sm font-black text-gray-900 truncate">{entry.patientName}</p>
+                                                <div className="flex items-center gap-3 flex-wrap">
+                                                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                                                        <Clock className="h-3 w-3" />{entry.time || "—"}
+                                                    </span>
+                                                    {entry.notes && (
+                                                        <span className="text-xs text-gray-400 truncate max-w-[180px]">{entry.notes}</span>
+                                                    )}
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_STYLE[entry.status]}`}>
+                                                        {entry.status}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <Link href={`/doctor/diagnose/${patient.uid}`} className="shrink-0">
-                                            <Button className="h-9 px-4 rounded-xl text-xs font-bold flex items-center gap-1.5">
-                                                Start <ChevronRight className="h-3.5 w-3.5" />
-                                            </Button>
-                                        </Link>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            {entry.status !== "COMPLETED" && entry.status !== "CANCELLED" && (
+                                                <>
+                                                    <Link href={`/doctor/diagnose/${entry.patientId || entry.id}`}
+                                                        className="h-9 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors">
+                                                        Start <ChevronRight className="h-3.5 w-3.5" />
+                                                    </Link>
+                                                    <button onClick={() => markDone(entry.id)} disabled={completing === entry.id}
+                                                        className="h-9 px-3 rounded-xl border border-gray-100 text-gray-400 hover:text-green-600 hover:border-green-100 text-xs font-bold flex items-center gap-1 transition-colors disabled:opacity-50">
+                                                        {completing === entry.id
+                                                            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                            : <><CheckCircle2 className="h-3.5 w-3.5" /> Done</>}
+                                                    </button>
+                                                </>
+                                            )}
+                                            {entry.status === "COMPLETED" && (
+                                                <span className="text-xs text-green-600 font-bold flex items-center gap-1">
+                                                    <CheckCircle2 className="h-3.5 w-3.5" /> Completed
+                                                </span>
+                                            )}
+                                        </div>
                                     </motion.div>
-                                ))
-                            )}
-                        </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
 
+                {/* Sidebar */}
                 <div className="lg:col-span-4 space-y-4">
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                         <h3 className="text-sm font-black text-gray-900 mb-4 flex items-center gap-2">
                             <ClipboardList className="h-4 w-4 text-cyan-600" /> Quick Access
                         </h3>
                         <div className="space-y-2">
-                            <Link href="/doctor/diagnostics">
-                                <Button variant="outline" className="w-full justify-start h-10 rounded-xl border-gray-100 bg-gray-50 hover:bg-white hover:border-cyan-200 text-gray-700 font-bold text-xs mb-2">
-                                    <FileText className="mr-2 h-3.5 w-3.5 text-gray-400" /> Diagnostic History
-                                </Button>
+                            <Link href="/doctor/diagnostics"
+                                className="flex items-center gap-2 w-full h-10 px-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-white hover:border-cyan-200 text-gray-700 font-bold text-xs transition-colors">
+                                <FileText className="h-3.5 w-3.5 text-gray-400" /> Diagnostic History
                             </Link>
-                            <Button variant="outline" className="w-full justify-start h-10 rounded-xl border-gray-100 bg-gray-50 hover:bg-white hover:border-cyan-200 text-gray-700 font-bold text-xs">
-                                <Users className="mr-2 h-3.5 w-3.5 text-gray-400" /> Patient Registry
-                            </Button>
+                            <Link href="/doctor/patients"
+                                className="flex items-center gap-2 w-full h-10 px-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-white hover:border-cyan-200 text-gray-700 font-bold text-xs transition-colors">
+                                <Users className="h-3.5 w-3.5 text-gray-400" /> My Patients
+                            </Link>
+                            <Link href="/doctor/cpoe"
+                                className="flex items-center gap-2 w-full h-10 px-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-white hover:border-cyan-200 text-gray-700 font-bold text-xs transition-colors">
+                                <ClipboardList className="h-3.5 w-3.5 text-gray-400" /> CPOE — Order Entry
+                            </Link>
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-5 text-white shadow-xl relative overflow-hidden">
-                        <div className="relative z-10">
-                            <h3 className="text-sm font-black mb-1">Clinic Performance</h3>
-                            <p className="text-gray-400 text-xs mb-4">Completed <span className="text-cyan-400 font-black">94%</span> of visits this quarter.</p>
-                            <div className="space-y-1.5">
-                                <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                                    <motion.div initial={{ width: 0 }} animate={{ width: "94%" }} className="h-full bg-cyan-400" />
-                                </div>
-                                <div className="flex justify-between text-[10px] font-bold text-gray-500">
-                                    <span>Efficiency</span>
-                                    <span className="text-cyan-400">94%</span>
-                                </div>
+                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-5 text-white shadow-xl">
+                        <h3 className="text-sm font-black mb-1">Today's Summary</h3>
+                        <p className="text-gray-400 text-xs mb-4">
+                            {done} of {queue.length} appointment{queue.length !== 1 ? "s" : ""} completed today.
+                        </p>
+                        <div className="space-y-1.5">
+                            <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                                <motion.div initial={{ width: 0 }}
+                                    animate={{ width: queue.length > 0 ? `${Math.round((done / queue.length) * 100)}%` : "0%" }}
+                                    className="h-full bg-cyan-400 transition-all" />
+                            </div>
+                            <div className="flex justify-between text-[10px] font-bold text-gray-500">
+                                <span>Progress</span>
+                                <span className="text-cyan-400">
+                                    {queue.length > 0 ? Math.round((done / queue.length) * 100) : 0}%
+                                </span>
                             </div>
                         </div>
-                        <Activity className="absolute bottom-[-20px] right-[-20px] h-32 w-32 text-white/[0.03]" />
                     </div>
                 </div>
             </div>

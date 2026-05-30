@@ -74,9 +74,11 @@ interface CreateForm {
     email: string;
     phone: string;
     role: UserRole;
+    specialization: string;
+    title: string;
 }
 
-const EMPTY_CREATE: CreateForm = { name: "", email: "", phone: "", role: "DOCTOR" };
+const EMPTY_CREATE: CreateForm = { name: "", email: "", phone: "", role: "DOCTOR", specialization: SPECIALIZATIONS[0], title: "" };
 
 export default function UserManagementPage() {
     const [users, setUsers] = useState<UserProfile[]>([]);
@@ -190,6 +192,8 @@ export default function UserManagementPage() {
                 role: createForm.role,
                 name: createForm.name,
                 phone: createForm.phone,
+                specialization: createForm.specialization || "",
+                title: createForm.title || "",
                 invitedBy: "Administrator",
                 invitedAt: serverTimestamp(),
                 used: false,
@@ -264,11 +268,31 @@ export default function UserManagementPage() {
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Role</label>
-                                    <select value={createForm.role} onChange={e => setCreateForm(p => ({ ...p, role: e.target.value as UserRole }))}
+                                    <select value={createForm.role}
+                                        onChange={e => setCreateForm(p => ({ ...p, role: e.target.value as UserRole, specialization: e.target.value === "DOCTOR" ? SPECIALIZATIONS[0] : "", title: "" }))}
                                         className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all cursor-pointer">
                                         {ALL_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                                     </select>
                                 </div>
+                                {createForm.role === "DOCTOR" && (
+                                    <>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1 flex items-center gap-1">
+                                                <Stethoscope className="h-3 w-3" /> Specialization
+                                            </label>
+                                            <select value={createForm.specialization}
+                                                onChange={e => setCreateForm(p => ({ ...p, specialization: e.target.value }))}
+                                                className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all cursor-pointer">
+                                                {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Title / Designation</label>
+                                            <Input placeholder="e.g. Consultant, Registrar, MO" value={createForm.title}
+                                                onChange={e => setCreateForm(p => ({ ...p, title: e.target.value }))} />
+                                        </div>
+                                    </>
+                                )}
                                 {createError && (
                                     <p className="text-xs font-semibold text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{createError}</p>
                                 )}

@@ -2,21 +2,15 @@
 
 import React, { useEffect, useState } from "react";
 import {
-    collection,
-    query,
-    where,
-    getDocs
+    collection, query, where, getDocs,
+    doc, updateDoc, serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import {
-    Search,
-    Pill,
-    User,
-    FileText,
-    ArrowRight,
-    ClipboardCheck
+    Search, Pill, FileText, ArrowRight,
+    ClipboardCheck, Loader2, CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -29,6 +23,8 @@ export default function PharmacyDashboard() {
     const [diagnostics, setDiagnostics] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [finalizing, setFinalizing] = useState<string | null>(null);
+    const [finalized, setFinalized] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         if (profile) {
@@ -51,6 +47,39 @@ export default function PharmacyDashboard() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleFinalize = async (diag: any) => {
+        if (finalizing === diag.id || finalized.has(diag.id)) return;
+        setFinalizing(diag.id);
+        try {
+            // Mark the diagnostic itself as dispensed
+            await updateDoc(doc(db, "diagnostics", diag.id), {
+                status: "DISPENSED",
+                dispensedBy: profile?.name,
+                dispensedAt: serverTimestamp(),
+            });
+
+            // Also mark the linked cpoeOrder if one exists
+            const snap = await getDocs(query(
+                collection(db, "cpoeOrders"),
+                where("diagnosticRef", "==", diag.id),
+            ));
+            const orderDoc = snap.docs && snap.docs.length > 0 ? snap.docs[0] : null;
+            if (orderDoc) {
+                await updateDoc(doc(db, "cpoeOrders", orderDoc.id), {
+                    status: "DISPENSED",
+                    dispensedBy: profile?.name,
+                    dispensedAt: serverTimestamp(),
+                });
+            }
+
+            setFinalized(prev => new Set([...prev, diag.id]));
+        } catch (e) {
+            console.error("Finalize error:", e);
+            alert("Failed to finalize prescription. Please try again.");
+        }
+        finally { setFinalizing(null); }
     };
 
     const filtered = diagnostics.filter(d =>
@@ -137,9 +166,21 @@ export default function PharmacyDashboard() {
                                         Details
                                     </Button>
                                 </Link>
-                                <Button className="flex-1 h-9 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5">
-                                    Finalize <ArrowRight className="h-3 w-3" />
-                                </Button>
+                                {finalized.has(diag.id) ? (
+                                    <Button disabled className="flex-1 h-9 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 bg-green-600 hover:bg-green-600">
+                                        <CheckCircle2 className="h-3.5 w-3.5" /> Dispensed
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        onClick={() => handleFinalize(diag)}
+                                        disabled={finalizing === diag.id}
+                                        className="flex-1 h-9 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5">
+                                        {finalizing === diag.id
+                                            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            : <>Finalize <ArrowRight className="h-3 w-3" /></>
+                                        }
+                                    </Button>
+                                )}
                             </div>
                         </motion.div>
                     ))}

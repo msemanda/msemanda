@@ -29,7 +29,7 @@ interface RxOrder {
 type Tab = "queued" | "dispensed" | "cancelled";
 
 const TAB_STATUS: Record<Tab, string> = {
-    queued:    "PAID",
+    queued:    "PENDING",
     dispensed: "DISPENSED",
     cancelled: "CANCELLED",
 };
@@ -49,9 +49,9 @@ export default function PrescriptionQueuePage() {
         const fetchCounts = async () => {
             try {
                 const [q, d, c] = await Promise.all([
-                    getDocs(query(collection(db, "cpoeOrders"), where("type", "==", "MEDICATION"), where("status", "==", "PAID"))),
-                    getDocs(query(collection(db, "cpoeOrders"), where("type", "==", "MEDICATION"), where("status", "==", "DISPENSED"))),
-                    getDocs(query(collection(db, "cpoeOrders"), where("type", "==", "MEDICATION"), where("status", "==", "CANCELLED"))),
+                    getDocs(query(collection(db, "cpoeOrders"), where("orderType", "==", "MEDICATION"), where("status", "==", "PENDING"))),
+                    getDocs(query(collection(db, "cpoeOrders"), where("orderType", "==", "MEDICATION"), where("status", "==", "DISPENSED"))),
+                    getDocs(query(collection(db, "cpoeOrders"), where("orderType", "==", "MEDICATION"), where("status", "==", "CANCELLED"))),
                 ]);
                 setCounts({ queued: q.size, dispensed: d.size, cancelled: c.size });
             } catch (e) { console.error(e); }
@@ -64,7 +64,7 @@ export default function PrescriptionQueuePage() {
         try {
             const snap = await getDocs(
                 query(collection(db, "cpoeOrders"),
-                    where("type", "==", "MEDICATION"),
+                    where("orderType", "==", "MEDICATION"),
                     where("status", "==", TAB_STATUS[tab]))
             );
             setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() } as RxOrder)));
@@ -125,7 +125,7 @@ export default function PrescriptionQueuePage() {
                 <div>
                     <h1 className="text-2xl font-black text-gray-900">Prescription Queue</h1>
                     <p className="text-sm text-gray-500 mt-0.5">
-                        Medication orders confirmed by cashier — ready to dispense
+                        Medication orders from doctors — ready to dispense
                     </p>
                 </div>
                 <button onClick={fetchOrders}
@@ -139,7 +139,7 @@ export default function PrescriptionQueuePage() {
                 <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
                     <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
                     <p className="text-sm font-semibold text-amber-700">
-                        {counts.queued} prescription{counts.queued !== 1 ? "s" : ""} waiting — payment confirmed, ready to dispense.
+                        {counts.queued} prescription{counts.queued !== 1 ? "s" : ""} waiting — ordered by doctor, ready to dispense.
                     </p>
                 </div>
             )}
@@ -184,7 +184,7 @@ export default function PrescriptionQueuePage() {
                     </p>
                     <p className="text-xs text-gray-400">
                         {tab === "queued"
-                            ? "Paid medication orders from doctors appear here."
+                            ? "Medication orders from doctors appear here."
                             : "Records will appear here once processed."}
                     </p>
                 </div>
@@ -215,7 +215,7 @@ export default function PrescriptionQueuePage() {
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-sm text-gray-700 mt-1 font-medium">{order.orderText}</p>
+                                            <p className="text-sm text-gray-700 mt-1 font-medium">{order.detail || order.orderText}</p>
                                             <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                                                 {order.orderedBy && (
                                                     <span className="text-[10px] text-gray-400 flex items-center gap-1">
@@ -251,7 +251,7 @@ export default function PrescriptionQueuePage() {
                                 {tab === "queued" && (
                                     <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
                                         <p className="text-xs text-amber-600 font-semibold flex items-center gap-1.5">
-                                            <Clock className="h-3.5 w-3.5" /> Payment confirmed — confirm dispensing below
+                                            <Clock className="h-3.5 w-3.5" /> Ordered by doctor — dispense now, Finance bills separately
                                         </p>
                                         <div className="flex gap-2">
                                             <button onClick={() => handleCancel(order)} disabled={!!processing}

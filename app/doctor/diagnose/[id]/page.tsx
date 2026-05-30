@@ -7,9 +7,11 @@ import {
     collection,
     getDocs,
     setDoc,
+    addDoc,
     serverTimestamp
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -28,6 +30,7 @@ import { motion } from "framer-motion";
 export default function DiagnosisEntryPage() {
     const { id } = useParams();
     const router = useRouter();
+    const { profile } = useAuth();
     const [patient, setPatient] = useState<any>(null);
     const [pharmacies, setPharmacies] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -70,12 +73,55 @@ export default function DiagnosisEntryPage() {
         setProcessing(true);
         try {
             const diagId = `DIAG-${Date.now()}`;
+
+            // Save clinical notes to diagnostics collection (EMR record)
             await setDoc(doc(db, "diagnostics", diagId), {
                 ...formData,
                 patientId: id,
                 patientName: patient?.name,
+                patientEmail: patient?.email || "",
+                orderedBy: profile?.name,
+                orderedByUid: profile?.uid,
                 createdAt: serverTimestamp(),
             });
+
+            // Send medication order directly to pharmacy queue
+            if (formData.medicines) {
+                const cpoeRef = await addDoc(collection(db, "cpoeOrders"), {
+                    orderType: "MEDICATION",
+                    detail: `${formData.medicines}${formData.dosage ? ` — ${formData.dosage}` : ""}`,
+                    patientId: id,
+                    patientName: patient?.name,
+                    patientEmail: patient?.email || "",
+                    notes: formData.usageDirections,
+                    fromDate: formData.fromDate,
+                    toDate: formData.toDate,
+                    diagnosticRef: diagId,
+                    orderedBy: profile?.name,
+                    orderedByUid: profile?.uid,
+                    priority: "ROUTINE",
+                    status: "PENDING",
+                    amount: 0,
+                    ward: "OPD",
+                    createdAt: serverTimestamp(),
+                });
+
+                // Create bill for cashier to collect payment
+                await addDoc(collection(db, "patientBills"), {
+                    patientName: patient?.name,
+                    patientEmail: patient?.email || "",
+                    description: `${formData.medicines}${formData.dosage ? ` — ${formData.dosage}` : ""}`,
+                    billType: "MEDICATION",
+                    amount: 0,
+                    orderId: cpoeRef.id,
+                    diagnosticRef: diagId,
+                    orderedBy: profile?.name,
+                    status: "PENDING_PAYMENT",
+                    ward: "OPD",
+                    createdAt: serverTimestamp(),
+                });
+            }
+
             router.push("/doctor/dashboard");
         } catch (error) {
             console.error("Error saving diagnosis:", error);

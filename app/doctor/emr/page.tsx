@@ -1,50 +1,130 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 import { motion } from "framer-motion";
-import { FileText, Search, Filter, ChevronRight, Activity, Pill, FlaskConical, Scan } from "lucide-react";
+import {
+    FileText, Search, RefreshCw, Pill, CalendarDays,
+    Clock, Loader2, ChevronRight,
+} from "lucide-react";
 
-const emrPatients = [
-    {
-        id: "P001", name: "John Mwesiga", age: 45, gender: "M", dob: "15/03/1981",
-        diagnosis: "Type 2 Diabetes Mellitus", icd: "E11", lastVisit: "2026-05-20",
-        allergies: ["Penicillin"], bloodGroup: "O+", vitals: { bp: "138/88", hr: 82, temp: 37.1, spo2: 97 },
-        medications: ["Metformin 500mg BD", "Atorvastatin 20mg OD"],
-        labs: [{ name: "HbA1c", value: "8.2%", date: "2026-05-15", flag: "HIGH" }],
-    },
-    {
-        id: "P002", name: "Grace Nakato", age: 67, gender: "F", dob: "22/07/1959",
-        diagnosis: "Hypertension Stage 2", icd: "I10", lastVisit: "2026-05-22",
-        allergies: [], bloodGroup: "A+", vitals: { bp: "158/98", hr: 76, temp: 36.8, spo2: 98 },
-        medications: ["Amlodipine 5mg OD", "Losartan 50mg OD", "Hydrochlorothiazide 12.5mg OD"],
-        labs: [{ name: "RFTs", value: "Creatinine 1.1 mg/dL", date: "2026-05-10", flag: "NORMAL" }],
-    },
-    {
-        id: "P003", name: "Patrick Ssemanda", age: 32, gender: "M", dob: "08/11/1993",
-        diagnosis: "Community-acquired Pneumonia", icd: "J18", lastVisit: "2026-05-24",
-        allergies: ["Sulfa drugs"], bloodGroup: "B+", vitals: { bp: "118/75", hr: 95, temp: 38.6, spo2: 94 },
-        medications: ["Amoxicillin-Clavulanate 875mg BD", "Azithromycin 500mg OD", "Paracetamol 1g TDS"],
-        labs: [{ name: "CBC", value: "WBC 14.2 x10³/µL", date: "2026-05-24", flag: "HIGH" }],
-    },
-];
+interface PatientSummary {
+    key: string;
+    name: string;
+    email: string;
+    lastVisit: string;
+    visitCount: number;
+}
 
-const FLAG_CLASS: Record<string, string> = { HIGH: "badge-red", LOW: "badge-yellow", NORMAL: "badge-green", CRITICAL: "badge-red" };
+const STATUS_BADGE: Record<string, string> = {
+    SCHEDULED:  "bg-gray-50 text-gray-500",
+    CALLED:     "bg-purple-50 text-purple-700",
+    COMPLETED:  "bg-green-50 text-green-700",
+    CANCELLED:  "bg-red-50 text-red-500",
+};
+
+const ORDER_TYPE_COLOR: Record<string, string> = {
+    MEDICATION: "bg-blue-50 text-blue-700",
+    LAB:        "bg-amber-50 text-amber-700",
+    RADIOLOGY:  "bg-purple-50 text-purple-700",
+    NURSING:    "bg-teal-50 text-teal-700",
+    DIET:       "bg-green-50 text-green-700",
+    PROCEDURE:  "bg-rose-50 text-rose-700",
+};
 
 export default function EMRPage() {
-    const [selected, setSelected] = useState<typeof emrPatients[0] | null>(null);
-    const [search, setSearch] = useState("");
+    const { profile } = useAuth();
+    const [patients, setPatients]     = useState<PatientSummary[]>([]);
+    const [loading, setLoading]       = useState(true);
+    const [selected, setSelected]     = useState<PatientSummary | null>(null);
+    const [visits, setVisits]         = useState<any[]>([]);
+    const [orders, setOrders]         = useState<any[]>([]);
+    const [loadingDetail, setLoadingDetail] = useState(false);
+    const [search, setSearch]         = useState("");
 
-    const filtered = emrPatients.filter(p =>
-        p.name.toLowerCase().includes(search.toLowerCase()) || p.id.toLowerCase().includes(search.toLowerCase())
-    );
+    const loadPatients = async () => {
+        if (!profile?.uid) return;
+        setLoading(true);
+        try {
+            const snap = await getDocs(query(
+                collection(db, "appointments"),
+                where("doctorId", "==", profile.uid),
+                orderBy("date", "desc"),
+            ));
+
+            const map = new Map<string, PatientSummary>();
+            snap.docs.forEach(d => {
+                const data = d.data() as Record<string, string>;
+                const key = data.patientEmail || data.patientName;
+                if (!key) return;
+                if (map.has(key)) {
+                    map.get(key)!.visitCount++;
+                } else {
+                    map.set(key, {
+                        key,
+                        name: data.patientName || "Unknown",
+                        email: data.patientEmail || "",
+                        lastVisit: data.date || "",
+                        visitCount: 1,
+                    });
+                }
+            });
+            setPatients(Array.from(map.values()));
+        } catch (e) { console.error(e); }
+        finally { setLoading(false); }
+    };
+
+    const selectPatient = async (p: PatientSummary) => {
+        setSelected(p);
+        setLoadingDetail(true);
+        try {
+            const [visitSnap, orderSnap] = await Promise.all([
+                getDocs(query(
+                    collection(db, "appointments"),
+                    where("doctorId", "==", profile?.uid),
+                    where("patientEmail", "==", p.email),
+                    orderBy("date", "desc"),
+                )),
+                getDocs(query(
+                    collection(db, "cpoeOrders"),
+                    where("patientEmail", "==", p.email),
+                    orderBy("createdAt", "desc"),
+                )),
+            ]);
+            setVisits(visitSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+            setOrders(orderSnap.docs.map(d => ({ id: d.id, ...d.data() })).slice(0, 10));
+        } catch (e) { console.error(e); }
+        finally { setLoadingDetail(false); }
+    };
+
+    useEffect(() => { loadPatients(); }, [profile?.uid]);
+
+    const filtered = patients.filter(p => {
+        const q = search.toLowerCase();
+        return !q || p.name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q);
+    });
+
+    const formatDate = (iso: string) => {
+        if (!iso) return "—";
+        try { return new Date(iso + "T00:00:00").toLocaleDateString("en-UG", { day: "2-digit", month: "short", year: "numeric" }); }
+        catch { return iso; }
+    };
 
     return (
         <div className="max-w-7xl mx-auto space-y-5">
-            <div>
-                <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-                    <FileText className="h-6 w-6 text-blue-600" /> Electronic Medical Records
-                </h1>
-                <p className="text-sm text-gray-500 mt-0.5">Comprehensive patient medical history and records</p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+                        <FileText className="h-6 w-6 text-blue-600" /> Electronic Medical Records
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Patient visit history and clinical orders under your care</p>
+                </div>
+                <button onClick={loadPatients} disabled={loading}
+                    className="h-9 w-9 rounded-xl border border-gray-100 bg-white shadow-sm flex items-center justify-center text-gray-400 hover:text-blue-600 transition-colors disabled:opacity-50">
+                    <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                </button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 min-h-[70vh]">
@@ -53,28 +133,32 @@ export default function EMRPage() {
                     <div className="px-4 py-3 border-b border-gray-50">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <input
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
+                            <input value={search} onChange={e => setSearch(e.target.value)}
                                 className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 rounded-lg border-0 outline-none focus:ring-2 focus:ring-blue-500/20"
-                                placeholder="Search patient or ID..."
-                            />
+                                placeholder="Search patient..." />
                         </div>
                     </div>
+
                     <div className="flex-1 divide-y divide-gray-50 overflow-y-auto">
-                        {filtered.map((p) => (
-                            <button
-                                key={p.id}
-                                onClick={() => setSelected(p)}
-                                className={`w-full text-left px-4 py-3.5 hover:bg-blue-50/50 transition-colors flex items-center gap-3 ${selected?.id === p.id ? "bg-blue-50 border-r-2 border-blue-600" : ""}`}
-                            >
+                        {loading ? (
+                            <div className="flex items-center justify-center py-20 gap-2 text-gray-400 text-sm">
+                                <Loader2 className="h-5 w-5 animate-spin" /> Loading patients…
+                            </div>
+                        ) : filtered.length === 0 ? (
+                            <div className="py-20 text-center text-gray-400 text-sm px-4">
+                                {search ? "No patients match your search." : "No patients found yet. Appointments will appear here."}
+                            </div>
+                        ) : filtered.map(p => (
+                            <button key={p.key} onClick={() => selectPatient(p)}
+                                className={`w-full text-left px-4 py-3.5 hover:bg-blue-50/50 transition-colors flex items-center gap-3 ${selected?.key === p.key ? "bg-blue-50 border-r-2 border-blue-600" : ""}`}>
                                 <div className="h-9 w-9 rounded-xl bg-blue-100 flex items-center justify-center font-black text-blue-700 text-sm shrink-0">
                                     {p.name.charAt(0)}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-bold text-gray-900 truncate">{p.name}</p>
-                                    <p className="text-xs text-gray-400">{p.age}y &bull; {p.gender} &bull; {p.bloodGroup}</p>
-                                    <p className="text-xs text-blue-600 font-semibold truncate">{p.diagnosis}</p>
+                                    <p className="text-xs text-gray-400">
+                                        {p.visitCount} visit{p.visitCount !== 1 ? "s" : ""} · Last: {formatDate(p.lastVisit)}
+                                    </p>
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
                             </button>
@@ -88,94 +172,95 @@ export default function EMRPage() {
                         <div className="h-full flex flex-col items-center justify-center text-center p-12 text-gray-400">
                             <FileText className="h-12 w-12 mb-3 opacity-20" />
                             <p className="font-semibold">Select a patient to view their EMR</p>
+                            <p className="text-xs mt-1 text-gray-300">Visit history and clinical orders will appear here</p>
+                        </div>
+                    ) : loadingDetail ? (
+                        <div className="h-full flex items-center justify-center gap-2 text-gray-400 text-sm">
+                            <Loader2 className="h-5 w-5 animate-spin" /> Loading records…
                         </div>
                     ) : (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-5 space-y-5">
                             {/* Patient header */}
-                            <div className="flex items-start justify-between pb-4 border-b border-gray-50">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center font-black text-blue-700 text-lg">
-                                        {selected.name.charAt(0)}
+                            <div className="flex items-start gap-3 pb-4 border-b border-gray-50">
+                                <div className="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center font-black text-blue-700 text-lg shrink-0">
+                                    {selected.name.charAt(0)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h2 className="text-lg font-black text-gray-900">{selected.name}</h2>
+                                    <p className="text-xs text-gray-400 mt-0.5">{selected.email}</p>
+                                    <div className="flex items-center gap-3 mt-1.5">
+                                        <span className="text-xs text-gray-500">{selected.visitCount} visit{selected.visitCount !== 1 ? "s" : ""} under your care</span>
+                                        <span className="text-xs text-blue-600 font-semibold">Last: {formatDate(selected.lastVisit)}</span>
                                     </div>
-                                    <div>
-                                        <h2 className="text-lg font-black text-gray-900">{selected.name}</h2>
-                                        <p className="text-xs text-gray-400">
-                                            DOB: {selected.dob} &bull; {selected.age}y {selected.gender} &bull; {selected.bloodGroup}
-                                            {selected.allergies.length > 0 && <span className="ml-1 text-red-500 font-bold">&bull; Allergic: {selected.allergies.join(", ")}</span>}
-                                        </p>
+                                </div>
+                            </div>
+
+                            {/* Visit history */}
+                            <div>
+                                <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <CalendarDays className="h-3.5 w-3.5" /> Visit History ({visits.length})
+                                </h3>
+                                {visits.length === 0 ? (
+                                    <p className="text-xs text-gray-400 py-2">No visit records found.</p>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {visits.slice(0, 5).map(v => (
+                                            <div key={v.id} className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100">
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-bold text-gray-900">{formatDate(v.date)}</span>
+                                                        {v.time && (
+                                                            <span className="text-xs text-gray-400 flex items-center gap-0.5">
+                                                                <Clock className="h-3 w-3" />{v.time}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {v.notes && <p className="text-xs text-gray-500 mt-0.5 truncate max-w-[220px]">{v.notes}</p>}
+                                                </div>
+                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${STATUS_BADGE[v.status] || "bg-gray-50 text-gray-500"}`}>
+                                                    {v.status}
+                                                </span>
+                                            </div>
+                                        ))}
                                     </div>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-400">Last visit: {selected.lastVisit}</p>
-                                    <p className="text-xs font-bold text-blue-600">{selected.icd} — {selected.diagnosis}</p>
-                                </div>
+                                )}
                             </div>
 
-                            {/* Vitals */}
+                            {/* Clinical orders */}
                             <div>
                                 <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                    <Activity className="h-3.5 w-3.5" /> Latest Vitals
+                                    <Pill className="h-3.5 w-3.5" /> Clinical Orders ({orders.length})
                                 </h3>
-                                <div className="grid grid-cols-4 gap-2">
-                                    {[
-                                        { label: "BP", value: selected.vitals.bp, unit: "mmHg" },
-                                        { label: "HR", value: selected.vitals.hr, unit: "bpm" },
-                                        { label: "Temp", value: selected.vitals.temp, unit: "°C" },
-                                        { label: "SpO₂", value: selected.vitals.spo2, unit: "%" },
-                                    ].map((v) => (
-                                        <div key={v.label} className="bg-gray-50 rounded-xl p-3 text-center">
-                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{v.label}</p>
-                                            <p className="text-lg font-black text-gray-900">{v.value}</p>
-                                            <p className="text-[10px] text-gray-400">{v.unit}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Medications */}
-                            <div>
-                                <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                    <Pill className="h-3.5 w-3.5" /> Current Medications
-                                </h3>
-                                <div className="space-y-1.5">
-                                    {selected.medications.map((m) => (
-                                        <div key={m} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 border border-blue-100">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
-                                            <span className="text-sm font-semibold text-blue-700">{m}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Lab results */}
-                            <div>
-                                <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                    <FlaskConical className="h-3.5 w-3.5" /> Recent Lab Results
-                                </h3>
-                                <div className="space-y-2">
-                                    {selected.labs.map((l) => (
-                                        <div key={l.name} className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100">
-                                            <div>
-                                                <p className="text-sm font-bold text-gray-900">{l.name}</p>
-                                                <p className="text-xs text-gray-400">{l.date}</p>
+                                {orders.length === 0 ? (
+                                    <p className="text-xs text-gray-400 py-2">No CPOE orders placed for this patient yet.</p>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {orders.map(o => (
+                                            <div key={o.id} className="flex items-start justify-between px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-0.5">
+                                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${ORDER_TYPE_COLOR[o.orderType] || "bg-gray-100 text-gray-500"}`}>
+                                                            {o.orderType}
+                                                        </span>
+                                                        {o.priority && o.priority !== "ROUTINE" && (
+                                                            <span className={`text-[10px] font-black ${o.priority === "STAT" ? "text-red-600" : "text-amber-600"}`}>
+                                                                {o.priority}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-xs font-bold text-gray-900 truncate">{o.detail}</p>
+                                                    {o.notes && <p className="text-xs text-gray-400 mt-0.5">{o.notes}</p>}
+                                                </div>
+                                                <div className="text-right shrink-0 ml-3">
+                                                    {o.amount > 0 && (
+                                                        <p className="text-xs font-black text-gray-700">UGX {o.amount?.toLocaleString()}</p>
+                                                    )}
+                                                    <p className="text-[10px] text-gray-400 mt-0.5">{o.status?.replace(/_/g, " ")}</p>
+                                                </div>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-sm font-bold text-gray-700">{l.value}</p>
-                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${FLAG_CLASS[l.flag]}`}>{l.flag}</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex gap-2 pt-2">
-                                <button className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition-colors">
-                                    Add Consultation Note
-                                </button>
-                                <button className="flex-1 py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-bold border border-gray-100 transition-colors">
-                                    Order Labs / Imaging
-                                </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     )}

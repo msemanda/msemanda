@@ -99,10 +99,13 @@ export default function SetupPage() {
             } else if (inviteSnap.data().used) {
                 setError("This invitation has already been used. Contact your administrator if you need a new one.");
             } else {
+                const invData = inviteSnap.data();
                 setInvite({
-                    role: inviteSnap.data().role as UserRole,
-                    invitedBy: inviteSnap.data().invitedBy || "Administrator",
-                });
+                    role: invData.role as UserRole,
+                    invitedBy: invData.invitedBy || "Administrator",
+                    specialization: invData.specialization || "",
+                    title: invData.title || "",
+                } as any);
                 setStep("setup");
             }
         } catch {
@@ -147,8 +150,10 @@ export default function SetupPage() {
                 email,
                 name: name.trim(),
                 role: invite.role,
+                specialization: (invite as any).specialization || "",
+                title: (invite as any).title || "",
                 createdAt: serverTimestamp(),
-            };
+            } as any;
 
             await setDoc(doc(db, "users", user.uid), profile, { merge: true });
             if (!invite.isSuperadmin) {

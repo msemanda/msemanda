@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { doc, getDoc } from "firebase/firestore";
+import {
+    doc, getDoc, getDocs, collection, query,
+    where, updateDoc, serverTimestamp,
+} from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -25,6 +28,8 @@ export default function PharmacyDiagnosticDetail() {
     const { profile } = useAuth();
     const [diagnostic, setDiagnostic] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [fulfilling, setFulfilling] = useState(false);
+    const [fulfilled, setFulfilled] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -60,6 +65,29 @@ export default function PharmacyDiagnosticDetail() {
             </div>
         );
     }
+
+    const handleFulfill = async () => {
+        if (!diagnostic || fulfilling || fulfilled) return;
+        setFulfilling(true);
+        try {
+            // Find the associated cpoeOrder by diagnosticRef
+            const snap = await getDocs(query(
+                collection(db, "cpoeOrders"),
+                where("diagnosticRef", "==", diagnostic.id),
+            ));
+            const orderDoc = snap.docs && snap.docs.length > 0 ? snap.docs[0] : null;
+            if (orderDoc) {
+                await updateDoc(doc(db, "cpoeOrders", orderDoc.id), {
+                    status: "DISPENSED",
+                    dispensedBy: profile?.name,
+                    dispensedAt: serverTimestamp(),
+                });
+            }
+            setFulfilled(true);
+            setTimeout(() => router.push("/pharmacy/dashboard"), 1500);
+        } catch (e) { console.error(e); }
+        finally { setFulfilling(false); }
+    };
 
     if (!diagnostic) return null;
 
@@ -167,8 +195,16 @@ export default function PharmacyDiagnosticDetail() {
                 </div>
 
                 <div className="flex gap-6">
-                    <Button className="flex-1 h-20 text-xl font-black rounded-[32px] shadow-premium bg-cyan-600 hover:bg-cyan-700 transition-all flex items-center justify-center gap-4">
-                        <CheckCircle2 className="h-6 w-6" /> Confirm Fulfillment
+                    <Button
+                        onClick={handleFulfill}
+                        disabled={fulfilling || fulfilled}
+                        className="flex-1 h-20 text-xl font-black rounded-[32px] shadow-premium bg-cyan-600 hover:bg-cyan-700 disabled:opacity-60 transition-all flex items-center justify-center gap-4">
+                        {fulfilled
+                            ? <><CheckCircle2 className="h-6 w-6" /> Fulfilled — Redirecting…</>
+                            : fulfilling
+                                ? <><span className="animate-spin h-6 w-6 border-[3px] border-white/30 border-t-white rounded-full inline-block" /> Processing…</>
+                                : <><CheckCircle2 className="h-6 w-6" /> Confirm Fulfillment</>
+                        }
                     </Button>
                     <Button variant="outline" className="h-20 px-10 rounded-[32px] border-gray-100 text-gray-400 font-black uppercase tracking-widest hover:bg-white hover:text-red-500 hover:border-red-100 transition-all">
                         Report Issue

@@ -1,7 +1,7 @@
 // ── Database switch ────────────────────────────────────────────────────────────
 // true  → Firebase Firestore (remote cloud DB)
 // false → PostgreSQL (local DB via API routes)
-export const ISDBREMOTE = false;
+export const ISDBREMOTE = true;
 
 // ── Roles ─────────────────────────────────────────────────────────────────────
 export const ROLES = [

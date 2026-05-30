@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { collection, getDocs, addDoc, query, where, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ClipboardList, Plus, FlaskConical, Scan, Pill, UtensilsCrossed,
-    Activity, CheckCircle2, Clock, CreditCard, AlertCircle
+    Activity, CheckCircle2, Clock, CreditCard, AlertCircle,
+    Search, X, User,
 } from "lucide-react";
 
 type OrderType = "MEDICATION" | "LAB" | "RADIOLOGY" | "NURSING" | "DIET" | "PROCEDURE";
@@ -77,19 +78,21 @@ const ORDER_SUGGESTIONS: Record<OrderType, { text: string; amount: number }[]> =
 };
 
 const STATUS_COLOR: Record<string, string> = {
-    AWAITING_PAYMENT: "bg-amber-50 text-amber-700 border-amber-100",
-    PAID:             "bg-green-50 text-green-700 border-green-100",
-    PENDING:          "bg-gray-50 text-gray-500 border-gray-100",
-    IN_PROGRESS:      "bg-blue-50 text-blue-600 border-blue-100",
-    COMPLETED:        "bg-green-50 text-green-700 border-green-100",
-    CANCELLED:        "bg-red-50 text-red-600 border-red-100",
+    PENDING:     "bg-amber-50 text-amber-700 border-amber-100",
+    IN_PROGRESS: "bg-blue-50 text-blue-600 border-blue-100",
+    COMPLETED:   "bg-green-50 text-green-700 border-green-100",
+    DISPENSED:   "bg-green-50 text-green-700 border-green-100",
+    CANCELLED:   "bg-red-50 text-red-600 border-red-100",
 };
 
 export default function CPOEPage() {
     const { profile } = useAuth();
     const [activeType, setActiveType] = useState<OrderType>("MEDICATION");
-    const [patients, setPatients] = useState<any[]>([]);
+    const [patients, setPatients]     = useState<any[]>([]);
     const [selectedPatient, setSelectedPatient] = useState<any>(null);
+    const [patientSearch, setPatientSearch]     = useState("");
+    const [showDropdown, setShowDropdown]       = useState(false);
+    const comboRef = useRef<HTMLDivElement>(null);
     const [priority, setPriority] = useState<"ROUTINE" | "URGENT" | "STAT">("ROUTINE");
     const [detail, setDetail] = useState("");
     const [amount, setAmount] = useState("0");
@@ -99,21 +102,51 @@ export default function CPOEPage() {
     const [orders, setOrders] = useState<any[]>([]);
     const [loadingOrders, setLoadingOrders] = useState(true);
 
-    useEffect(() => { fetchPatients(); fetchMyOrders(); }, []);
+    useEffect(() => { fetchPatients(); fetchMyOrders(); }, [profile?.uid]);
+
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (comboRef.current && !comboRef.current.contains(e.target as Node))
+                setShowDropdown(false);
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, []);
 
     const fetchPatients = async () => {
+        if (!profile?.uid) return;
         try {
-            const snap = await getDocs(query(collection(db, "ipdAdmissions"), where("status", "==", "ADMITTED")));
-            const admitted = snap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
-            setPatients(admitted);
-            if (admitted.length > 0) setSelectedPatient(admitted[0]);
+            const today = new Date().toISOString().split("T")[0];
+            const [ipdSnap, apptSnap] = await Promise.all([
+                getDocs(query(collection(db, "ipdAdmissions"), where("status", "==", "ADMITTED"))),
+                getDocs(query(
+                    collection(db, "appointments"),
+                    where("doctorId", "==", profile.uid),
+                    where("date", "==", today),
+                )),
+            ]);
+
+            const inpatients = ipdSnap.docs.map(d => ({
+                id: d.id, ...d.data(), _source: "IPD",
+            })) as any[];
+
+            const outpatients = apptSnap.docs
+                .filter(d => !["COMPLETED", "CANCELLED"].includes(d.data().status))
+                .map(d => ({
+                    id: d.id, ...d.data(),
+                    ward: "OPD", bedNumber: null, _source: "OPD",
+                })) as any[];
+
+            const all = [...inpatients, ...outpatients];
+            setPatients(all);
         } catch(e) { console.error(e); }
     };
 
     const fetchMyOrders = async () => {
+        if (!profile?.uid) return;
         setLoadingOrders(true);
         try {
-            const snap = await getDocs(collection(db, "cpoeOrders"));
+            const snap = await getDocs(query(collection(db, "cpoeOrders"), where("orderedByUid", "==", profile.uid)));
             const all = snap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
             setOrders(all.sort((a: any, b: any) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).slice(0, 20));
         } catch(e) { console.error(e); }
@@ -140,7 +173,7 @@ export default function CPOEPage() {
                 notes: notes.trim(),
                 orderedBy: profile?.name,
                 orderedByUid: profile?.uid,
-                status: "AWAITING_PAYMENT",
+                status: "PENDING",
                 createdAt: serverTimestamp(),
             });
 
@@ -175,31 +208,80 @@ export default function CPOEPage() {
                 <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
                     <ClipboardList className="h-6 w-6 text-blue-600" /> CPOE — Physician Order Entry
                 </h1>
-                <p className="text-sm text-gray-500 mt-0.5">Orders generate a bill — Cashier must approve payment before the service is delivered</p>
+                <p className="text-sm text-gray-500 mt-0.5">Orders go directly to the department — Finance tracks payment separately</p>
             </div>
 
-            <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
-                <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                <p className="text-sm font-semibold text-amber-700">
-                    All orders create a patient bill. The Cashier must confirm payment before Lab / Pharmacy / Radiology can fulfil the order.
+            <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                <AlertCircle className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                <p className="text-sm font-semibold text-blue-700">
+                    Orders go directly to the relevant department. A bill is generated simultaneously for Finance to track and collect payment.
                 </p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-4">
-                    {/* Patient selector */}
+                    {/* Patient combobox */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Patient (Admitted)</label>
-                        {patients.length === 0 ? (
-                            <p className="text-xs text-gray-400 py-2">No admitted patients found. Admit a patient from IPD first.</p>
-                        ) : (
-                            <select value={selectedPatient?.id || ""}
-                                onChange={e => setSelectedPatient(patients.find(p => p.id === e.target.value) || null)}
-                                className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-900 focus:border-blue-500 outline-none bg-gray-50">
-                                {patients.map(p => (
-                                    <option key={p.id} value={p.id}>{p.patientName} — {p.ward} (Bed {p.bedNumber})</option>
-                                ))}
-                            </select>
+                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Patient (Today's OPD + IPD)</label>
+                        <div ref={comboRef} className="relative">
+                            {selectedPatient ? (
+                                <div className="flex items-center gap-2 h-10 px-3 rounded-xl border border-blue-200 bg-blue-50">
+                                    <User className="h-4 w-4 text-blue-500 shrink-0" />
+                                    <span className="flex-1 text-sm font-bold text-blue-900 truncate">
+                                        {selectedPatient.patientName}
+                                        <span className="ml-1.5 text-[10px] font-semibold text-blue-500">
+                                            {selectedPatient._source === "IPD" ? `${selectedPatient.ward} Ward` : "OPD"}
+                                        </span>
+                                    </span>
+                                    <button onClick={() => { setSelectedPatient(null); setPatientSearch(""); }}
+                                        className="h-5 w-5 rounded-full bg-blue-200 hover:bg-blue-300 flex items-center justify-center text-blue-700 transition-colors shrink-0">
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                                    <input
+                                        value={patientSearch}
+                                        onChange={e => { setPatientSearch(e.target.value); setShowDropdown(true); }}
+                                        onFocus={() => setShowDropdown(true)}
+                                        placeholder={patients.length === 0 ? "No patients scheduled today…" : "Type patient name to search…"}
+                                        disabled={patients.length === 0}
+                                        className="w-full h-10 pl-9 pr-3 rounded-xl border border-gray-200 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none bg-gray-50 disabled:opacity-50"
+                                    />
+                                </>
+                            )}
+
+                            <AnimatePresence>
+                                {showDropdown && !selectedPatient && patients.length > 0 && (
+                                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                                        className="absolute z-20 top-full mt-1 left-0 right-0 bg-white border border-gray-100 rounded-xl shadow-lg overflow-hidden max-h-52 overflow-y-auto">
+                                        {patients
+                                            .filter(p => !patientSearch || p.patientName?.toLowerCase().includes(patientSearch.toLowerCase()))
+                                            .map(p => (
+                                                <button key={p.id} onMouseDown={() => { setSelectedPatient(p); setPatientSearch(""); setShowDropdown(false); }}
+                                                    className="w-full text-left px-4 py-2.5 hover:bg-blue-50 flex items-center gap-3 transition-colors border-b border-gray-50 last:border-0">
+                                                    <div className="h-7 w-7 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700 font-black text-xs shrink-0">
+                                                        {p.patientName?.charAt(0)}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-bold text-gray-900 truncate">{p.patientName}</p>
+                                                        <p className="text-[10px] text-gray-400">
+                                                            {p._source === "IPD" ? `${p.ward} Ward · Bed ${p.bedNumber}` : "OPD · Today"}
+                                                        </p>
+                                                    </div>
+                                                </button>
+                                            ))
+                                        }
+                                        {patients.filter(p => !patientSearch || p.patientName?.toLowerCase().includes(patientSearch.toLowerCase())).length === 0 && (
+                                            <p className="px-4 py-3 text-xs text-gray-400">No patients match "{patientSearch}"</p>
+                                        )}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                        {!selectedPatient && patients.length === 0 && (
+                            <p className="text-[11px] text-gray-400 mt-1.5">Book an appointment via Receptionist or admit a patient from IPD first.</p>
                         )}
                     </div>
 
@@ -275,7 +357,7 @@ export default function CPOEPage() {
                             {submitted && (
                                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                                     className="flex items-center gap-2 p-3 rounded-xl bg-green-50 border border-green-100 text-green-700 text-sm font-semibold">
-                                    <CheckCircle2 className="h-4 w-4" /> Order submitted — bill generated, awaiting cashier payment approval
+                                    <CheckCircle2 className="h-4 w-4" /> Order sent to department — Finance notified to collect payment
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -291,7 +373,7 @@ export default function CPOEPage() {
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="px-4 py-3.5 border-b border-gray-50">
                         <h3 className="font-bold text-gray-900 text-sm">Recent Orders</h3>
-                        <p className="text-[10px] text-gray-400 mt-0.5">Orders awaiting or confirmed payment</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">Your submitted orders</p>
                     </div>
                     {loadingOrders ? (
                         <div className="flex items-center justify-center py-14"><div className="animate-spin h-6 w-6 border-[3px] border-blue-100 border-t-blue-600 rounded-full"/></div>
@@ -321,7 +403,7 @@ export default function CPOEPage() {
                                         <p className="text-xs text-gray-500 mb-2 line-clamp-2">{o.detail}</p>
                                         <div className="flex items-center justify-between">
                                             <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${STATUS_COLOR[o.status] || STATUS_COLOR["PENDING"]}`}>
-                                                {o.status === "AWAITING_PAYMENT" ? "Awaiting Payment" : o.status.replace("_", " ")}
+                                                {o.status.replace(/_/g, " ")}
                                             </span>
                                             {o.amount > 0 && <span className="text-xs font-black text-gray-700">UGX {o.amount.toLocaleString()}</span>}
                                         </div>

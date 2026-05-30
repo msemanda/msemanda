@@ -88,10 +88,12 @@ export default function CashierBillsPage() {
                 collectedBy: profile?.name,
                 receiptNo,
             });
+            // Only mark PAID on cpoeOrder if it hasn't been dispensed yet
+            // (pharmacy may have already advanced the status to DISPENSED)
             if (bill.orderId) {
                 await updateDoc(doc(db, "cpoeOrders", bill.orderId), {
-                    status: "PAID",
                     paidAt: serverTimestamp(),
+                    collectedBy: profile?.name,
                 });
             }
             // Record as income so cashier dashboard totals stay accurate
@@ -142,7 +144,7 @@ export default function CashierBillsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-gray-900">Service Bills</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">Doctor-ordered service bills — approve payment before service is delivered</p>
+                    <p className="text-sm text-gray-500 mt-0.5">Collect payment for services already rendered by departments</p>
                 </div>
                 <button onClick={fetchBills} className="h-10 w-10 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-200 transition-all shrink-0">
                     <RefreshCw className="h-4 w-4" />
@@ -153,7 +155,7 @@ export default function CashierBillsPage() {
                 <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
                     <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
                     <p className="text-sm font-semibold text-amber-700">
-                        {counts.pending} bill{counts.pending !== 1 ? "s" : ""} awaiting payment confirmation — services on hold until approved.
+                        {counts.pending} bill{counts.pending !== 1 ? "s" : ""} awaiting payment — services have been delivered, collect from patient.
                     </p>
                 </div>
             )}
@@ -249,7 +251,7 @@ export default function CashierBillsPage() {
                                     {tab === "pending" && (
                                         <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
                                             <p className="text-xs text-amber-600 font-semibold flex items-center gap-1.5">
-                                                <Clock className="h-3.5 w-3.5" /> Service on hold — confirm payment to proceed
+                                                <Clock className="h-3.5 w-3.5" /> Service delivered — collect payment from patient
                                             </p>
                                             <div className="flex gap-2">
                                                 <button onClick={() => handleCancel(bill)} disabled={!!processing}
