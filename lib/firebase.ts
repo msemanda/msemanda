@@ -1,8 +1,8 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getAnalytics, isSupported } from "firebase/analytics";
 
+// Firebase is used ONLY for authentication (login, signup, auth state).
+// All data storage goes to Neon PostgreSQL via the firestore-shim alias.
 const firebaseConfig = {
   apiKey: "AIzaSyAGQ05zweOEObV2SV4UQ1ZVTmhfkKTh8vA",
   authDomain: "ehealth-8989d.firebaseapp.com",
@@ -10,17 +10,14 @@ const firebaseConfig = {
   storageBucket: "ehealth-8989d.firebasestorage.app",
   messagingSenderId: "87503451704",
   appId: "1:87503451704:web:fd964134585841b0a918cd",
-  measurementId: "G-6RP6EGHGRR"
 };
 
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
 
-if (typeof window !== "undefined") {
-  isSupported().then((supported) => {
-    if (supported) getAnalytics(app);
-  });
-}
+// db is a stub — pages still import it but the firestore-shim intercepts all
+// firebase/firestore calls at build time and routes them to Neon, so db is
+// never actually used for data operations.
+const db = {};
 
 export { app, auth, db };
