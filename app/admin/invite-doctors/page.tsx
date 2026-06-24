@@ -6,6 +6,7 @@ import {
     setDoc, deleteDoc, serverTimestamp
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { fmtDate } from "@/lib/ts";
 import { useAuth } from "@/context/AuthContext";
 import { UserRole } from "@/types";
 import {
@@ -274,9 +275,7 @@ export default function InviteStaffPage() {
 
                                         <p className="text-sm font-black text-gray-900 break-all">{invite.email}</p>
                                         <p className="text-xs text-gray-400 mt-1">
-                                            by {invite.invitedBy} · {invite.invitedAt?.seconds
-                                                ? new Date(invite.invitedAt.seconds * 1000).toLocaleDateString()
-                                                : "recently"}
+                                            by {invite.invitedBy} · {fmtDate(invite.invitedAt, "recently")}
                                         </p>
 
                                         {!invite.used && (

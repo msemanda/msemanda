@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { collection, query, getDocs, orderBy } from "firebase/firestore";
+import { toDate } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { Transaction } from "@/types";
 import { motion } from "framer-motion";
@@ -29,9 +30,8 @@ export default function FinanceReports() {
     const byMonth = useMemo(() => {
         const map: Record<string, { income: number; expenses: number }> = {};
         all.forEach(t => {
-            const key = t.date?.seconds
-                ? format(new Date(t.date.seconds * 1000), "MMM yyyy")
-                : "Unknown";
+            const d = toDate(t.date);
+            const key = d ? format(d, "MMM yyyy") : "Unknown";
             if (!map[key]) map[key] = { income: 0, expenses: 0 };
             if (t.type === "INCOME") map[key].income += t.amount;
             else map[key].expenses += t.amount;

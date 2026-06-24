@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
+import { tsMs } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
@@ -83,7 +84,7 @@ export default function AdminDashboard() {
                 // Sort by createdAt manually if needed, or just take first few
                 const recent = snapshot.docs
                     .map(doc => ({ ...doc.data(), uid: doc.id }))
-                    .sort((a: any, b: any) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+                    .sort((a: any, b: any) => tsMs(b.createdAt) - tsMs(a.createdAt))
                     .slice(0, 3);
                 setRecentPatients(recent);
             } catch (error) {

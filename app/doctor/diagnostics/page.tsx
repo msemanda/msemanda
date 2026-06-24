@@ -8,6 +8,7 @@ import {
     getDocs
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { fmtDate } from "@/lib/ts";
 import { useAuth } from "@/context/AuthContext";
 import {
     FileText,
@@ -129,7 +130,7 @@ export default function DoctorDiagnosticsPage() {
                                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Authenticated On</p>
                                                 <div className="flex items-center text-sm font-black text-gray-900">
                                                     <Calendar className="h-4 w-4 mr-2 text-cyan-600" />
-                                                    {report.createdAt?.seconds ? new Date(report.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}
+                                                    {fmtDate(report.createdAt, 'N/A')}
                                                 </div>
                                             </div>
                                             <div className="h-10 w-px bg-gray-100" />

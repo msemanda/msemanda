@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, query, where, getDocs, doc, setDoc, deleteDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import { fmtDate } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -187,9 +188,7 @@ export default function ReceptionistInvitesPage() {
                                     </div>
                                     <p className="text-sm font-black text-gray-900 break-all">{invite.email}</p>
                                     <p className="text-xs text-gray-400 mt-1">
-                                        by {invite.invitedBy} · {invite.invitedAt?.seconds
-                                            ? new Date(invite.invitedAt.seconds * 1000).toLocaleDateString()
-                                            : "recently"}
+                                        by {invite.invitedBy} · {fmtDate(invite.invitedAt, "recently")}
                                     </p>
                                     {!invite.used && (
                                         <button onClick={() => revoke(invite.email)} disabled={revoking === invite.email}

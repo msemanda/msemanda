@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { collection, query, getDocs, orderBy } from "firebase/firestore";
+import { fmtDate } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { Transaction } from "@/types";
 import { motion } from "framer-motion";
@@ -123,7 +124,7 @@ export default function TransactionsPage() {
                                     <p className="text-xs text-gray-400 truncate">
                                         {t.category}
                                         {t.patientName && ` · ${t.patientName}`}
-                                        {" · "}{t.date?.seconds ? new Date(t.date.seconds * 1000).toLocaleDateString() : "—"}
+                                        {" · "}{fmtDate(t.date)}
                                         {" · "}{t.recordedBy}
                                     </p>
                                 </div>

@@ -37,8 +37,10 @@ export default function SessionsPage() {
 
     const formatTimestamp = (ts: any) => {
         if (!ts) return "N/A";
-        const date = ts.toDate();
-        return date.toLocaleString();
+        if (typeof ts === "string") return new Date(ts).toLocaleString();
+        if (typeof ts.toDate === "function") return ts.toDate().toLocaleString();
+        if (ts.seconds) return new Date(ts.seconds * 1000).toLocaleString();
+        return "N/A";
     };
 
     return (

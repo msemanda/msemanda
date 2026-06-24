@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import { fmtDateTime } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { LabOrder } from "@/types";
 import { motion } from "framer-motion";
@@ -61,7 +62,7 @@ export default function LabReportsPage() {
             </head><body>
             <h1>Laboratory Report</h1>
             <p><strong>Patient:</strong> ${order.patientName || order.patientId} &nbsp; <strong>Priority:</strong> ${order.priority}</p>
-            <p><strong>Ordered:</strong> ${order.orderedAt?.seconds ? new Date(order.orderedAt.seconds * 1000).toLocaleString() : "—"} &nbsp; <strong>Completed:</strong> ${order.completedAt?.seconds ? new Date(order.completedAt.seconds * 1000).toLocaleString() : "—"}</p>
+            <p><strong>Ordered:</strong> ${fmtDateTime(order.orderedAt)} &nbsp; <strong>Completed:</strong> ${fmtDateTime(order.completedAt)}</p>
             <h2>Tests Ordered</h2>
             <p>${order.tests.join(", ")}</p>
             ${order.results?.length ? `
@@ -122,11 +123,7 @@ export default function LabReportsPage() {
                                     </div>
                                     <div>
                                         <p className="text-sm font-black text-gray-900">{order.patientName || order.patientId}</p>
-                                        <p className="text-xs text-gray-400">
-                                            {order.completedAt?.seconds
-                                                ? new Date(order.completedAt.seconds * 1000).toLocaleString()
-                                                : "—"}
-                                        </p>
+                                        <p className="text-xs text-gray-400">{fmtDateTime(order.completedAt)}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, query, where, getDocs, addDoc, serverTimestamp, orderBy } from "firebase/firestore";
+import { fmtDate } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { Transaction, EXPENSE_CATEGORIES, PaymentMethod } from "@/types";
@@ -212,7 +213,7 @@ export default function ExpensesPage() {
                                         <p className="text-sm font-bold text-gray-900 truncate">{t.description}</p>
                                         <p className="text-xs text-gray-400">
                                             {t.category} · {t.paymentMethod.replace(/_/g, " ")}
-                                            {" · "}{t.date?.seconds ? new Date(t.date.seconds * 1000).toLocaleDateString() : "—"}
+                                            {" · "}{fmtDate(t.date)}
                                         </p>
                                     </div>
                                 </div>

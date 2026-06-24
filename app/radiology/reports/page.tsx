@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import { fmtDateTime } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { RadiologyOrder } from "@/types";
 import { motion } from "framer-motion";
@@ -65,7 +66,7 @@ export default function RadiologyReportsPage() {
             <h1>Radiology Report</h1>
             <p><strong>Patient:</strong> ${order.patientName || order.patientId}</p>
             <p><strong>Modality:</strong> ${order.modality} &nbsp; <strong>Body Part:</strong> ${order.bodyPart} &nbsp; <strong>Priority:</strong> ${order.priority}</p>
-            <p><strong>Reported:</strong> ${order.reportedAt?.seconds ? new Date(order.reportedAt.seconds * 1000).toLocaleString() : "—"}</p>
+            <p><strong>Reported:</strong> ${fmtDateTime(order.reportedAt)}</p>
             ${order.findings ? `<h2>Findings</h2><div class="box"><p>${order.findings}</p></div>` : ""}
             ${order.impression ? `<h2>Impression</h2><div class="box"><p>${order.impression}</p></div>` : ""}
             <br/><button onclick="window.print()">Print / Save PDF</button>
@@ -122,11 +123,7 @@ export default function RadiologyReportsPage() {
                                         <p className="text-sm font-black text-gray-900">
                                             {order.patientName || order.patientId} — {order.bodyPart}
                                         </p>
-                                        <p className="text-xs text-gray-400">
-                                            {order.reportedAt?.seconds
-                                                ? new Date(order.reportedAt.seconds * 1000).toLocaleString()
-                                                : "—"}
-                                        </p>
+                                        <p className="text-xs text-gray-400">{fmtDateTime(order.reportedAt)}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">

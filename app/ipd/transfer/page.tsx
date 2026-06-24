@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { fmtDate } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { AnimatePresence, motion } from "framer-motion";
@@ -159,7 +160,7 @@ export default function IpdTransferPage() {
                                     <td className="px-4 py-3 text-xs text-gray-500 max-w-[160px] truncate">{t.reason}</td>
                                     <td className="px-4 py-3 text-xs text-gray-500">{t.transferredBy}</td>
                                     <td className="px-4 py-3 text-xs text-gray-400">
-                                        {t.transferredAt?.seconds ? new Date(t.transferredAt.seconds * 1000).toLocaleDateString() : "â€”"}
+                                        {fmtDate(t.transferredAt)}
                                     </td>
                                 </tr>
                             ))}

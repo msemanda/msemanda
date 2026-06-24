@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { collection, getDocs, addDoc, query, where, serverTimestamp } from "firebase/firestore";
+import { tsMs } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -148,7 +149,7 @@ export default function CPOEPage() {
         try {
             const snap = await getDocs(query(collection(db, "cpoeOrders"), where("orderedByUid", "==", profile.uid)));
             const all = snap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
-            setOrders(all.sort((a: any, b: any) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).slice(0, 20));
+            setOrders(all.sort((a: any, b: any) => tsMs(b.createdAt) - tsMs(a.createdAt)).slice(0, 20));
         } catch(e) { console.error(e); }
         finally { setLoadingOrders(false); }
     };

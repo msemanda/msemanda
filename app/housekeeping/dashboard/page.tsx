@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
+import { tsMs } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { motion } from "framer-motion";
 import { Home, CheckCircle2, Clock, AlertCircle, RefreshCw } from "lucide-react";
@@ -22,7 +23,7 @@ export default function HousekeepingDashboard() {
                     pending: all.filter(t => t.status === "pending").length,
                     inProgress: all.filter(t => t.status === "in_progress").length,
                     completed: all.filter(t => t.status === "completed").length,
-                    overdue: all.filter(t => t.status !== "completed" && t.dueAt?.seconds && t.dueAt.seconds < now).length,
+                    overdue: all.filter(t => t.status !== "completed" && tsMs(t.dueAt) > 0 && tsMs(t.dueAt) < Date.now()).length,
                 });
                 setRecent(all.filter(t => t.status !== "completed").slice(0, 8));
             } catch(e) { console.error(e); }

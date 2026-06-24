@@ -8,6 +8,7 @@ import {
     getDocs
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { fmtDate } from "@/lib/ts";
 import { useAuth } from "@/context/AuthContext";
 import {
     FileText,
@@ -87,7 +88,7 @@ export default function PatientDiagnosticsPage() {
                                     </div>
                                     <div className="text-right">
                                         <div className="text-lg font-bold text-gray-900">
-                                            {report.createdAt?.seconds ? new Date(report.createdAt.seconds * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Pending'}
+                                            {fmtDate(report.createdAt, 'Pending')}
                                         </div>
                                         <div className="text-xs text-blue-600 font-bold uppercase tracking-widest">Digital Healthcare Signature</div>
                                     </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { fmtDate, daysAgo } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -181,7 +182,7 @@ export default function IpdAdmissionsPage() {
                         </thead>
                         <tbody className="divide-y divide-gray-50">
                             {filtered.map(a => {
-                                const days = a.admittedAt?.seconds ? Math.floor((Date.now() / 1000 - a.admittedAt.seconds) / 86400) : 0;
+                                const days = daysAgo(a.admittedAt);
                                 return (
                                     <tr key={a.id} className="hover:bg-gray-50/50 transition-colors">
                                         <td className="px-4 py-3">
@@ -195,7 +196,7 @@ export default function IpdAdmissionsPage() {
                                         <td className="px-4 py-3 text-xs text-gray-500">{a.doctorName}</td>
                                         <td className="px-4 py-3 text-xs text-gray-500 max-w-[140px] truncate">{a.diagnosis}</td>
                                         <td className="px-4 py-3 text-xs text-gray-400">
-                                            {a.admittedAt?.seconds ? new Date(a.admittedAt.seconds * 1000).toLocaleDateString() : "â€”"}
+                                            {fmtDate(a.admittedAt)}
                                         </td>
                                         <td className="px-4 py-3 text-xs font-bold text-gray-700">{days}d</td>
                                     </tr>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, query, where, getDocs, addDoc, serverTimestamp, orderBy } from "firebase/firestore";
+import { fmtDate } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { Transaction, INCOME_CATEGORIES, PaymentMethod } from "@/types";
@@ -241,7 +242,7 @@ export default function IncomePage() {
                                             {t.category}
                                             {t.patientName && ` · ${t.patientName}`}
                                             {" · "}{t.paymentMethod.replace(/_/g, " ")}
-                                            {" · "}{t.date?.seconds ? new Date(t.date.seconds * 1000).toLocaleDateString() : "—"}
+                                            {" · "}{fmtDate(t.date)}
                                         </p>
                                     </div>
                                 </div>

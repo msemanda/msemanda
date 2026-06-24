@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { fmtDate } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -168,7 +169,7 @@ export default function CssdDispatchPage() {
                                     <td className="px-4 py-3 text-xs text-gray-500">{r.receivedBy}</td>
                                     <td className="px-4 py-3 text-xs text-gray-500">{r.dispatchedBy}</td>
                                     <td className="px-4 py-3 text-xs text-gray-400">
-                                        {r.dispatchedAt?.seconds ? new Date(r.dispatchedAt.seconds * 1000).toLocaleDateString() : "â€”"}
+                                        {fmtDate(r.dispatchedAt)}
                                     </td>
                                 </tr>
                             ))}

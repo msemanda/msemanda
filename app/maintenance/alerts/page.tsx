@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
+import { fmtDate } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { AnimatePresence, motion } from "framer-motion";
@@ -158,7 +159,7 @@ export default function MaintenanceAlertsPage() {
                                                 </div>
                                                 <p className="text-xs font-semibold text-gray-700">{alert.equipmentName}</p>
                                                 <p className="text-xs text-gray-500 mt-1">{alert.description}</p>
-                                                <p className="text-[10px] text-gray-400 mt-1">By {alert.createdBy} · {alert.createdAt?.seconds ? new Date(alert.createdAt.seconds * 1000).toLocaleDateString() : "—"}</p>
+                                                <p className="text-[10px] text-gray-400 mt-1">By {alert.createdBy} · {fmtDate(alert.createdAt)}</p>
                                             </div>
                                         </div>
                                         <button onClick={() => handleDismiss(alert.id)} className="h-7 w-7 rounded-lg border border-current/20 flex items-center justify-center text-gray-400 hover:bg-white/50 transition-colors shrink-0">

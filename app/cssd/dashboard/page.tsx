@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, query, getDocs, where } from "firebase/firestore";
+import { tsMs } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { motion } from "framer-motion";
 import { RefreshCw, PackageCheck, Clock, CheckCircle2, XCircle, ClipboardList } from "lucide-react";
@@ -23,7 +24,7 @@ export default function CssdDashboard() {
                     completed: items.filter(i => i.status === "COMPLETED").length,
                     failed:    items.filter(i => i.status === "FAILED").length,
                 });
-                setRecent(items.sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0)).slice(0,8));
+                setRecent(items.sort((a,b) => tsMs(b.createdAt) - tsMs(a.createdAt)).slice(0,8));
             } catch(e){ console.error(e); }
             finally { setLoading(false); }
         };

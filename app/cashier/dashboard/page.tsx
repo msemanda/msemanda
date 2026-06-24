@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, getDocs, orderBy, limit, where, Timestamp } from "firebase/firestore";
+import { collection, query, getDocs, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Transaction } from "@/types";
 import { motion } from "framer-motion";
@@ -15,10 +15,18 @@ function fmt(n: number) {
     return "UGX " + n.toLocaleString("en-UG");
 }
 
-function startOfMonth() {
+function startOfMonth(): string {
     const d = new Date();
     d.setDate(1); d.setHours(0, 0, 0, 0);
-    return Timestamp.fromDate(d);
+    return d.toISOString();
+}
+
+function parseDate(v: any): string | null {
+    if (!v) return null;
+    if (typeof v === "string") return v;
+    if (typeof v.toDate === "function") return v.toDate().toISOString();
+    if (v.seconds) return new Date(v.seconds * 1000).toISOString();
+    return null;
 }
 
 export default function CashierDashboard() {
@@ -35,8 +43,10 @@ export default function CashierDashboard() {
             const som = startOfMonth();
             let income = 0, expenses = 0, monthIncome = 0, monthExpenses = 0;
             all.forEach(t => {
-                if (t.type === "INCOME") { income += t.amount; if (t.date?.seconds >= som.seconds) monthIncome += t.amount; }
-                else { expenses += t.amount; if (t.date?.seconds >= som.seconds) monthExpenses += t.amount; }
+                const tDate = parseDate(t.date);
+                const thisMonth = tDate ? tDate >= som : false;
+                if (t.type === "INCOME") { income += t.amount; if (thisMonth) monthIncome += t.amount; }
+                else { expenses += t.amount; if (thisMonth) monthExpenses += t.amount; }
             });
             setTotals({ income, expenses, monthIncome, monthExpenses });
 
@@ -141,7 +151,7 @@ export default function CashierDashboard() {
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-gray-900">{t.description}</p>
-                                        <p className="text-xs text-gray-400">{t.category} · {t.date?.seconds ? new Date(t.date.seconds * 1000).toLocaleDateString() : "—"}</p>
+                                        <p className="text-xs text-gray-400">{t.category} · {parseDate(t.date) ? new Date(parseDate(t.date)!).toLocaleDateString() : "—"}</p>
                                     </div>
                                 </div>
                                 <span className={`text-sm font-black ${t.type === "INCOME" ? "text-green-600" : "text-red-500"}`}>

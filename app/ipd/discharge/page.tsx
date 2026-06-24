@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, where, updateDoc, doc, serverTimestamp } from "firebase/firestore";
+import { fmtDate, daysAgo } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -102,7 +103,7 @@ export default function IpdDischargePage() {
                 <div className="space-y-3">
                     <AnimatePresence>
                         {filtered.map((a, i) => {
-                            const days = a.admittedAt?.seconds ? Math.floor((Date.now() / 1000 - a.admittedAt.seconds) / 86400) : 0;
+                            const days = daysAgo(a.admittedAt);
                             return (
                                 <motion.div key={a.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97 }} transition={{ delay: i * 0.04 }}
                                     className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
@@ -120,7 +121,7 @@ export default function IpdDischargePage() {
                                         <div className="flex items-center gap-3">
                                             <div className="text-right">
                                                 <p className="text-xs text-gray-400">
-                                                    {a.admittedAt?.seconds ? new Date(a.admittedAt.seconds * 1000).toLocaleDateString() : "—"}
+                                                    {fmtDate(a.admittedAt)}
                                                 </p>
                                                 <p className="text-xs font-bold text-gray-600">{days} day{days !== 1 ? "s" : ""} stay</p>
                                             </div>

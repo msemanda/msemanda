@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { fmtDate } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { AnimatePresence, motion } from "framer-motion";
@@ -158,7 +159,7 @@ export default function IpdOrdersPage() {
                                         <p className="text-sm font-black text-gray-900">{o.patientName}</p>
                                         <p className="text-xs text-gray-500">{o.ward} · {o.orderType}</p>
                                         <p className="text-xs text-gray-400 mt-0.5 truncate">{o.description}</p>
-                                        <p className="text-[10px] text-gray-300 mt-0.5">By {o.orderedBy} · {o.createdAt?.seconds ? new Date(o.createdAt.seconds * 1000).toLocaleDateString() : "—"}</p>
+                                        <p className="text-[10px] text-gray-300 mt-0.5">By {o.orderedBy} · {fmtDate(o.createdAt)}</p>
                                     </div>
                                 </div>
                                 <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border flex items-center gap-1 shrink-0 ${

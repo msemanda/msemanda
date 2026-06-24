@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import { fmtDate } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { HomeCareVisit } from "@/types";
 import { motion } from "framer-motion";
@@ -90,9 +91,7 @@ export default function VisitReports() {
                                     <p className="text-sm font-black text-gray-900">{visit.patientName || visit.patientId}</p>
                                     <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
                                         <Calendar className="h-3 w-3" />
-                                        {visit.visitDate?.seconds
-                                            ? new Date(visit.visitDate.seconds * 1000).toLocaleDateString()
-                                            : "—"}
+                                        {fmtDate(visit.visitDate)}
                                         {visit.duration ? ` · ${visit.duration} min` : ""}
                                     </p>
                                 </div>
@@ -132,10 +131,10 @@ export default function VisitReports() {
                                 </div>
                             )}
 
-                            {visit.nextVisit?.seconds && (
+                            {visit.nextVisit && (
                                 <p className="text-[10px] text-teal-600 font-semibold mt-3 flex items-center gap-1">
                                     <Calendar className="h-3 w-3" />
-                                    Next visit: {new Date(visit.nextVisit.seconds * 1000).toLocaleDateString()}
+                                    Next visit: {fmtDate(visit.nextVisit)}
                                 </p>
                             )}
                         </motion.div>

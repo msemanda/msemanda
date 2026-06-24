@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
+import { fmtDate } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { CheckCircle2, RefreshCw, Search } from "lucide-react";
 
@@ -100,7 +101,7 @@ export default function MaintenanceHistoryPage() {
                                     </td>
                                     <td className="px-4 py-3 text-xs text-gray-500">{r.assignedTo || "â€”"}</td>
                                     <td className="px-4 py-3 text-xs text-gray-400">
-                                        {r.updatedAt?.seconds ? new Date(r.updatedAt.seconds * 1000).toLocaleDateString() : "â€”"}
+                                        {fmtDate(r.updatedAt)}
                                     </td>
                                 </tr>
                             ))}
