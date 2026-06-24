@@ -15,6 +15,7 @@ import {
 interface RxOrder {
     id: string;
     orderText: string;
+    detail?: string;
     amount: number;
     patientName: string;
     patientEmail?: string;
