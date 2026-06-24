@@ -23,61 +23,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            setUser(user);
-            if (user) {
-                try {
-                    const docRef = doc(db, "users", user.uid);
-                    const docSnap = await getDoc(docRef);
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            setUser(firebaseUser);
 
-                    if (user.email === SUPERADMIN_EMAIL) {
-                        const existing = docSnap.exists() ? (docSnap.data() as UserProfile) : null;
-                        if (!existing || existing.role !== "ADMIN") {
-                            const adminProfile: UserProfile = {
-                                uid: user.uid,
-                                email: user.email!,
-                                role: "ADMIN",
-                                name: existing?.name || user.displayName || "System Administrator",
-                                address: existing?.address,
-                                dob: existing?.dob,
-                                gender: existing?.gender,
-                                createdAt: existing?.createdAt || serverTimestamp(),
-                            };
-                            await setDoc(docRef, adminProfile, { merge: true });
-                            setProfile(adminProfile);
-                        } else {
-                            setProfile(existing);
-                        }
-                    } else if (docSnap.exists()) {
-                        setProfile(docSnap.data() as UserProfile);
-                    } else {
-                        setProfile(null);
-                    }
-
-                    try {
-                        const sessionRef = doc(db, "sessions", `${user.uid}_${Date.now()}`);
-                        await setDoc(sessionRef, {
-                            uid: user.uid,
-                            email: user.email,
-                            timestamp: serverTimestamp(),
-                            userAgent: window.navigator.userAgent,
-                            lastActive: serverTimestamp()
-                        });
-                    } catch (sessionError) {
-                        console.warn("Telemetry recording failed:", sessionError);
-                    }
-                } catch (error: any) {
-                    if (error.code === 'permission-denied') {
-                        console.error("Firestore permission denied when fetching user profile:", error);
-                    } else {
-                        console.error("Error fetching user profile:", error);
-                    }
-                    setProfile(null);
-                }
-            } else {
+            if (!firebaseUser) {
                 setProfile(null);
+                setLoading(false);
+                return;
             }
-            setLoading(false);
+
+            // ── Superadmin fast-path ───────────────────────────────────────────
+            // semandamoses91@gmail.com is always ADMIN — set the profile
+            // immediately from Firebase identity so the UI never blocks on a DB
+            // round-trip, then upsert the record into Neon in the background.
+            if (firebaseUser.email === SUPERADMIN_EMAIL) {
+                const adminProfile: UserProfile = {
+                    uid:       firebaseUser.uid,
+                    email:     firebaseUser.email!,
+                    role:      "ADMIN",
+                    name:      firebaseUser.displayName || "System Administrator",
+                    createdAt: serverTimestamp(),
+                };
+                setProfile(adminProfile);
+                setLoading(false);
+
+                // Persist / refresh the admin record in Neon (non-blocking)
+                setDoc(doc(db, "users", firebaseUser.uid), adminProfile, { merge: true })
+                    .catch((err) => console.warn("Admin profile upsert failed:", err));
+
+                // Record session (non-blocking)
+                setDoc(doc(db, "sessions", `${firebaseUser.uid}_${Date.now()}`), {
+                    uid:        firebaseUser.uid,
+                    email:      firebaseUser.email,
+                    timestamp:  serverTimestamp(),
+                    userAgent:  window.navigator.userAgent,
+                    lastActive: serverTimestamp(),
+                }).catch(() => {/* telemetry — ignore failures */});
+
+                return;
+            }
+
+            // ── Regular users ─────────────────────────────────────────────────
+            try {
+                const docSnap = await getDoc(doc(db, "users", firebaseUser.uid));
+                setProfile(docSnap.exists() ? (docSnap.data() as UserProfile) : null);
+
+                // Record session (non-blocking)
+                setDoc(doc(db, "sessions", `${firebaseUser.uid}_${Date.now()}`), {
+                    uid:        firebaseUser.uid,
+                    email:      firebaseUser.email,
+                    timestamp:  serverTimestamp(),
+                    userAgent:  window.navigator.userAgent,
+                    lastActive: serverTimestamp(),
+                }).catch(() => {/* telemetry — ignore failures */});
+            } catch (error: unknown) {
+                console.error("Error fetching user profile:", error);
+                setProfile(null);
+            } finally {
+                setLoading(false);
+            }
         });
 
         return () => unsubscribe();
