@@ -1,25 +1,65 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Stethoscope, Clock, User, CheckCircle2, AlertCircle, XCircle } from "lucide-react";
+import { Stethoscope, Clock, User, CheckCircle2, AlertCircle, XCircle, RefreshCw } from "lucide-react";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-const otSchedule = [
-    { id: "OT001", time: "08:00", patient: "Alice Nakirya", surgeon: "Dr. Katongo", procedure: "Laparoscopic Appendectomy", ot: "OT-1", anesthesia: "General", status: "IN_PROGRESS", duration: 90 },
-    { id: "OT002", time: "10:30", patient: "Bob Katende", surgeon: "Dr. Ssekibala", procedure: "Total Hip Replacement", ot: "OT-2", anesthesia: "Spinal", status: "SCHEDULED", duration: 180 },
-    { id: "OT003", time: "13:00", patient: "Carol Akello", surgeon: "Dr. Namubiru", procedure: "Caesarean Section", ot: "OT-1", anesthesia: "Spinal", status: "SCHEDULED", duration: 60 },
-    { id: "OT004", time: "15:30", patient: "David Omara", surgeon: "Dr. Katongo", procedure: "Hernia Repair", ot: "OT-3", anesthesia: "Local+Sedation", status: "SCHEDULED", duration: 75 },
-    { id: "OT005", time: "06:00", patient: "Eve Nassali", surgeon: "Dr. Bwire", procedure: "Cholecystectomy", ot: "OT-2", anesthesia: "General", status: "COMPLETED", duration: 120 },
-];
+interface OTItem {
+    id: string;
+    time: string;
+    patient: string;
+    surgeon: string;
+    procedure: string;
+    ot: string;
+    anesthesia: string;
+    status: string;
+    duration: number;
+}
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-    SCHEDULED: { label: "Scheduled", color: "badge-blue", icon: Clock },
-    IN_PROGRESS: { label: "In Progress", color: "badge-yellow", icon: AlertCircle },
-    COMPLETED: { label: "Completed", color: "badge-green", icon: CheckCircle2 },
-    CANCELLED: { label: "Cancelled", color: "badge-red", icon: XCircle },
-    POSTPONED: { label: "Postponed", color: "badge-purple", icon: AlertCircle },
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+    SCHEDULED:  { label: "Scheduled",   color: "badge-blue",   icon: Clock },
+    IN_PROGRESS:{ label: "In Progress", color: "badge-yellow", icon: AlertCircle },
+    COMPLETED:  { label: "Completed",   color: "badge-green",  icon: CheckCircle2 },
+    CANCELLED:  { label: "Cancelled",   color: "badge-red",    icon: XCircle },
+    POSTPONED:  { label: "Postponed",   color: "badge-purple", icon: AlertCircle },
 };
 
 export default function OTPage() {
+    const [schedule, setSchedule] = useState<OTItem[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const load = useCallback(async () => {
+        setLoading(true);
+        try {
+            const snap = await getDocs(collection(db, "otSchedules"));
+            setSchedule(snap.docs.map(d => {
+                const r = d.data();
+                return {
+                    id: d.id,
+                    time: (r.time as string) ?? "—",
+                    patient: ((r.patientName ?? r.patient) as string) ?? "—",
+                    surgeon: ((r.surgeon ?? r.doctorName) as string) ?? "—",
+                    procedure: (r.procedure as string) ?? "—",
+                    ot: ((r.ot ?? r.theater) as string) ?? "—",
+                    anesthesia: (r.anesthesia as string) ?? "—",
+                    status: (r.status as string) ?? "SCHEDULED",
+                    duration: Number(r.duration ?? 60),
+                };
+            }));
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => { load(); }, [load]);
+
+    const otRooms = ["OT-1", "OT-2", "OT-3"];
+    const sorted = [...schedule].sort((a, b) => a.time.localeCompare(b.time));
+
     return (
         <div className="max-w-5xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
@@ -29,15 +69,18 @@ export default function OTPage() {
                     </h1>
                     <p className="text-sm text-gray-500 mt-0.5">Operating theater bookings for {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
                 </div>
-                <div className="flex gap-3">
-                    {["OT-1", "OT-2", "OT-3"].map((ot) => {
-                        const busy = otSchedule.some(s => s.ot === ot && s.status === "IN_PROGRESS");
+                <div className="flex items-center gap-3">
+                    {otRooms.map((ot) => {
+                        const busy = schedule.some(s => s.ot === ot && s.status === "IN_PROGRESS");
                         return (
                             <div key={ot} className={`px-3 py-2 rounded-xl text-xs font-bold border ${busy ? "bg-amber-50 text-amber-700 border-amber-100" : "bg-green-50 text-green-700 border-green-100"}`}>
                                 {ot}: {busy ? "In Use" : "Available"}
                             </div>
                         );
                     })}
+                    <button onClick={load} className="text-gray-400 hover:text-blue-600 transition-colors">
+                        <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                    </button>
                 </div>
             </div>
 
@@ -50,11 +93,16 @@ export default function OTPage() {
                     <span>OT / Duration</span>
                     <span>Status</span>
                 </div>
-                <div className="divide-y divide-gray-50">
-                    {otSchedule
-                        .sort((a, b) => a.time.localeCompare(b.time))
-                        .map((item, i) => {
-                            const cfg = STATUS_CONFIG[item.status];
+                {loading ? (
+                    <div className="flex items-center justify-center py-16">
+                        <div className="animate-spin h-6 w-6 border-[3px] border-blue-100 border-t-blue-500 rounded-full" />
+                    </div>
+                ) : sorted.length === 0 ? (
+                    <p className="text-center text-gray-400 py-16 text-xs font-bold uppercase tracking-widest">No OT schedules for today</p>
+                ) : (
+                    <div className="divide-y divide-gray-50">
+                        {sorted.map((item, i) => {
+                            const cfg = STATUS_CONFIG[item.status] ?? STATUS_CONFIG.SCHEDULED;
                             const Icon = cfg.icon;
                             return (
                                 <motion.div
@@ -84,7 +132,8 @@ export default function OTPage() {
                                 </motion.div>
                             );
                         })}
-                </div>
+                    </div>
+                )}
             </div>
         </div>
     );

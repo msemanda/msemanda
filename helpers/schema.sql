@@ -420,6 +420,136 @@ CREATE TABLE IF NOT EXISTS wellness_programs (
 CREATE INDEX IF NOT EXISTS idx_wellness_prog_status   ON wellness_programs ((data->>'status'));
 CREATE INDEX IF NOT EXISTS idx_wellness_prog_category ON wellness_programs ((data->>'category'));
 
+-- ── Nurse shifts ─────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS nurse_shifts (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_nurse_shifts_shift ON nurse_shifts ((data->>'shift'));
+CREATE INDEX IF NOT EXISTS idx_nurse_shifts_ward  ON nurse_shifts ((data->>'ward'));
+
+-- ── Nurse handovers ───────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS nurse_handovers (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_nurse_handovers_priority ON nurse_handovers ((data->>'priority'));
+
+-- ── Physiotherapy sessions (daily session log) ────────────────────────────────
+CREATE TABLE IF NOT EXISTS physiotherapy_sessions (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_physio_sessions_status ON physiotherapy_sessions ((data->>'status'));
+CREATE INDEX IF NOT EXISTS idx_physio_sessions_date   ON physiotherapy_sessions ((data->>'sessionDate'));
+
+-- ── Physiotherapy plans (treatment plan per patient) ─────────────────────────
+CREATE TABLE IF NOT EXISTS physiotherapy_plans (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_physio_plans_status ON physiotherapy_plans ((data->>'status'));
+
+-- ── Dental appointments ───────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS dental_appointments (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_dental_appt_status ON dental_appointments ((data->>'status'));
+CREATE INDEX IF NOT EXISTS idx_dental_appt_date   ON dental_appointments ((data->>'appointmentDate'));
+
+-- ── Dental x-rays ─────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS dental_xrays (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_dental_xrays_patient ON dental_xrays ((data->>'patientId'));
+
+-- ── Diet plans ────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS diet_plans (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_diet_plans_patient ON diet_plans ((data->>'patientId'));
+
+-- ── Dietary menu items ────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS dietary_menu_items (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_menu_items_meal ON dietary_menu_items ((data->>'meal'));
+
+-- ── Dietary assessments ───────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS dietary_assessments (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_dietary_assess_risk ON dietary_assessments ((data->>'malnutritionRisk'));
+
+-- ── Ambulance units ───────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS ambulance_units (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_amb_units_status ON ambulance_units ((data->>'status'));
+
+-- ── Ambulance calls ───────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS ambulance_calls (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_amb_calls_status ON ambulance_calls ((data->>'status'));
+
+-- ── Emergency logs ────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS emergency_logs (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_emergency_logs_date ON emergency_logs ((data->>'date'));
+CREATE INDEX IF NOT EXISTS idx_emergency_logs_type ON emergency_logs ((data->>'type'));
+
+-- ── Wellness sessions (recurring session schedule) ────────────────────────────
+CREATE TABLE IF NOT EXISTS wellness_sessions (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_wellness_sess_program ON wellness_sessions ((data->>'program'));
+
+-- ── Home care routes (daily visit route for nurses) ───────────────────────────
+CREATE TABLE IF NOT EXISTS home_care_routes (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_hcr_status ON home_care_routes ((data->>'status'));
+
 -- ============================================================
 -- Done. Run this file against the ehealth database:
 --   psql -U postgres -d ehealth -f schema.sql
