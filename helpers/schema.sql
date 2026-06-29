@@ -381,6 +381,45 @@ CREATE TABLE IF NOT EXISTS wellness_enrollments (
 CREATE INDEX IF NOT EXISTS idx_wellness_patient_id ON wellness_enrollments ((data->>'patientId'));
 CREATE INDEX IF NOT EXISTS idx_wellness_program    ON wellness_enrollments ((data->>'program'));
 
+-- ── Home care patients (patient-level profile for home visits) ───────────────
+CREATE TABLE IF NOT EXISTS home_care_patients (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_hcp_status     ON home_care_patients ((data->>'status'));
+CREATE INDEX IF NOT EXISTS idx_hcp_patient_id ON home_care_patients ((data->>'patientId'));
+
+-- ── Blood inventory (per blood-group stock levels) ────────────────────────────
+CREATE TABLE IF NOT EXISTS blood_inventory (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_blood_inv_group ON blood_inventory ((data->>'bloodGroup'));
+
+-- ── Blood requests (transfusion requests from wards) ─────────────────────────
+CREATE TABLE IF NOT EXISTS blood_requests (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_blood_req_status  ON blood_requests ((data->>'status'));
+CREATE INDEX IF NOT EXISTS idx_blood_req_urgency ON blood_requests ((data->>'urgency'));
+
+-- ── Wellness programs (program catalog) ───────────────────────────────────────
+CREATE TABLE IF NOT EXISTS wellness_programs (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_wellness_prog_status   ON wellness_programs ((data->>'status'));
+CREATE INDEX IF NOT EXISTS idx_wellness_prog_category ON wellness_programs ((data->>'category'));
+
 -- ============================================================
 -- Done. Run this file against the ehealth database:
 --   psql -U postgres -d ehealth -f schema.sql

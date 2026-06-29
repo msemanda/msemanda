@@ -1,79 +1,22 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Sparkles, Users, TrendingUp, Heart, ArrowRight } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { Sparkles, Users, TrendingUp, Heart, ArrowRight, RefreshCw } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import Link from "next/link";
 
-const stats = [
-    { label: "Active Programs", value: "8", icon: Sparkles, color: "text-purple-600", bg: "bg-purple-50" },
-    { label: "Enrolled Members", value: "312", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Improved Health", value: "78%", icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
-    { label: "Satisfaction", value: "4.8", icon: Heart, color: "text-red-500", bg: "bg-red-50" },
-];
-
-const programs = [
-    {
-        id: "WL001",
-        name: "Diabetes Prevention Program",
-        category: "CHRONIC_DISEASE",
-        enrolled: 48,
-        sessions: "Mon, Wed, Fri",
-        duration: "12 weeks",
-        status: "ACTIVE",
-        facilitator: "Dr. Namubiru",
-    },
-    {
-        id: "WL002",
-        name: "Cardiac Rehab & Heart Health",
-        category: "FITNESS",
-        enrolled: 32,
-        sessions: "Tue, Thu",
-        duration: "8 weeks",
-        status: "ACTIVE",
-        facilitator: "Dr. Bwire",
-    },
-    {
-        id: "WL003",
-        name: "Stress Management & Mindfulness",
-        category: "MENTAL_HEALTH",
-        enrolled: 65,
-        sessions: "Daily (online)",
-        duration: "6 weeks",
-        status: "ACTIVE",
-        facilitator: "Dr. Ssekibala",
-    },
-    {
-        id: "WL004",
-        name: "Weight Management & Nutrition",
-        category: "NUTRITION",
-        enrolled: 80,
-        sessions: "Mon, Wed",
-        duration: "16 weeks",
-        status: "ACTIVE",
-        facilitator: "Mrs. Nakirya",
-    },
-    {
-        id: "WL005",
-        name: "Smoking Cessation Support",
-        category: "PREVENTIVE",
-        enrolled: 22,
-        sessions: "Sat",
-        duration: "10 weeks",
-        status: "ACTIVE",
-        facilitator: "Dr. Katongo",
-    },
-    {
-        id: "WL006",
-        name: "Hypertension Lifestyle Clinic",
-        category: "CHRONIC_DISEASE",
-        enrolled: 55,
-        sessions: "Thu",
-        duration: "Ongoing",
-        status: "ACTIVE",
-        facilitator: "Dr. Katongo",
-    },
-];
+interface WellnessProgram {
+    id: string;
+    name: string;
+    category: string;
+    enrolled: number;
+    sessions: string;
+    duration: string;
+    status: string;
+    facilitator: string;
+}
 
 const CATEGORY_COLORS: Record<string, string> = {
     CHRONIC_DISEASE: "bg-red-50 text-red-700 border-red-100",
@@ -84,19 +27,65 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function WellnessDashboard() {
-    const { profile } = useAuth();
+    const [programs, setPrograms] = useState<WellnessProgram[]>([]);
+    const [enrolledCount, setEnrolledCount] = useState(0);
+    const [loading, setLoading] = useState(true);
+
+    const load = useCallback(async () => {
+        setLoading(true);
+        try {
+            const [progSnap, enrollSnap] = await Promise.all([
+                getDocs(query(collection(db, "wellnessPrograms"), where("status", "==", "ACTIVE"))),
+                getDocs(collection(db, "wellnessEnrollments")),
+            ]);
+            setPrograms(progSnap.docs.map(d => {
+                const r = d.data();
+                return {
+                    id: d.id,
+                    name: ((r.name ?? r.programName) as string) ?? "—",
+                    category: (r.category as string) ?? "OTHER",
+                    enrolled: Number(r.enrolled ?? r.enrolledCount ?? 0),
+                    sessions: ((r.sessions ?? r.schedule) as string) ?? "—",
+                    duration: (r.duration as string) ?? "—",
+                    status: (r.status as string) ?? "ACTIVE",
+                    facilitator: ((r.facilitator ?? r.doctorName) as string) ?? "—",
+                };
+            }));
+            setEnrolledCount(
+                enrollSnap.docs.filter(d => d.data().status === "ACTIVE").length
+            );
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => { load(); }, [load]);
+
+    const statCards = [
+        { label: "Active Programs",  value: loading ? "…" : String(programs.length), icon: Sparkles,   color: "text-purple-600", bg: "bg-purple-50" },
+        { label: "Enrolled Members", value: loading ? "…" : String(enrolledCount),   icon: Users,       color: "text-blue-600",   bg: "bg-blue-50"   },
+        { label: "Improved Health",  value: "—",                                      icon: TrendingUp,  color: "text-green-600",  bg: "bg-green-50"  },
+        { label: "Satisfaction",     value: "—",                                      icon: Heart,       color: "text-red-500",    bg: "bg-red-50"    },
+    ];
 
     return (
         <div className="max-w-7xl mx-auto space-y-6">
-            <div>
-                <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-                    <Sparkles className="h-6 w-6 text-purple-600" /> Wellness Hub
-                </h1>
-                <p className="text-sm text-gray-500 mt-0.5">Preventive health &amp; wellness programs management</p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+                        <Sparkles className="h-6 w-6 text-purple-600" /> Wellness Hub
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Preventive health &amp; wellness programs management</p>
+                </div>
+                <button onClick={load} className="text-gray-400 hover:text-purple-600 transition-colors">
+                    <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                </button>
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((s, i) => {
+                {statCards.map((s, i) => {
                     const Icon = s.icon;
                     return (
                         <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="stat-card">
@@ -115,30 +104,38 @@ export default function WellnessDashboard() {
                         Manage <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
                 </div>
-                <div className="divide-y divide-gray-50">
-                    {programs.map((p, i) => (
-                        <motion.div key={p.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-                            className="px-5 py-4 hover:bg-gray-50 transition-colors flex items-center gap-4">
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <p className="text-sm font-bold text-gray-900">{p.name}</p>
-                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${CATEGORY_COLORS[p.category]}`}>
-                                        {p.category.replace("_", " ")}
-                                    </span>
+                {loading ? (
+                    <div className="flex items-center justify-center py-8">
+                        <div className="animate-spin h-5 w-5 border-[3px] border-purple-100 border-t-purple-500 rounded-full" />
+                    </div>
+                ) : programs.length === 0 ? (
+                    <p className="text-center text-gray-400 py-8 text-xs">No active wellness programs</p>
+                ) : (
+                    <div className="divide-y divide-gray-50">
+                        {programs.map((p, i) => (
+                            <motion.div key={p.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                                className="px-5 py-4 hover:bg-gray-50 transition-colors flex items-center gap-4">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <p className="text-sm font-bold text-gray-900">{p.name}</p>
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${CATEGORY_COLORS[p.category] ?? "bg-gray-50 text-gray-600 border-gray-100"}`}>
+                                            {p.category.replace(/_/g, " ")}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-gray-400">{p.sessions} &bull; {p.duration} &bull; {p.facilitator}</p>
                                 </div>
-                                <p className="text-xs text-gray-400">{p.sessions} &bull; {p.duration} &bull; {p.facilitator}</p>
-                            </div>
-                            <div className="text-right shrink-0">
-                                <p className="text-lg font-black text-blue-600">{p.enrolled}</p>
-                                <p className="text-[10px] text-gray-400">enrolled</p>
-                            </div>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                                <div className="h-2 w-2 rounded-full bg-green-500" />
-                                <span className="text-xs font-semibold text-green-600">Active</span>
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
+                                <div className="text-right shrink-0">
+                                    <p className="text-lg font-black text-blue-600">{p.enrolled}</p>
+                                    <p className="text-[10px] text-gray-400">enrolled</p>
+                                </div>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                    <div className="h-2 w-2 rounded-full bg-green-500" />
+                                    <span className="text-xs font-semibold text-green-600">Active</span>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

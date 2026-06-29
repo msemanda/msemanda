@@ -1,15 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { FlaskConical, Search, CheckCircle2, XCircle } from "lucide-react";
+import { FlaskConical, Search, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { toDate } from "@/lib/ts";
 
-const requests = [
-    { id: "BR001", patient: "Sarah Namutebi", bed: "B-03", bloodGroup: "O+", units: 2, reason: "Acute blood loss — GI bleed", doctor: "Dr. Bwire", requestedAt: "09:15", urgency: "EMERGENCY", status: "PENDING" },
-    { id: "BR002", patient: "Alice Nakirya", bed: "C-04", bloodGroup: "A+", units: 1, reason: "Anaemia (Hb 7.2 g/dL)", doctor: "Dr. Bwire", requestedAt: "10:00", urgency: "URGENT", status: "APPROVED" },
-    { id: "BR003", patient: "Robert Mugisha", bed: "D-02", bloodGroup: "B+", units: 2, reason: "Pre-operative preparation — cardiac surgery", doctor: "Dr. Katongo", requestedAt: "11:30", urgency: "ROUTINE", status: "PENDING" },
-    { id: "BR004", patient: "John Mwesiga", bed: "A-01", bloodGroup: "O+", units: 1, reason: "Intra-operative transfusion", doctor: "Dr. Namubiru", requestedAt: "07:45", urgency: "EMERGENCY", status: "ISSUED" },
-];
+interface BloodRequest {
+    id: string;
+    patient: string;
+    bed: string;
+    bloodGroup: string;
+    units: number;
+    reason: string;
+    doctor: string;
+    requestedAt: string;
+    urgency: string;
+    status: string;
+}
 
 const URGENCY_BADGE: Record<string, string> = {
     EMERGENCY: "bg-red-50 text-red-700 border-red-100",
@@ -24,16 +33,61 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export default function BloodRequestsPage() {
+    const [requests, setRequests] = useState<BloodRequest[]>([]);
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
-    const filtered = requests.filter(r => r.patient.toLowerCase().includes(search.toLowerCase()) || r.bloodGroup.includes(search.toUpperCase()));
+
+    const load = useCallback(async () => {
+        setLoading(true);
+        try {
+            const snap = await getDocs(collection(db, "bloodRequests"));
+            setRequests(snap.docs.map(d => {
+                const r = d.data();
+                const at = toDate(r.requestedAt);
+                return {
+                    id: d.id,
+                    patient: ((r.patientName ?? r.patient) as string) ?? "—",
+                    bed: ((r.bed ?? r.bedNumber) as string) ?? "—",
+                    bloodGroup: ((r.bloodGroup ?? r.group) as string) ?? "?",
+                    units: Number(r.units ?? 1),
+                    reason: ((r.reason ?? r.indication) as string) ?? "—",
+                    doctor: ((r.doctor ?? r.doctorName) as string) ?? "—",
+                    requestedAt: at
+                        ? at.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+                        : ((r.requestedAt as string) ?? "—"),
+                    urgency: (r.urgency as string) ?? "ROUTINE",
+                    status: (r.status as string) ?? "PENDING",
+                };
+            }));
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => { load(); }, [load]);
+
+    const filtered = requests.filter(r =>
+        r.patient.toLowerCase().includes(search.toLowerCase()) ||
+        r.bloodGroup.includes(search.toUpperCase())
+    );
+    const pendingCount = requests.filter(r => r.status === "PENDING").length;
 
     return (
         <div className="max-w-5xl mx-auto space-y-5">
-            <div>
-                <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-                    <FlaskConical className="h-6 w-6 text-red-600" /> Blood Requests
-                </h1>
-                <p className="text-sm text-gray-500 mt-0.5">{requests.filter(r => r.status === "PENDING").length} pending requests</p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+                        <FlaskConical className="h-6 w-6 text-red-600" /> Blood Requests
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                        {loading ? "Loading…" : `${pendingCount} pending requests`}
+                    </p>
+                </div>
+                <button onClick={load} className="text-gray-400 hover:text-red-600 transition-colors">
+                    <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                </button>
             </div>
 
             <div className="relative max-w-sm">
@@ -43,39 +97,58 @@ export default function BloodRequestsPage() {
                     placeholder="Search patient or blood group..." />
             </div>
 
-            <div className="space-y-3">
-                {filtered.map((r, i) => (
-                    <motion.div key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                        className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                        <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center text-red-700 font-black text-sm">{r.bloodGroup}</div>
-                                <div>
-                                    <p className="text-sm font-black text-gray-900">{r.patient}
-                                        <span className="ml-2 text-xs font-normal text-gray-400">Bed {r.bed}</span>
-                                    </p>
-                                    <p className="text-xs text-gray-400">{r.doctor} · {r.requestedAt} · {r.units} unit{r.units > 1 ? "s" : ""}</p>
+            {loading ? (
+                <div className="flex items-center justify-center py-16">
+                    <div className="animate-spin h-6 w-6 border-[3px] border-red-100 border-t-red-500 rounded-full" />
+                </div>
+            ) : filtered.length === 0 ? (
+                <p className="text-center text-gray-400 py-16 text-xs font-bold uppercase tracking-widest">
+                    {search ? "No results match your search" : "No blood requests found"}
+                </p>
+            ) : (
+                <div className="space-y-3">
+                    {filtered.map((r, i) => (
+                        <motion.div key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                            className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                            <div className="flex items-start justify-between mb-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center text-red-700 font-black text-sm">
+                                        {r.bloodGroup}
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-black text-gray-900">
+                                            {r.patient}
+                                            <span className="ml-2 text-xs font-normal text-gray-400">Bed {r.bed}</span>
+                                        </p>
+                                        <p className="text-xs text-gray-400">
+                                            {r.doctor} · {r.requestedAt} · {r.units} unit{r.units > 1 ? "s" : ""}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${URGENCY_BADGE[r.urgency] ?? "bg-gray-50 text-gray-600 border-gray-100"}`}>
+                                        {r.urgency}
+                                    </span>
+                                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${STATUS_BADGE[r.status] ?? "bg-gray-50 text-gray-600"}`}>
+                                        {r.status}
+                                    </span>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${URGENCY_BADGE[r.urgency]}`}>{r.urgency}</span>
-                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${STATUS_BADGE[r.status]}`}>{r.status}</span>
-                            </div>
-                        </div>
-                        <p className="text-xs text-gray-600 ml-13">{r.reason}</p>
-                        {r.status === "PENDING" && (
-                            <div className="flex gap-2 mt-3 justify-end">
-                                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-100 text-red-500 text-xs font-bold hover:bg-red-50 transition-colors">
-                                    <XCircle className="h-3.5 w-3.5" /> Decline
-                                </button>
-                                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors">
-                                    <CheckCircle2 className="h-3.5 w-3.5" /> Approve & Issue
-                                </button>
-                            </div>
-                        )}
-                    </motion.div>
-                ))}
-            </div>
+                            <p className="text-xs text-gray-600 ml-13">{r.reason}</p>
+                            {r.status === "PENDING" && (
+                                <div className="flex gap-2 mt-3 justify-end">
+                                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-100 text-red-500 text-xs font-bold hover:bg-red-50 transition-colors">
+                                        <XCircle className="h-3.5 w-3.5" /> Decline
+                                    </button>
+                                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors">
+                                        <CheckCircle2 className="h-3.5 w-3.5" /> Approve & Issue
+                                    </button>
+                                </div>
+                            )}
+                        </motion.div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

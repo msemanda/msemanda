@@ -24,6 +24,7 @@ const ALLOWED = new Set([
     "pharmacyStock", "dispensingRecords", "categories",
     "feeSchedule",
     "dentalRecords", "physiotherapyPatients", "wellnessEnrollments",
+    "homeCarePatients", "bloodInventory", "bloodRequests", "wellnessPrograms",
 ]);
 
 function tableName(col: string) {
