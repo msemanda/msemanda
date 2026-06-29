@@ -351,6 +351,36 @@ CREATE TABLE IF NOT EXISTS fee_schedule (
 CREATE INDEX IF NOT EXISTS idx_fee_category ON fee_schedule ((data->>'category'));
 CREATE INDEX IF NOT EXISTS idx_fee_active   ON fee_schedule ((data->>'active'));
 
+-- ── Dental records ───────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS dental_records (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_dental_patient_id ON dental_records ((data->>'patientId'));
+CREATE INDEX IF NOT EXISTS idx_dental_status     ON dental_records ((data->>'status'));
+
+-- ── Physiotherapy patients (treatment tracking) ───────────────────────────────
+CREATE TABLE IF NOT EXISTS physiotherapy_patients (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_physio_patient_id ON physiotherapy_patients ((data->>'patientId'));
+CREATE INDEX IF NOT EXISTS idx_physio_progress   ON physiotherapy_patients ((data->>'progress'));
+
+-- ── Wellness enrollments (individual patient program tracking) ────────────────
+CREATE TABLE IF NOT EXISTS wellness_enrollments (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_wellness_patient_id ON wellness_enrollments ((data->>'patientId'));
+CREATE INDEX IF NOT EXISTS idx_wellness_program    ON wellness_enrollments ((data->>'program'));
+
 -- ============================================================
 -- Done. Run this file against the ehealth database:
 --   psql -U postgres -d ehealth -f schema.sql

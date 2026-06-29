@@ -23,6 +23,7 @@ const ALLOWED = new Set([
     "incidents", "homeCareVisits", "emergencyCases",
     "pharmacyStock", "dispensingRecords", "categories",
     "feeSchedule",
+    "dentalRecords", "physiotherapyPatients", "wellnessEnrollments",
 ]);
 
 function tableName(col: string) {
