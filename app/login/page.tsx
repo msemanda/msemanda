@@ -2,46 +2,36 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
 import { Input } from "@/components/ui/Input";
-import { UserRole } from "@/types";
+import type { UserRole } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-    HeartPulse,
-    Mail,
-    Lock,
-    ShieldCheck,
-    ArrowRight,
-    Sparkles,
-} from "lucide-react";
+import { HeartPulse, Mail, Lock, ShieldCheck, ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 function getRoleDashboard(role: UserRole): string {
     switch (role) {
-        case "ADMIN": return "/admin/dashboard";
-        case "PATIENT": return "/patient/dashboard";
-        case "DOCTOR": return "/doctor/dashboard";
-        case "PHARMACY": return "/pharmacy/dashboard";
-        case "NURSE": return "/nurse/dashboard";
-        case "LAB_TECH": return "/lab/dashboard";
-        case "RADIOLOGY_TECH": return "/radiology/dashboard";
+        case "ADMIN":           return "/admin/dashboard";
+        case "PATIENT":         return "/patient/dashboard";
+        case "DOCTOR":          return "/doctor/dashboard";
+        case "PHARMACY":        return "/pharmacy/dashboard";
+        case "NURSE":           return "/nurse/dashboard";
+        case "LAB_TECH":        return "/lab/dashboard";
+        case "RADIOLOGY_TECH":  return "/radiology/dashboard";
         case "PHYSIOTHERAPIST": return "/physiotherapy/dashboard";
-        case "DENTIST": return "/dental/dashboard";
-        case "DIETITIAN": return "/dietary/dashboard";
+        case "DENTIST":         return "/dental/dashboard";
+        case "DIETITIAN":       return "/dietary/dashboard";
         case "EMERGENCY_STAFF": return "/emergency/dashboard";
-        case "RECEPTIONIST": return "/receptionist/dashboard";
-        case "CASHIER": return "/cashier/dashboard";
-        default: return "/login";
+        case "RECEPTIONIST":    return "/receptionist/dashboard";
+        case "CASHIER":         return "/cashier/dashboard";
+        default:                return "/login";
     }
 }
 
 export default function LoginPage() {
-    const [email, setEmail] = useState("");
+    const [email, setEmail]       = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
+    const [error, setError]       = useState("");
+    const [loading, setLoading]   = useState(false);
     const router = useRouter();
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -50,32 +40,33 @@ export default function LoginPage() {
         setError("");
 
         try {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
+            const res = await fetch("/api/auth/login", {
+                method:  "POST",
+                headers: { "Content-Type": "application/json" },
+                body:    JSON.stringify({ email, password }),
+                credentials: "same-origin",
+            });
 
-            if (user.email === "semandamoses91@gmail.com") {
-                router.push("/admin/dashboard");
+            const data = await res.json();
+
+            if (!res.ok) {
+                setError(data.error || "Invalid email or password.");
                 return;
             }
 
-            const docSnap = await getDoc(doc(db, "users", user.uid));
-            if (docSnap.exists()) {
-                const userData = docSnap.data();
-                router.push(getRoleDashboard(userData.role as UserRole));
-            } else {
-                setError("No profile found. Please contact your administrator.");
-                await auth.signOut();
-            }
-        } catch (err: any) {
-            setError(err.message || "Failed to sign in. Please check your credentials.");
+            router.push(getRoleDashboard(data.role as UserRole));
+        } catch {
+            setError("Network error. Please check your connection and try again.");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6"
-            style={{ backgroundImage: "radial-gradient(at 50% 0%, rgba(37,99,235,0.06) 0, transparent 60%), radial-gradient(at 100% 100%, rgba(22,163,74,0.05) 0, transparent 50%)" }}>
+        <div
+            className="min-h-screen bg-gray-50 flex items-center justify-center p-6"
+            style={{ backgroundImage: "radial-gradient(at 50% 0%, rgba(37,99,235,0.06) 0, transparent 60%), radial-gradient(at 100% 100%, rgba(22,163,74,0.05) 0, transparent 50%)" }}
+        >
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -103,7 +94,7 @@ export default function LoginPage() {
                                     className="pl-10 font-medium"
                                     required
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={e => setEmail(e.target.value)}
                                 />
                             </div>
                         </div>
@@ -118,7 +109,7 @@ export default function LoginPage() {
                                     className="pl-10"
                                     required
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={e => setPassword(e.target.value)}
                                 />
                             </div>
                         </div>
@@ -142,7 +133,7 @@ export default function LoginPage() {
                             disabled={loading}
                             className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm shadow-blue-600/20"
                         >
-                            {loading ? "Signing in..." : "Sign In"}
+                            {loading ? "Signing in…" : "Sign In"}
                             {!loading && <ArrowRight className="h-4 w-4" />}
                         </button>
                     </form>

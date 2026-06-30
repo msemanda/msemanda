@@ -1,15 +1,10 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
-import { UserProfile } from "@/types";
-
-const SUPERADMIN_EMAIL = "semandamoses91@gmail.com";
+import type { UserProfile } from "@/types";
 
 interface AuthContextType {
-    user: User | null;
+    user: { uid: string; email: string } | null;
     profile: UserProfile | null;
     loading: boolean;
     logout: () => Promise<void>;
@@ -18,86 +13,39 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser]       = useState<{ uid: string; email: string } | null>(null);
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            setUser(firebaseUser);
-
-            if (!firebaseUser) {
-                setProfile(null);
-                setLoading(false);
-                return;
-            }
-
-            // ── Superadmin fast-path ───────────────────────────────────────────
-            // semandamoses91@gmail.com is always ADMIN — set the profile
-            // immediately from Firebase identity so the UI never blocks on a DB
-            // round-trip, then upsert the record into Neon in the background.
-            if (firebaseUser.email === SUPERADMIN_EMAIL) {
-                const adminProfile: UserProfile = {
-                    uid:       firebaseUser.uid,
-                    email:     firebaseUser.email!,
-                    role:      "ADMIN",
-                    name:      firebaseUser.displayName || "System Administrator",
-                    createdAt: serverTimestamp(),
-                };
-                setProfile(adminProfile);
-                setLoading(false);
-
-                // Persist / refresh the admin record in Neon (non-blocking)
-                setDoc(doc(db, "users", firebaseUser.uid), adminProfile, { merge: true })
-                    .catch((err) => console.warn("Admin profile upsert failed:", err));
-
-                // Record session (non-blocking)
-                setDoc(doc(db, "sessions", `${firebaseUser.uid}_${Date.now()}`), {
-                    uid:        firebaseUser.uid,
-                    email:      firebaseUser.email,
-                    timestamp:  serverTimestamp(),
-                    userAgent:  window.navigator.userAgent,
-                    lastActive: serverTimestamp(),
-                }).catch(() => {/* telemetry — ignore failures */});
-
-                return;
-            }
-
-            // ── Regular users ─────────────────────────────────────────────────
-            try {
-                const docSnap = await getDoc(doc(db, "users", firebaseUser.uid));
-                setProfile(docSnap.exists() ? (docSnap.data() as UserProfile) : null);
-
-                // Record session (non-blocking)
-                setDoc(doc(db, "sessions", `${firebaseUser.uid}_${Date.now()}`), {
-                    uid:        firebaseUser.uid,
-                    email:      firebaseUser.email,
-                    timestamp:  serverTimestamp(),
-                    userAgent:  window.navigator.userAgent,
-                    lastActive: serverTimestamp(),
-                }).catch(() => {/* telemetry — ignore failures */});
-            } catch (error: unknown) {
-                console.error("Error fetching user profile:", error);
-                setProfile(null);
-            } finally {
-                setLoading(false);
-            }
-        });
-
-        return () => unsubscribe();
+        fetch("/api/auth/me", { credentials: "same-origin" })
+            .then(r => (r.ok ? r.json() : null))
+            .then(data => {
+                if (data) {
+                    setUser({ uid: data.uid, email: data.email });
+                    setProfile({
+                        uid:         data.uid,
+                        email:       data.email,
+                        name:        data.name,
+                        role:        data.role,
+                        permissions: data.permissions ?? [],
+                        createdAt:   null,
+                    });
+                }
+            })
+            .catch(() => {})
+            .finally(() => setLoading(false));
     }, []);
 
     const logout = async () => {
         setLoading(true);
         try {
-            await auth.signOut();
+            await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
+        } finally {
             setUser(null);
             setProfile(null);
-            window.location.href = "/login";
-        } catch (error) {
-            console.error("Logout failed:", error);
-        } finally {
             setLoading(false);
+            window.location.href = "/login";
         }
     };
 
@@ -109,9 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error("useAuth must be used within an AuthProvider");
-    }
-    return context;
+    const ctx = useContext(AuthContext);
+    if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
+    return ctx;
 };

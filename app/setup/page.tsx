@@ -1,47 +1,39 @@
 "use client";
 
 import React, { useState } from "react";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { UserRole, UserProfile } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     HeartPulse, Mail, Lock, ArrowRight, ShieldCheck,
-    CheckCircle2, User, KeyRound, Stethoscope
+    CheckCircle2, User, KeyRound, Stethoscope,
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import Link from "next/link";
 
 function getRoleDashboard(role: UserRole): string {
     switch (role) {
-        case "ADMIN": return "/admin/dashboard";
-        case "PATIENT": return "/patient/dashboard";
-        case "DOCTOR": return "/doctor/dashboard";
-        case "PHARMACY": return "/pharmacy/dashboard";
-        case "NURSE": return "/nurse/dashboard";
-        case "LAB_TECH": return "/lab/dashboard";
-        case "RADIOLOGY_TECH": return "/radiology/dashboard";
+        case "ADMIN":           return "/admin/dashboard";
+        case "PATIENT":         return "/patient/dashboard";
+        case "DOCTOR":          return "/doctor/dashboard";
+        case "PHARMACY":        return "/pharmacy/dashboard";
+        case "NURSE":           return "/nurse/dashboard";
+        case "LAB_TECH":        return "/lab/dashboard";
+        case "RADIOLOGY_TECH":  return "/radiology/dashboard";
         case "PHYSIOTHERAPIST": return "/physiotherapy/dashboard";
-        case "DENTIST": return "/dental/dashboard";
-        case "DIETITIAN": return "/dietary/dashboard";
+        case "DENTIST":         return "/dental/dashboard";
+        case "DIETITIAN":       return "/dietary/dashboard";
         case "EMERGENCY_STAFF": return "/emergency/dashboard";
-        default: return "/login";
+        default:                return "/login";
     }
 }
 
 const ROLE_LABELS: Record<string, string> = {
-    ADMIN: "System Administrator",
-    PATIENT: "Patient",
-    DOCTOR: "Medical Practitioner",
-    PHARMACY: "Pharmacist",
-    NURSE: "Nurse",
-    LAB_TECH: "Laboratory Technician",
-    RADIOLOGY_TECH: "Radiology Technician",
-    PHYSIOTHERAPIST: "Physiotherapist",
-    DENTIST: "Dentist",
-    DIETITIAN: "Dietitian",
-    EMERGENCY_STAFF: "Emergency Staff",
+    ADMIN: "System Administrator", PATIENT: "Patient", DOCTOR: "Medical Practitioner",
+    PHARMACY: "Pharmacist", NURSE: "Nurse", LAB_TECH: "Laboratory Technician",
+    RADIOLOGY_TECH: "Radiology Technician", PHYSIOTHERAPIST: "Physiotherapist",
+    DENTIST: "Dentist", DIETITIAN: "Dietitian", EMERGENCY_STAFF: "Emergency Staff",
 };
 
 const ROLE_COLORS: Record<string, string> = {
@@ -65,25 +57,27 @@ type Step = "email" | "setup" | "done";
 interface InviteData {
     role: UserRole;
     invitedBy: string;
+    specialization?: string;
+    title?: string;
     isSuperadmin?: boolean;
 }
 
 export default function SetupPage() {
-    const [step, setStep] = useState<Step>("email");
-    const [email, setEmail] = useState("");
-    const [invite, setInvite] = useState<InviteData | null>(null);
-    const [name, setName] = useState("");
-    const [password, setPassword] = useState("");
+    const [step, setStep]                   = useState<Step>("email");
+    const [email, setEmail]                 = useState("");
+    const [invite, setInvite]               = useState<InviteData | null>(null);
+    const [name, setName]                   = useState("");
+    const [password, setPassword]           = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
+    const [error, setError]                 = useState("");
+    const [loading, setLoading]             = useState(false);
 
+    // ── Step 1: check invitation in Firestore ─────────────────────────────────
     const checkInvite = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
         const normalEmail = email.toLowerCase().trim();
 
-        // Superadmin bootstrap — fully outside try/catch, no Firestore call needed
         if (normalEmail === SUPERADMIN_EMAIL) {
             setInvite({ role: "ADMIN", invitedBy: "System", isSuperadmin: true });
             setName("System Administrator");
@@ -93,19 +87,19 @@ export default function SetupPage() {
 
         setLoading(true);
         try {
-            const inviteSnap = await getDoc(doc(db, "invites", normalEmail));
-            if (!inviteSnap.exists()) {
+            const snap = await getDoc(doc(db, "invites", normalEmail));
+            if (!snap.exists()) {
                 setError("No invitation found for this email. Please contact your administrator.");
-            } else if (inviteSnap.data().used) {
+            } else if (snap.data().used) {
                 setError("This invitation has already been used. Contact your administrator if you need a new one.");
             } else {
-                const invData = inviteSnap.data();
+                const d = snap.data();
                 setInvite({
-                    role: invData.role as UserRole,
-                    invitedBy: invData.invitedBy || "Administrator",
-                    specialization: invData.specialization || "",
-                    title: invData.title || "",
-                } as any);
+                    role:           d.role as UserRole,
+                    invitedBy:      d.invitedBy || "Administrator",
+                    specialization: d.specialization || "",
+                    title:          d.title || "",
+                });
                 setStep("setup");
             }
         } catch {
@@ -115,52 +109,46 @@ export default function SetupPage() {
         }
     };
 
+    // ── Step 2: create account ────────────────────────────────────────────────
     const handleSetup = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (password !== confirmPassword) {
-            setError("Passwords do not match.");
-            return;
-        }
-        if (password.length < 6) {
-            setError("Password must be at least 6 characters.");
-            return;
-        }
+        if (password !== confirmPassword) { setError("Passwords do not match."); return; }
+        if (password.length < 6)          { setError("Password must be at least 6 characters."); return; }
         if (!invite) return;
 
         setLoading(true);
         setError("");
-        try {
-            let user;
 
-            try {
-                const cred = await createUserWithEmailAndPassword(auth, email, password);
-                user = cred.user;
-            } catch (createErr: any) {
-                if (createErr.code === "auth/email-already-in-use") {
-                    // Auth account exists but no Firestore profile — sign in instead
-                    const cred = await signInWithEmailAndPassword(auth, email, password);
-                    user = cred.user;
-                } else {
-                    throw createErr;
-                }
+        try {
+            const uid = crypto.randomUUID();
+
+            // Create auth record in Neon
+            const res = await fetch("/api/auth/register", {
+                method:  "POST",
+                headers: { "Content-Type": "application/json" },
+                body:    JSON.stringify({
+                    uid,
+                    email:       email.toLowerCase().trim(),
+                    password,
+                    name:        name.trim(),
+                    role:        invite.role,
+                    permissions: [],
+                }),
+                credentials: "same-origin",
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                setError(data.error || "Failed to create account. Please try again.");
+                return;
             }
 
-            const profile: UserProfile = {
-                uid: user.uid,
-                email,
-                name: name.trim(),
-                role: invite.role,
-                specialization: (invite as any).specialization || "",
-                title: (invite as any).title || "",
-                createdAt: serverTimestamp(),
-            } as any;
-
-            await setDoc(doc(db, "users", user.uid), profile, { merge: true });
+            // Mark invite as used in Firestore (if not superadmin)
             if (!invite.isSuperadmin) {
                 await updateDoc(doc(db, "invites", email.toLowerCase().trim()), {
-                    used: true,
+                    used:   true,
                     usedAt: serverTimestamp(),
-                    uid: user.uid,
+                    uid,
                 });
             }
 
@@ -168,20 +156,18 @@ export default function SetupPage() {
             setTimeout(() => {
                 window.location.href = getRoleDashboard(invite.role);
             }, 2000);
-        } catch (err: any) {
-            if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
-                setError("Incorrect password for this account. Please try again.");
-            } else {
-                setError(err.message || "Failed to create account. Please try again.");
-            }
+        } catch {
+            setError("Failed to create account. Please try again.");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6"
-            style={{ backgroundImage: "radial-gradient(at 50% 0%, rgba(37,99,235,0.06) 0, transparent 60%), radial-gradient(at 100% 100%, rgba(22,163,74,0.05) 0, transparent 50%)" }}>
+        <div
+            className="min-h-screen bg-gray-50 flex items-center justify-center p-6"
+            style={{ backgroundImage: "radial-gradient(at 50% 0%, rgba(37,99,235,0.06) 0, transparent 60%), radial-gradient(at 100% 100%, rgba(22,163,74,0.05) 0, transparent 50%)" }}
+        >
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -207,8 +193,9 @@ export default function SetupPage() {
                             <CheckCircle2 className="h-8 w-8 text-green-600" />
                         </div>
                         <h2 className="text-2xl font-black text-gray-900 mb-2">Account Created</h2>
-                        <p className="text-gray-500 text-sm">Redirecting you to your workspace...</p>
+                        <p className="text-gray-500 text-sm">Redirecting you to your workspace…</p>
                     </motion.div>
+
                 ) : step === "email" ? (
                     <div className="bg-white rounded-3xl shadow-premium border border-gray-100 p-8">
                         <div className="flex items-center gap-3 mb-6 p-4 bg-blue-50 rounded-2xl border border-blue-100">
@@ -228,7 +215,7 @@ export default function SetupPage() {
                                         className="pl-10 font-medium"
                                         required
                                         value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
+                                        onChange={e => setEmail(e.target.value)}
                                     />
                                 </div>
                             </div>
@@ -252,7 +239,7 @@ export default function SetupPage() {
                                 disabled={loading}
                                 className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm shadow-blue-600/20"
                             >
-                                {loading ? "Checking..." : "Check Invitation"}
+                                {loading ? "Checking…" : "Check Invitation"}
                                 {!loading && <ArrowRight className="h-4 w-4" />}
                             </button>
                         </form>
@@ -266,6 +253,7 @@ export default function SetupPage() {
                             </p>
                         </div>
                     </div>
+
                 ) : (
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
@@ -302,7 +290,7 @@ export default function SetupPage() {
                                         className="pl-10 font-medium"
                                         required
                                         value={name}
-                                        onChange={(e) => setName(e.target.value)}
+                                        onChange={e => setName(e.target.value)}
                                     />
                                 </div>
                             </div>
@@ -317,7 +305,7 @@ export default function SetupPage() {
                                         className="pl-10"
                                         required
                                         value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
+                                        onChange={e => setPassword(e.target.value)}
                                     />
                                 </div>
                             </div>
@@ -332,7 +320,7 @@ export default function SetupPage() {
                                         className="pl-10"
                                         required
                                         value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        onChange={e => setConfirmPassword(e.target.value)}
                                     />
                                 </div>
                             </div>
@@ -356,7 +344,7 @@ export default function SetupPage() {
                                 disabled={loading}
                                 className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm shadow-blue-600/20"
                             >
-                                {loading ? "Creating Account..." : "Create My Account"}
+                                {loading ? "Creating Account…" : "Create My Account"}
                                 {!loading && <ArrowRight className="h-4 w-4" />}
                             </button>
                         </form>
