@@ -1,8 +1,8 @@
-# Rhona Medical Center — System Overview
+# RHD Medical Services — System Overview
 
 ## What It Is
 
-Rhona Medical Center is a full-stack hospital information system (HIS) built as a Next.js web application. It is designed for medium-sized hospitals and clinics in Uganda and similar contexts. The system covers every care pathway from patient registration through clinical care, ancillary services, pharmacy, and administration.
+RHD Medical Services is a full-stack hospital information system (HIS) built as a Next.js web application. It is designed for medium-sized hospitals and clinics in Uganda and similar contexts. The system covers every care pathway from patient registration through clinical care, ancillary services, pharmacy, and administration.
 
 ## Purpose
 

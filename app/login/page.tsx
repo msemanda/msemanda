@@ -78,7 +78,7 @@ export default function LoginPage() {
                             <HeartPulse className="h-6 w-6 text-white" />
                         </div>
                     </Link>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">Rhona Medical Center</h1>
+                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">RHD Medical Services</h1>
                     <p className="text-gray-500 mt-2 font-medium text-sm">Sign in to your clinical workspace</p>
                 </div>
 

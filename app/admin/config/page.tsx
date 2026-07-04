@@ -30,7 +30,7 @@ interface SystemConfig {
 }
 
 const DEFAULT_CONFIG: SystemConfig = {
-    facilityName: "Rhona Medical Center",
+    facilityName: "RHD Medical Services",
     facilityType: "General Hospital",
     address: "",
     city: "",
@@ -199,7 +199,7 @@ export default function SystemConfigPage() {
                     <div className="space-y-4">
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Facility Name</label>
-                            <Input value={config.facilityName} onChange={e => set("facilityName", e.target.value)} placeholder="e.g. Rhona Medical Center" />
+                            <Input value={config.facilityName} onChange={e => set("facilityName", e.target.value)} placeholder="e.g. RHD Medical Services" />
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Facility Type</label>

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Rhona Medical Center – User Manual Generator
+ * RHD Medical Services – User Manual Generator
  *
  * Usage:
  *   node generate-manual.mjs                        # content only (no screenshots)
@@ -35,7 +35,7 @@ const MODULES = [
     roles: ["ADMIN"],
     path: "/admin",
     description:
-      "The Administration Console is the central command center of the Rhona Medical Center Hospital Management System. It gives system administrators complete visibility and control over every department, user account, clinical module, and financial record in the hospital. From a single dashboard, administrators can monitor live KPIs, manage staff accounts, configure system settings, and generate executive-level analytics reports.",
+      "The Administration Console is the central command center of the RHD Medical Services Hospital Management System. It gives system administrators complete visibility and control over every department, user account, clinical module, and financial record in the hospital. From a single dashboard, administrators can monitor live KPIs, manage staff accounts, configure system settings, and generate executive-level analytics reports.",
     features: [
       "Real-time KPI dashboard showing total patients, verified doctors, appointments, and revenue",
       "User account management — create, edit, and assign roles to all 13 user types",
@@ -134,7 +134,7 @@ const MODULES = [
     roles: ["RECEPTIONIST", "ADMIN"],
     path: "/receptionist",
     description:
-      "The Reception module is the first point of contact for patients at Rhona Medical Center. Receptionists use it to admit patients, search records, book doctor appointments, manage the daily queue, and collect consultation fees. It integrates with the doctor's appointment calendar so that bookings are visible in real time across both modules.",
+      "The Reception module is the first point of contact for patients at RHD Medical Services. Receptionists use it to admit patients, search records, book doctor appointments, manage the daily queue, and collect consultation fees. It integrates with the doctor's appointment calendar so that bookings are visible in real time across both modules.",
     features: [
       "Walk-in patient admission with complete registration form",
       "Patient search by name, ID, or contact details",
@@ -224,7 +224,7 @@ const MODULES = [
     roles: ["RADIOLOGY_TECH", "ADMIN"],
     path: "/radiology",
     description:
-      "The Radiology module handles all medical imaging workflows at Rhona Medical Center. It supports six imaging modalities — X-Ray, CT, MRI, Ultrasound, PET, and Mammography — and provides radiographers with a structured worklist, order management system, reporting tools, and statistical analysis of imaging volumes by modality and department.",
+      "The Radiology module handles all medical imaging workflows at RHD Medical Services. It supports six imaging modalities — X-Ray, CT, MRI, Ultrasound, PET, and Mammography — and provides radiographers with a structured worklist, order management system, reporting tools, and statistical analysis of imaging volumes by modality and department.",
     features: [
       "Imaging order queue with modality, urgency, and referring doctor details",
       "Daily worklist with scheduling and patient arrival tracking",
@@ -866,7 +866,7 @@ function buildHTML(screenshots = {}) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Rhona Medical Center — User Manual</title>
+  <title>RHD Medical Services — User Manual</title>
   <style>${CSS}</style>
 </head>
 <body>
@@ -875,7 +875,7 @@ function buildHTML(screenshots = {}) {
 <div class="cover">
   <div class="cover-badge">Official Documentation</div>
   <div class="cover-logo">🏥</div>
-  <div class="cover-hospital">Rhona Medical Center</div>
+  <div class="cover-hospital">RHD Medical Services</div>
   <div class="cover-system">Comprehensive Hospital Management System</div>
   <div class="cover-divider"></div>
   <div class="cover-manual-label">User Manual</div>
@@ -898,14 +898,14 @@ function buildHTML(screenshots = {}) {
       <div class="cover-meta-value">154+ Screens</div>
     </div>
   </div>
-  <div class="cover-footer">Rhona Medical Center &nbsp;·&nbsp; Confidential — For Authorised Use Only</div>
+  <div class="cover-footer">RHD Medical Services &nbsp;·&nbsp; Confidential — For Authorised Use Only</div>
 </div>
 
 <!-- TABLE OF CONTENTS -->
 <div class="toc page-break">
   <div class="toc-header">
     <h1>Table of Contents</h1>
-    <p>This manual covers all 22 functional modules of the Rhona Medical Center Hospital Management System.</p>
+    <p>This manual covers all 22 functional modules of the RHD Medical Services Hospital Management System.</p>
   </div>
   <div class="toc-section">
     <div class="toc-section-title">Clinical Modules</div>
@@ -944,7 +944,7 @@ function buildHTML(screenshots = {}) {
 <div class="intro page-break">
   <h1>System Introduction</h1>
   <p class="intro-lead">
-    The Rhona Medical Center Hospital Management System (HMS) is a fully integrated, web-based clinical and administrative platform built on modern cloud infrastructure. It unifies all hospital departments — from the emergency department and operating theatre through to the pharmacy, laboratory, and finance office — into a single, role-based system accessible from any device with an internet connection.
+    The RHD Medical Services Hospital Management System (HMS) is a fully integrated, web-based clinical and administrative platform built on modern cloud infrastructure. It unifies all hospital departments — from the emergency department and operating theatre through to the pharmacy, laboratory, and finance office — into a single, role-based system accessible from any device with an internet connection.
   </p>
   <p class="intro-lead">
     The system uses role-based access control (RBAC) to ensure that each staff member sees only the modules and data relevant to their position. All clinical data is stored securely in an encrypted cloud database and accessible in real time. The platform is HIPAA-aligned and supports audit logging of all user actions.
@@ -1083,7 +1083,7 @@ async function main() {
   const noScreenshots = args.includes("--no-screenshots");
 
   console.log("\n  ╔══════════════════════════════════════════════════════╗");
-  console.log("  ║   Rhona Medical Center — User Manual Generator      ║");
+  console.log("  ║   RHD Medical Services — User Manual Generator      ║");
   console.log("  ╚══════════════════════════════════════════════════════╝\n");
 
   let screenshots = {};
@@ -1146,7 +1146,7 @@ async function main() {
     margin: { top: "15mm", bottom: "15mm", left: "0mm", right: "0mm" },
     displayHeaderFooter: true,
     headerTemplate: "<div></div>",
-    footerTemplate: `<div style="font-size:9px;color:#94a3b8;padding:0 20mm;width:100%;display:flex;justify-content:space-between;align-items:center;"><span>Rhona Medical Center — User Manual v1.0</span><span style="color:#94a3b8">Confidential</span><span class="pageNumber"></span></div>`,
+    footerTemplate: `<div style="font-size:9px;color:#94a3b8;padding:0 20mm;width:100%;display:flex;justify-content:space-between;align-items:center;"><span>RHD Medical Services — User Manual v1.0</span><span style="color:#94a3b8">Confidential</span><span class="pageNumber"></span></div>`,
   });
 
   await browser.close();

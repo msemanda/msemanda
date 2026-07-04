@@ -107,7 +107,7 @@ export default function AdminDashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-xl font-black text-slate-900 tracking-tight">Admin Dashboard</h1>
-                    <p className="text-sm text-slate-500 mt-0.5">Rhona Medical Center &mdash; system overview</p>
+                    <p className="text-sm text-slate-500 mt-0.5">RHD Medical Services &mdash; system overview</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <button className="h-9 w-9 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-slate-400 hover:text-cyan-600 transition-all shadow-sm">

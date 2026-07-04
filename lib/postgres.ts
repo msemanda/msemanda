@@ -29,6 +29,14 @@ function buildPool(kind: "neon" | "local"): Pool {
     pool.on("error", (err) => {
         console.error(`Unexpected pg client error [${kind}]:`, err.message);
     });
+    // Neon's pooled endpoint sometimes hands back connections with an empty
+    // search_path, which breaks every unqualified table reference in this
+    // codebase. Force it explicitly on every new physical connection.
+    pool.on("connect", (client) => {
+        client.query("SET search_path TO public").catch((err) => {
+            console.error(`Failed to set search_path [${kind}]:`, err.message);
+        });
+    });
     return pool;
 }
 

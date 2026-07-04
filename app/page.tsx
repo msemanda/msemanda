@@ -57,7 +57,7 @@ export default function HomePage() {
                     <div className="p-2 bg-blue-600 rounded-xl shadow-sm shadow-blue-600/20">
                         <HeartPulse className="h-4.5 w-4.5 text-white" />
                     </div>
-                    <span className="text-base font-black text-gray-900 tracking-tight">Rhona Medical Center</span>
+                    <span className="text-base font-black text-gray-900 tracking-tight">RHD Medical Services</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <Link href="/login"
@@ -123,7 +123,7 @@ export default function HomePage() {
             </main>
 
             <footer className="py-4 px-6 border-t border-gray-100 bg-white/50 text-center">
-                <p className="text-[11px] text-gray-400 font-medium">© 2026 Rhona Medical Center · Kansanga, Kampala · All rights reserved</p>
+                <p className="text-[11px] text-gray-400 font-medium">© 2026 RHD Medical Services · Kansanga, Kampala · All rights reserved</p>
             </footer>
         </div>
     );
