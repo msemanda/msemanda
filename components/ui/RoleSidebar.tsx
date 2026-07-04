@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LogOut, HeartPulse, LucideIcon, Menu, X } from "lucide-react";
+import { LogOut, LucideIcon, Menu, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import { Logo } from "@/components/ui/Logo";
 
 export interface SidebarItem {
     name: string;
@@ -45,11 +46,9 @@ export function RoleSidebar({ groups, roleLabel }: RoleSidebarProps) {
             {/* Logo */}
             <div className="p-4 border-b border-gray-50 flex items-center justify-between">
                 <Link href="/" className="flex items-center gap-2.5 group" onClick={() => setIsOpen(false)}>
-                    <div className="p-2 bg-blue-600 rounded-xl shadow-sm group-hover:scale-105 transition-transform shrink-0">
-                        <HeartPulse className="h-4 w-4 text-white" />
-                    </div>
+                    <Logo size={36} className="group-hover:scale-105 transition-transform" />
                     <div>
-                        <span className="text-sm font-black text-gray-900 tracking-tight">RHONA</span>
+                        <span className="text-sm font-black text-gray-900 tracking-tight">RHD</span>
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{roleLabel}</p>
                     </div>
                 </Link>

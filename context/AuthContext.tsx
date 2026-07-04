@@ -21,7 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         fetch("/api/auth/me", { credentials: "same-origin" })
             .then(r => (r.ok ? r.json() : null))
             .then(data => {
-                if (data) {
+                if (data?.authenticated) {
                     setUser({ uid: data.uid, email: data.email });
                     setProfile({
                         uid:         data.uid,

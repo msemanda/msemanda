@@ -4,12 +4,12 @@
   --background: #f8fafc;
   --foreground: #0f172a;
 
-  /* Clinical Blue */
-  --blue-50: #eff6ff;
-  --blue-100: #dbeafe;
-  --blue-500: #3b82f6;
-  --blue-600: #2563eb;
-  --blue-700: #1d4ed8;
+  /* Brand red (RHD Medical Services logo) */
+  --blue-50: #fef1f1;
+  --blue-100: #fcdfdf;
+  --blue-500: #e92027;
+  --blue-600: #cc141a;
+  --blue-700: #ac1116;
 
   /* Clinical Green */
   --green-50: #f0fdf4;
@@ -17,27 +17,62 @@
   --green-500: #22c55e;
   --green-600: #16a34a;
 
-  /* Legacy cyan (kept for compatibility) */
-  --cyan-50: #ecfeff;
-  --cyan-100: #cffafe;
-  --cyan-600: #0891b2;
-  --cyan-700: #0e7490;
+  /* Brand teal (logo ring accent) */
+  --cyan-50: #f5f8fa;
+  --cyan-100: #e7eff3;
+  --cyan-600: #4c7d94;
+  --cyan-700: #40697d;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  /* Clinical palette */
-  --color-clinical-blue: #2563eb;
-  --color-clinical-blue-dark: #1d4ed8;
+  /* Brand palette, sampled from the RHD Medical Services logo */
+  --color-clinical-blue: #cc141a;
+  --color-clinical-blue-dark: #ac1116;
   --color-clinical-green: #16a34a;
   --color-clinical-green-light: #22c55e;
 
-  /* Legacy cyan */
-  --color-cyan-primary: #0891b2;
-  --color-cyan-dark: #0e7490;
-  --color-teal-accent: #0f766e;
+  /* Primary action color (brand red) */
+  --color-cyan-primary: #cc141a;
+  --color-cyan-dark: #ac1116;
+  --color-teal-accent: #40697d;
+
+  /* Override Tailwind's built-in blue-* scale app-wide with brand red */
+  --color-blue-50: #fef1f1;
+  --color-blue-100: #fcdfdf;
+  --color-blue-200: #f8b9bb;
+  --color-blue-300: #f3868a;
+  --color-blue-400: #ee4f54;
+  --color-blue-500: #e92027;
+  --color-blue-600: #cc141a;
+  --color-blue-700: #ac1116;
+  --color-blue-800: #900e13;
+  --color-blue-900: #790c10;
+
+  /* Override Tailwind's built-in teal-* and cyan-* scales with the logo's ring teal */
+  --color-teal-50: #f5f8fa;
+  --color-teal-100: #e7eff3;
+  --color-teal-200: #cddde5;
+  --color-teal-300: #a7c4d2;
+  --color-teal-400: #7fa9bd;
+  --color-teal-500: #5d93ac;
+  --color-teal-600: #4c7d94;
+  --color-teal-700: #40697d;
+  --color-teal-800: #365868;
+  --color-teal-900: #2d4a58;
+
+  --color-cyan-50: #f5f8fa;
+  --color-cyan-100: #e7eff3;
+  --color-cyan-200: #cddde5;
+  --color-cyan-300: #a7c4d2;
+  --color-cyan-400: #7fa9bd;
+  --color-cyan-500: #5d93ac;
+  --color-cyan-600: #4c7d94;
+  --color-cyan-700: #40697d;
+  --color-cyan-800: #365868;
+  --color-cyan-900: #2d4a58;
 
   --font-sans: "Outfit", var(--font-geist-sans), sans-serif;
 
@@ -83,7 +118,7 @@
   }
 
   .shadow-premium {
-    box-shadow: 0 4px 24px -4px rgba(37, 99, 235, 0.12), 0 2px 8px -2px rgba(0,0,0,0.06);
+    box-shadow: 0 4px 24px -4px rgba(204, 20, 26, 0.12), 0 2px 8px -2px rgba(0,0,0,0.06);
   }
 
   .bg-mesh {
@@ -129,7 +164,7 @@
     @apply bg-white rounded-2xl p-6 border border-gray-100 shadow-sm transition-all duration-200;
   }
   .stat-card:hover {
-    box-shadow: 0 4px 24px -4px rgba(37, 99, 235, 0.12), 0 2px 8px -2px rgba(0,0,0,0.06);
+    box-shadow: 0 4px 24px -4px rgba(204, 20, 26, 0.12), 0 2px 8px -2px rgba(0,0,0,0.06);
   }
 
   /* Module section header */
