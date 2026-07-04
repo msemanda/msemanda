@@ -6,7 +6,7 @@ import { db } from "@/lib/firebase";
 import { motion } from "framer-motion";
 import {
     Building2, Phone, Mail, MapPin, Globe, Save, CheckCircle2,
-    Settings2, ShieldCheck, Bell, ClipboardList,
+    Settings2, ShieldCheck, Bell, ClipboardList, Database, Loader2, AlertCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
@@ -92,17 +92,54 @@ function Toggle({ checked, onChange, label, description }: {
     );
 }
 
+type DbProvider = "neon" | "local" | "firebase";
+
+const DB_PROVIDERS: { value: DbProvider; label: string; description: string }[] = [
+    { value: "neon",     label: "Neon (cloud Postgres)", description: "Managed Postgres over the internet — use for production / shared access" },
+    { value: "local",    label: "Local Postgres",        description: "Postgres on this machine — fastest for development, no network needed" },
+    { value: "firebase", label: "Firebase",               description: "Google Firestore — requires a server service-account key to enable" },
+];
+
 export default function SystemConfigPage() {
     const [config, setConfig] = useState<SystemConfig>(DEFAULT_CONFIG);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
 
+    const [dbProvider, setDbProviderState] = useState<DbProvider | null>(null);
+    const [dbSwitching, setDbSwitching] = useState<DbProvider | null>(null);
+    const [dbError, setDbError] = useState<string | null>(null);
+
     useEffect(() => {
         getDoc(doc(db, "system", "config")).then(snap => {
             if (snap.exists()) setConfig({ ...DEFAULT_CONFIG, ...snap.data() as SystemConfig });
         }).finally(() => setLoading(false));
+
+        fetch("/api/admin/db-provider")
+            .then(res => res.json())
+            .then(data => setDbProviderState(data.provider ?? "local"))
+            .catch(() => setDbProviderState("local"));
     }, []);
+
+    const switchDbProvider = async (provider: DbProvider) => {
+        if (provider === dbProvider) return;
+        setDbSwitching(provider);
+        setDbError(null);
+        try {
+            const res = await fetch("/api/admin/db-provider", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ provider }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error ?? "Failed to switch data source");
+            setDbProviderState(data.provider);
+        } catch (err) {
+            setDbError(err instanceof Error ? err.message : "Failed to switch data source");
+        } finally {
+            setDbSwitching(null);
+        }
+    };
 
     const set = <K extends keyof SystemConfig>(key: K, value: SystemConfig[K]) =>
         setConfig(prev => ({ ...prev, [key]: value }));
@@ -286,6 +323,53 @@ export default function SystemConfigPage() {
                                 description="Blocks all non-admin logins while enabled"
                             />
                         </div>
+                    </div>
+                </motion.div>
+
+                {/* Data Source */}
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 lg:col-span-2"
+                >
+                    <SectionHeader icon={Database} title="Data Source" />
+                    <p className="text-xs text-gray-400 -mt-2 mb-4">Switches immediately — no restart required.</p>
+
+                    {dbError && (
+                        <div className="flex items-start gap-2 mb-4 p-3 rounded-xl bg-red-50 border border-red-100 text-xs font-semibold text-red-700">
+                            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                            {dbError}
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {DB_PROVIDERS.map(p => {
+                            const active = dbProvider === p.value;
+                            const isSwitching = dbSwitching === p.value;
+                            return (
+                                <button
+                                    key={p.value}
+                                    type="button"
+                                    disabled={dbProvider === null || dbSwitching !== null}
+                                    onClick={() => switchDbProvider(p.value)}
+                                    className={cn(
+                                        "text-left rounded-xl border p-4 transition-colors disabled:opacity-60",
+                                        active ? "border-blue-500 bg-blue-50/60" : "border-gray-100 hover:border-gray-200"
+                                    )}
+                                >
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-sm font-bold text-gray-800">{p.label}</span>
+                                        {isSwitching ? (
+                                            <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
+                                        ) : active ? (
+                                            <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                                        ) : null}
+                                    </div>
+                                    <p className="text-[11px] text-gray-400 leading-snug">{p.description}</p>
+                                </button>
+                            );
+                        })}
                     </div>
                 </motion.div>
             </div>
