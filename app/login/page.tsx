@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/Input";
 import type { UserRole } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
@@ -33,7 +32,6 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [error, setError]       = useState("");
     const [loading, setLoading]   = useState(false);
-    const router = useRouter();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -55,7 +53,11 @@ export default function LoginPage() {
                 return;
             }
 
-            router.push(getRoleDashboard(data.role as UserRole));
+            // Full navigation (not router.push): AuthContext only fetches auth
+            // state once on mount, so a client-side route change here would land
+            // on the dashboard before context knows login succeeded, and its
+            // layout guard would immediately bounce back to /login.
+            window.location.href = getRoleDashboard(data.role as UserRole);
         } catch {
             setError("Network error. Please check your connection and try again.");
         } finally {

@@ -1,5 +1,5 @@
 import { SignJWT, jwtVerify } from "jose";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import type { UserRole } from "@/types";
 
 export interface AuthPayload {
@@ -36,11 +36,22 @@ export async function verifyToken(token: string): Promise<AuthPayload | null> {
     }
 }
 
+async function isHttps(): Promise<boolean> {
+    // Base this on the actual connection, not NODE_ENV: a `next start` (production)
+    // deployment served over plain HTTP on a LAN/host machine still needs `secure`
+    // off, or browsers silently refuse to store the cookie and login appears to
+    // "fail" with no error (it just never persists), while `next dev` on localhost
+    // works fine — exactly the host-vs-local mismatch this was causing.
+    const h = await headers();
+    const proto = h.get("x-forwarded-proto");
+    return proto === "https";
+}
+
 export async function setAuthCookie(token: string): Promise<void> {
     const jar = await cookies();
     jar.set(COOKIE, token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: await isHttps(),
         sameSite: "lax",
         maxAge: MAX_AGE,
         path: "/",
