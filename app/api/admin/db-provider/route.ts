@@ -38,6 +38,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: `Could not connect to ${provider}: ${test.error}` }, { status: 502 });
     }
 
-    setDbProvider(provider as DbProvider);
+    try {
+        setDbProvider(provider as DbProvider);
+    } catch (err) {
+        return NextResponse.json({ error: (err as Error).message }, { status: 501 });
+    }
     return NextResponse.json({ provider });
 }
