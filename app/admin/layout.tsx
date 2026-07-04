@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HeartPulse } from "lucide-react";
+import { Logo } from "@/components/ui/Logo";
 
 export default function AdminLayout({
     children,
@@ -37,9 +37,9 @@ export default function AdminLayout({
                                 rotate: [0, 5, 0]
                             }}
                             transition={{ duration: 2, repeat: Infinity }}
-                            className="relative p-4 bg-white rounded-3xl shadow-premium border border-cyan-100"
+                            className="relative"
                         >
-                            <HeartPulse className="h-10 w-10 text-cyan-600" />
+                            <Logo size={80} />
                         </motion.div>
                     </div>
                     <p className="mt-6 text-xs font-black text-gray-400 uppercase tracking-[0.3em] animate-pulse">Initializing Terminal</p>

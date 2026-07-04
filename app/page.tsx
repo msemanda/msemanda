@@ -35,12 +35,14 @@ export default function HomePage() {
     const containerRef = useRef<HTMLDivElement>(null);
     const mouseX = useMotionValue(0);
     const mouseY = useMotionValue(0);
-    const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
-    const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
-    const blobAX = useTransform(springX, (v) => v * 0.04);
-    const blobAY = useTransform(springY, (v) => v * 0.04);
-    const blobBX = useTransform(springX, (v) => v * -0.03);
-    const blobBY = useTransform(springY, (v) => v * -0.03);
+    const springX = useSpring(mouseX, { stiffness: 50, damping: 18 });
+    const springY = useSpring(mouseY, { stiffness: 50, damping: 18 });
+    const blobAX = useTransform(springX, (v) => v * 0.12);
+    const blobAY = useTransform(springY, (v) => v * 0.12);
+    const blobBX = useTransform(springX, (v) => v * -0.09);
+    const blobBY = useTransform(springY, (v) => v * -0.09);
+    const blobCX = useTransform(springX, (v) => v * 0.16);
+    const blobCY = useTransform(springY, (v) => v * -0.1);
 
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         const rect = containerRef.current?.getBoundingClientRect();
@@ -75,17 +77,22 @@ export default function HomePage() {
         >
             {/* Interactive background blobs */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div className="absolute inset-0 bg-dot-grid opacity-40" />
                 <motion.div
                     style={{ x: blobAX, y: blobAY }}
-                    className="mesh-blob top-[-10%] left-[-5%] h-96 w-96 bg-blue-400/25 animate-float"
+                    className="mesh-blob top-[-15%] left-[-8%] h-[30rem] w-[30rem] bg-blue-500/40 animate-float"
                 />
                 <motion.div
                     style={{ x: blobBX, y: blobBY }}
-                    className="mesh-blob top-[20%] right-[-8%] h-[28rem] w-[28rem] bg-teal-400/20 animate-pulse-slow"
+                    className="mesh-blob top-[15%] right-[-10%] h-[32rem] w-[32rem] bg-teal-600/60 animate-pulse-slow"
                 />
                 <motion.div
-                    style={{ x: blobAX, y: blobBY }}
-                    className="mesh-blob bottom-[-15%] left-[25%] h-80 w-80 bg-blue-300/20 animate-float"
+                    style={{ x: blobCX, y: blobCY }}
+                    className="mesh-blob bottom-[-20%] left-[20%] h-[26rem] w-[26rem] bg-blue-400/35 animate-float"
+                />
+                <motion.div
+                    style={{ x: blobBX, y: blobAY }}
+                    className="mesh-blob bottom-[5%] right-[15%] h-72 w-72 bg-teal-500/55 animate-pulse-slow"
                 />
             </div>
 
