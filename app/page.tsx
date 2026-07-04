@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { HeartPulse, ArrowRight, ShieldCheck, Stethoscope, FlaskConical, Pill, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowRight, ShieldCheck, Stethoscope, FlaskConical, Pill, Sparkles } from "lucide-react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { Logo } from "@/components/ui/Logo";
 
 function getRolePath(role: string): string {
     const map: Record<string, string> = {
@@ -31,6 +32,23 @@ export default function HomePage() {
     const { profile, loading } = useAuth();
     const router = useRouter();
 
+    const containerRef = useRef<HTMLDivElement>(null);
+    const mouseX = useMotionValue(0);
+    const mouseY = useMotionValue(0);
+    const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
+    const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
+    const blobAX = useTransform(springX, (v) => v * 0.04);
+    const blobAY = useTransform(springY, (v) => v * 0.04);
+    const blobBX = useTransform(springX, (v) => v * -0.03);
+    const blobBY = useTransform(springY, (v) => v * -0.03);
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = containerRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        mouseX.set(e.clientX - rect.left - rect.width / 2);
+        mouseY.set(e.clientY - rect.top - rect.height / 2);
+    };
+
     useEffect(() => {
         if (!loading && profile) {
             router.replace(getRolePath(profile.role));
@@ -50,13 +68,31 @@ export default function HomePage() {
     if (profile) return null;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-teal-50/20 flex flex-col">
+        <div
+            ref={containerRef}
+            onMouseMove={handleMouseMove}
+            className="relative min-h-screen overflow-hidden bg-mesh flex flex-col"
+        >
+            {/* Interactive background blobs */}
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                <motion.div
+                    style={{ x: blobAX, y: blobAY }}
+                    className="mesh-blob top-[-10%] left-[-5%] h-96 w-96 bg-blue-400/25 animate-float"
+                />
+                <motion.div
+                    style={{ x: blobBX, y: blobBY }}
+                    className="mesh-blob top-[20%] right-[-8%] h-[28rem] w-[28rem] bg-teal-400/20 animate-pulse-slow"
+                />
+                <motion.div
+                    style={{ x: blobAX, y: blobBY }}
+                    className="mesh-blob bottom-[-15%] left-[25%] h-80 w-80 bg-blue-300/20 animate-float"
+                />
+            </div>
+
             {/* Navbar */}
-            <header className="flex items-center justify-between px-6 py-4 border-b border-white/60 bg-white/70 backdrop-blur-md sticky top-0 z-40">
+            <header className="relative z-40 flex items-center justify-between px-6 py-4 border-b border-white/60 bg-white/70 backdrop-blur-md sticky top-0">
                 <div className="flex items-center gap-2.5">
-                    <div className="p-2 bg-blue-600 rounded-xl shadow-sm shadow-blue-600/20">
-                        <HeartPulse className="h-4.5 w-4.5 text-white" />
-                    </div>
+                    <Logo size={36} />
                     <span className="text-base font-black text-gray-900 tracking-tight">RHD Medical Services</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -72,14 +108,9 @@ export default function HomePage() {
             </header>
 
             {/* Hero */}
-            <main className="flex-1 flex flex-col items-center justify-center px-6 py-16 text-center">
+            <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-16 text-center">
                 <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
                     className="max-w-xl mx-auto space-y-5">
-
-                    <div className="inline-flex items-center gap-2 bg-white border border-blue-100 rounded-full px-3.5 py-1.5 shadow-sm">
-                        <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-[11px] font-bold text-blue-700 uppercase tracking-wider">System Online · Kampala, Uganda</span>
-                    </div>
 
                     <h1 className="text-4xl sm:text-5xl font-black text-gray-900 leading-tight tracking-tight">
                         Integrated Healthcare<br />
@@ -122,8 +153,12 @@ export default function HomePage() {
                 </motion.div>
             </main>
 
-            <footer className="py-4 px-6 border-t border-gray-100 bg-white/50 text-center">
+            <footer className="relative z-10 py-5 px-6 border-t border-gray-100 bg-white/50 text-center space-y-2">
                 <p className="text-[11px] text-gray-400 font-medium">© 2026 RHD Medical Services · Kansanga, Kampala · All rights reserved</p>
+                <div className="inline-flex items-center gap-2 bg-white border border-blue-100 rounded-full px-3.5 py-1.5 shadow-sm">
+                    <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-[11px] font-bold text-blue-700 uppercase tracking-wider">System Online · Kampala, Uganda</span>
+                </div>
             </footer>
         </div>
     );

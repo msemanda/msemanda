@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/ui/Logo";
 import {
     LayoutDashboard,
     UserPlus,
@@ -10,7 +11,6 @@ import {
     Calendar,
     FileText,
     LogOut,
-    HeartPulse,
     Shield,
     CreditCard,
     Users,
@@ -173,11 +173,9 @@ export function Sidebar() {
                 {/* Logo */}
                 <div className="p-4 border-b border-gray-50 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-2.5 group">
-                        <div className="p-2 bg-blue-600 rounded-xl shadow-sm group-hover:scale-105 transition-transform">
-                            <HeartPulse className="h-4 w-4 text-white" />
-                        </div>
+                        <Logo size={36} className="group-hover:scale-105 transition-transform" />
                         <div>
-                            <span className="text-sm font-black text-gray-900 tracking-tight">RHONA</span>
+                            <span className="text-sm font-black text-gray-900 tracking-tight">RHD</span>
                             <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Admin Console</p>
                         </div>
                     </Link>

@@ -6,11 +6,12 @@ import { db } from "@/lib/firebase";
 import { UserRole, UserProfile } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    HeartPulse, Mail, Lock, ArrowRight, ShieldCheck,
+    Mail, Lock, ArrowRight, ShieldCheck,
     CheckCircle2, User, KeyRound, Stethoscope,
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import Link from "next/link";
+import { Logo } from "@/components/ui/Logo";
 
 function getRoleDashboard(role: UserRole): string {
     switch (role) {
@@ -175,9 +176,7 @@ export default function SetupPage() {
             >
                 <div className="text-center mb-8">
                     <Link href="/" className="inline-flex items-center group mb-6">
-                        <div className="p-2.5 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl shadow-lg shadow-blue-600/20 group-hover:scale-105 transition-transform">
-                            <HeartPulse className="h-6 w-6 text-white" />
-                        </div>
+                        <Logo size={64} className="shadow-lg group-hover:scale-105 transition-transform" />
                     </Link>
                     <h1 className="text-3xl font-black text-gray-900 tracking-tight">Account Setup</h1>
                     <p className="text-gray-500 mt-2 font-medium text-sm">Activate your invitation to get started</p>

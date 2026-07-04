@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/Input";
 import type { UserRole } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
-import { HeartPulse, Mail, Lock, ShieldCheck, ArrowRight, Sparkles } from "lucide-react";
+import { Mail, Lock, ShieldCheck, ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { Logo } from "@/components/ui/Logo";
 
 function getRoleDashboard(role: UserRole): string {
     switch (role) {
@@ -74,9 +75,7 @@ export default function LoginPage() {
             >
                 <div className="text-center mb-8">
                     <Link href="/" className="inline-flex items-center group mb-6">
-                        <div className="p-2.5 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl shadow-lg shadow-blue-600/20 group-hover:scale-105 transition-transform">
-                            <HeartPulse className="h-6 w-6 text-white" />
-                        </div>
+                        <Logo size={64} className="shadow-lg group-hover:scale-105 transition-transform" />
                     </Link>
                     <h1 className="text-3xl font-black text-gray-900 tracking-tight">RHD Medical Services</h1>
                     <p className="text-gray-500 mt-2 font-medium text-sm">Sign in to your clinical workspace</p>

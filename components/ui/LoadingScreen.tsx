@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { HeartPulse } from "lucide-react";
+import { Logo } from "@/components/ui/Logo";
 
 interface LoadingScreenProps {
     label?: string;
@@ -20,9 +20,9 @@ export function LoadingScreen({ label = "Loading..." }: LoadingScreenProps) {
                     <motion.div
                         animate={{ scale: [1, 1.08, 1], rotate: [0, 4, 0] }}
                         transition={{ duration: 2, repeat: Infinity }}
-                        className="relative p-4 bg-white rounded-2xl shadow-premium border border-blue-50"
+                        className="relative"
                     >
-                        <HeartPulse className="h-8 w-8 text-blue-600" />
+                        <Logo size={64} />
                     </motion.div>
                 </div>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em] animate-pulse">{label}</p>

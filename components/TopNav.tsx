@@ -2,8 +2,9 @@
 
 import React from "react";
 import { useAuth } from "@/context/AuthContext";
-import { LogOut, Bell, HeartPulse, ChevronDown } from "lucide-react";
+import { LogOut, Bell, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { Logo } from "@/components/ui/Logo";
 
 interface TopNavProps {
     role: string;
@@ -34,10 +35,8 @@ export function TopNav({ role }: TopNavProps) {
             {/* Left */}
             <div className="flex items-center gap-4">
                 <Link href="/" className="flex items-center gap-2 group">
-                    <div className="p-1.5 bg-blue-600 rounded-lg group-hover:scale-105 transition-transform">
-                        <HeartPulse className="h-4 w-4 text-white" />
-                    </div>
-                    <span className="text-sm font-black text-gray-900 tracking-tight">RHONA</span>
+                    <Logo size={28} className="group-hover:scale-105 transition-transform" />
+                    <span className="text-sm font-black text-gray-900 tracking-tight">RHD</span>
                 </Link>
                 <div className="h-4 w-px bg-gray-200" />
                 <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${roleColor}`}>
