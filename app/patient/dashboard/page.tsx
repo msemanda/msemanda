@@ -7,7 +7,8 @@ import {
     User,
     FileText,
     HeartPulse,
-    Activity
+    Activity,
+    MessageCircle
 } from "lucide-react";
 import { PatientProfile } from "@/types";
 import { Button } from "@/components/ui/Button";
@@ -34,6 +35,11 @@ export default function PatientDashboard() {
                     <p className="text-sm text-gray-500 mt-0.5">Your health dashboard — appointments and records.</p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <Link href="/patient/messages">
+                        <Button variant="outline" className="h-9 px-4 rounded-xl border-gray-200 bg-white font-bold text-xs flex items-center gap-1.5">
+                            <MessageCircle className="h-3.5 w-3.5 text-gray-400" /> Messages
+                        </Button>
+                    </Link>
                     <Link href="/patient/records">
                         <Button variant="outline" className="h-9 px-4 rounded-xl border-gray-200 bg-white font-bold text-xs flex items-center gap-1.5">
                             <FileText className="h-3.5 w-3.5 text-gray-400" /> Records

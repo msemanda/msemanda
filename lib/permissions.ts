@@ -43,10 +43,18 @@ export const ALL_PERMISSIONS: PermissionDef[] = [
     { key: "patient_invite", label: "Patient Invitations",         description: "Send patient registration invites",   category: "Reception" },
     { key: "book_appt",      label: "Book Appointments",           description: "Book doctor appointments for patients", category: "Reception" },
     { key: "billing",        label: "Consultation Fees",           description: "Collect and confirm consultation fees", category: "Reception" },
+
+    // Finance / Cashier
+    { key: "cashier_billing",      label: "Patient Billing",     description: "Generate and manage patient bills",       category: "Finance" },
+    { key: "cashier_transactions", label: "Transactions",        description: "View and record financial transactions",  category: "Finance" },
+    { key: "cashier_income",       label: "Income Recording",    description: "Record income entries",                   category: "Finance" },
+    { key: "cashier_expenses",     label: "Expense Recording",   description: "Record expense entries",                  category: "Finance" },
+    { key: "fee_schedule",         label: "Fee Schedule",        description: "Manage consultation fee schedule pricing", category: "Finance" },
+    { key: "cashier_reports",      label: "Financial Reports",   description: "View financial reports and analytics",    category: "Finance" },
 ];
 
 export const PERMISSION_CATEGORIES = [
-    "Clinical", "Scheduling", "Nursing", "Ancillary", "Specialty", "Reception",
+    "Clinical", "Scheduling", "Nursing", "Ancillary", "Specialty", "Reception", "Finance",
 ];
 
 export const SPECIALIZATIONS = [

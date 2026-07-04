@@ -247,13 +247,40 @@ export interface EmergencyCase {
     gender?: string;
     chiefComplaint: string;
     triageLevel: "IMMEDIATE" | "URGENT" | "LESS_URGENT" | "NON_URGENT";
-    status: "WAITING" | "IN_TREATMENT" | "ADMITTED" | "DISCHARGED" | "TRANSFERRED";
+    status: "WAITING" | "IN_TREATMENT" | "ADMITTED" | "DISCHARGED" | "REFERRED" | "TRANSFERRED";
     arrivalTime: any;
     assignedDoctorId?: string;
     assignedNurseId?: string;
     vitals?: Vitals;
     notes?: string;
     disposition?: string;
+    referredTo?: string;
+    referralReason?: string;
+    referredAt?: any;
+}
+
+export interface ChatMessage {
+    id: string;
+    patientUid: string;
+    patientName: string;
+    senderUid: string;
+    senderName: string;
+    senderRole: "PATIENT" | "STAFF";
+    body: string;
+    read: boolean;
+    createdAt: any;
+}
+
+export interface AppNotification {
+    id: string;
+    targetUid?: string;
+    targetRole?: string;
+    type: string;
+    title: string;
+    body: string;
+    link?: string;
+    read: boolean;
+    createdAt: any;
 }
 
 export interface HomeCareVisit {

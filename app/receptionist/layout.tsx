@@ -15,6 +15,7 @@ import {
     Send,
     CreditCard,
     Stethoscope,
+    MessageCircle,
 } from "lucide-react";
 
 const sidebarGroups: SidebarGroup[] = [
@@ -22,6 +23,7 @@ const sidebarGroups: SidebarGroup[] = [
         label: "Overview",
         items: [
             { name: "Dashboard", href: "/receptionist/dashboard", icon: LayoutDashboard },
+            { name: "Messages", href: "/receptionist/messages", icon: MessageCircle },
         ],
     },
     {

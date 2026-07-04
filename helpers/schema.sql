@@ -550,6 +550,26 @@ CREATE TABLE IF NOT EXISTS home_care_routes (
 );
 CREATE INDEX IF NOT EXISTS idx_hcr_status ON home_care_routes ((data->>'status'));
 
+-- ── Messages (patient <-> staff chat, threaded by patientUid) ─────────────────
+CREATE TABLE IF NOT EXISTS messages (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_messages_patient ON messages ((data->>'patientUid'));
+CREATE INDEX IF NOT EXISTS idx_messages_read ON messages ((data->>'read'));
+
+-- ── Notifications (system-generated, targeted at a user or a role) ───────────
+CREATE TABLE IF NOT EXISTS notifications (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_notifications_target_uid ON notifications ((data->>'targetUid'));
+CREATE INDEX IF NOT EXISTS idx_notifications_target_role ON notifications ((data->>'targetRole'));
+
 -- ============================================================
 -- Done. Run this file against the ehealth database:
 --   psql -U postgres -d ehealth -f schema.sql

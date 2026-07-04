@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Logo } from "@/components/ui/Logo";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 
 export interface SidebarItem {
     name: string;
@@ -52,12 +53,15 @@ export function RoleSidebar({ groups, roleLabel }: RoleSidebarProps) {
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{roleLabel}</p>
                     </div>
                 </Link>
-                <button
-                    className="md:hidden h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-                    onClick={() => setIsOpen(false)}
-                >
-                    <X className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                    <NotificationBell />
+                    <button
+                        className="md:hidden h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setIsOpen(false)}
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
+                </div>
             </div>
 
             {/* Navigation */}

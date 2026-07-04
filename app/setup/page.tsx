@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { notify } from "@/lib/notify";
 import { UserRole, UserProfile } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -60,6 +61,7 @@ interface InviteData {
     invitedBy: string;
     specialization?: string;
     title?: string;
+    phone?: string;
     isSuperadmin?: boolean;
 }
 
@@ -100,6 +102,7 @@ export default function SetupPage() {
                     invitedBy:      d.invitedBy || "Administrator",
                     specialization: d.specialization || "",
                     title:          d.title || "",
+                    phone:          d.phone || "",
                 });
                 setStep("setup");
             }
@@ -150,6 +153,30 @@ export default function SetupPage() {
                     used:   true,
                     usedAt: serverTimestamp(),
                     uid,
+                });
+            }
+
+            // Create the staff profile so this person shows up in User Management —
+            // /api/auth/register only creates login credentials, not this profile.
+            await setDoc(doc(db, "users", uid), {
+                uid,
+                name:           name.trim(),
+                email:          email.toLowerCase().trim(),
+                role:           invite.role,
+                phone:          invite.phone || "",
+                title:          invite.title || "",
+                specialization: invite.specialization || "",
+                permissions:    [],
+                createdAt:      serverTimestamp(),
+            });
+
+            if (!invite.isSuperadmin) {
+                await notify({
+                    targetRole: "ADMIN",
+                    type:       "account_setup",
+                    title:      `${name.trim()} completed account setup`,
+                    body:       `New ${invite.role.replace("_", " ").toLowerCase()} account activated`,
+                    link:       "/admin/users",
                 });
             }
 

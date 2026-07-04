@@ -40,6 +40,7 @@ const PAYMENT_METHODS = [
     { value: "MOBILE_MONEY", label: "Mobile Money (MTN/Airtel)", icon: Smartphone },
     { value: "CASH", label: "Cash (at reception)", icon: Banknote },
     { value: "BANK_TRANSFER", label: "Bank Transfer", icon: Building2 },
+    { value: "VISA", label: "Visa Card", icon: CreditCard },
     { value: "INSURANCE", label: "Insurance", icon: Shield },
 ];
 
@@ -324,7 +325,8 @@ export default function PatientRecordsPage() {
                                     <div className="space-y-1.5">
                                         <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">
                                             {payMethod === "MOBILE_MONEY" ? "Transaction ID / Reference" :
-                                             payMethod === "BANK_TRANSFER" ? "Transfer Reference" : "Insurance Claim No."}
+                                             payMethod === "BANK_TRANSFER" ? "Transfer Reference" :
+                                             payMethod === "VISA" ? "Card Transaction Reference" : "Insurance Claim No."}
                                         </label>
                                         <input
                                             required

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 import {
     LayoutDashboard,
     UserPlus,
@@ -179,12 +180,15 @@ export function Sidebar() {
                             <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Admin Console</p>
                         </div>
                     </Link>
-                    <button
-                        className="md:hidden h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-                        onClick={() => setIsOpen(false)}
-                    >
-                        <X className="h-4 w-4" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                        <NotificationBell />
+                        <button
+                            className="md:hidden h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Nav */}

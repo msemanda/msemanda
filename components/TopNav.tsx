@@ -2,9 +2,10 @@
 
 import React from "react";
 import { useAuth } from "@/context/AuthContext";
-import { LogOut, Bell, ChevronDown } from "lucide-react";
+import { LogOut, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 
 interface TopNavProps {
     role: string;
@@ -46,10 +47,7 @@ export function TopNav({ role }: TopNavProps) {
 
             {/* Right */}
             <div className="flex items-center gap-3">
-                <button className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-gray-50 text-gray-400 transition-colors relative">
-                    <Bell className="h-4 w-4" />
-                    <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 bg-red-500 rounded-full" />
-                </button>
+                <NotificationBell />
 
                 <div className="h-4 w-px bg-gray-100" />
 

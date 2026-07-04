@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { collection, query, where, getDocs, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { notify } from "@/lib/notify";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -166,6 +167,13 @@ export default function BookAppointmentPage() {
                 bookedBy: profile?.uid,
                 bookedByName: profile?.name,
                 bookedAt: serverTimestamp(),
+            });
+            await notify({
+                targetUid: selectedDoctor.uid,
+                type:      "appointment",
+                title:     `New appointment: ${form.patientName.trim()}`,
+                body:      `${form.date} at ${form.time}`,
+                link:      "/doctor/appointments",
             });
             setSuccess(true);
         } catch (err: any) {

@@ -31,6 +31,7 @@ const ALLOWED = new Set([
     "dietPlans", "dietaryMenuItems", "dietaryAssessments",
     "ambulanceUnits", "ambulanceCalls", "emergencyLogs",
     "wellnessSessions", "homeCareRoutes",
+    "messages", "notifications",
 ]);
 
 function tableName(col: string) {
