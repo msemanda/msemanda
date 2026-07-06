@@ -8,6 +8,7 @@ import { Transaction } from "@/types";
 import { motion } from "framer-motion";
 import { BarChart3, RefreshCw, TrendingUp, TrendingDown, Wallet } from "lucide-react";
 import { format } from "date-fns";
+import { ExportMenu } from "@/components/ui/ExportMenu";
 
 function fmt(n: number) { return "UGX " + n.toLocaleString("en-UG"); }
 
@@ -68,9 +69,20 @@ export default function FinanceReports() {
                     </h1>
                     <p className="text-sm text-gray-500 mt-0.5">Income vs expenses summary</p>
                 </div>
-                <button onClick={fetchAll} className="h-9 w-9 rounded-xl border border-gray-100 bg-white shadow-sm text-gray-400 hover:text-blue-600 flex items-center justify-center transition-colors">
-                    <RefreshCw className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button onClick={fetchAll} className="h-9 w-9 rounded-xl border border-gray-100 bg-white shadow-sm text-gray-400 hover:text-blue-600 flex items-center justify-center transition-colors">
+                        <RefreshCw className="h-4 w-4" />
+                    </button>
+                    <ExportMenu data={{
+                        title: "Financial Report",
+                        subtitle: `Income UGX ${totals.income.toLocaleString()} · Expenses UGX ${totals.expenses.toLocaleString()}`,
+                        columns: [
+                            { key: "month", label: "Month" }, { key: "income", label: "Income (UGX)" },
+                            { key: "expenses", label: "Expenses (UGX)" }, { key: "net", label: "Net (UGX)" },
+                        ],
+                        rows: byMonth.map(m => ({ month: m.month, income: m.income, expenses: m.expenses, net: m.net })),
+                    }} />
+                </div>
             </div>
 
             {/* Totals */}

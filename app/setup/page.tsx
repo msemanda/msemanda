@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { notify } from "@/lib/notify";
+import { DEFAULT_ROLE_PERMISSIONS } from "@/lib/permissions";
 import { UserRole, UserProfile } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -151,7 +152,7 @@ export default function SetupPage() {
                     password,
                     name:        name.trim(),
                     role:        invite.role,
-                    permissions: [],
+                    permissions: DEFAULT_ROLE_PERMISSIONS[invite.role] ?? [],
                 }),
                 credentials: "same-origin",
             });

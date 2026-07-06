@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { BarChart3, Building2, RefreshCw } from "lucide-react";
+import { ExportMenu } from "@/components/ui/ExportMenu";
 
 export default function AssetsReportsPage() {
     const [assets, setAssets] = useState<any[]>([]);
@@ -41,9 +42,23 @@ export default function AssetsReportsPage() {
                     <h1 className="text-2xl font-black text-gray-900">Asset Reports</h1>
                     <p className="text-sm text-gray-500 mt-0.5">Summary and breakdown of fixed assets</p>
                 </div>
-                <button onClick={fetchData} className="h-10 w-10 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-blue-600 transition-all">
-                    <RefreshCw className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button onClick={fetchData} className="h-10 w-10 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-blue-600 transition-all">
+                        <RefreshCw className="h-4 w-4" />
+                    </button>
+                    <ExportMenu data={{
+                        title: "Asset Reports",
+                        subtitle: `${assets.length} assets · UGX ${totalValue.toLocaleString()} total value`,
+                        columns: [
+                            { key: "name", label: "Asset" }, { key: "category", label: "Category" },
+                            { key: "condition", label: "Condition" }, { key: "purchaseValue", label: "Value (UGX)" },
+                        ],
+                        rows: assets.map(a => ({
+                            name: a.name || "—", category: a.category || "Uncategorized",
+                            condition: a.condition || "Unknown", purchaseValue: a.purchaseValue || 0,
+                        })),
+                    }} />
+                </div>
             </div>
 
             <div className="grid grid-cols-3 gap-4">

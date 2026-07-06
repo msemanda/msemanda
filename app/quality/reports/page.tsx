@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { BarChart3, ShieldCheck, AlertTriangle, RefreshCw } from "lucide-react";
+import { ExportMenu } from "@/components/ui/ExportMenu";
 
 export default function QualityReportsPage() {
     const [audits, setAudits] = useState<any[]>([]);
@@ -41,9 +42,22 @@ export default function QualityReportsPage() {
                     <h1 className="text-2xl font-black text-gray-900">Quality Reports</h1>
                     <p className="text-sm text-gray-500 mt-0.5">Quality performance and infection control summary</p>
                 </div>
-                <button onClick={fetchData} className="h-10 w-10 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-blue-600 transition-all">
-                    <RefreshCw className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button onClick={fetchData} className="h-10 w-10 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-blue-600 transition-all">
+                        <RefreshCw className="h-4 w-4" />
+                    </button>
+                    <ExportMenu data={{
+                        title: "Quality Reports",
+                        subtitle: `${audits.length} audits · ${activeInfections} active infections`,
+                        columns: [
+                            { key: "pathogen", label: "Pathogen" }, { key: "ward", label: "Ward" },
+                            { key: "casesCount", label: "Cases" }, { key: "status", label: "Status" },
+                        ],
+                        rows: infections.map(i => ({
+                            pathogen: i.pathogen || "—", ward: i.ward || "—", casesCount: i.casesCount || 0, status: i.status || "—",
+                        })),
+                    }} />
+                </div>
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

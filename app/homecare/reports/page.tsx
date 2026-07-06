@@ -7,6 +7,7 @@ import { db } from "@/lib/firebase";
 import { HomeCareVisit } from "@/types";
 import { motion } from "framer-motion";
 import { ClipboardList, Calendar, RefreshCw, MapPin } from "lucide-react";
+import { ExportMenu } from "@/components/ui/ExportMenu";
 
 const STATUS_COLOR: Record<string, string> = {
     COMPLETED: "bg-green-50 text-green-700 border-green-100",
@@ -58,10 +59,24 @@ export default function VisitReports() {
                         {loading ? "Loading…" : `${visits.length} completed ${visits.length === 1 ? "visit" : "visits"}`}
                     </p>
                 </div>
-                <button onClick={fetchReports}
-                    className="h-9 w-9 rounded-xl border border-gray-100 bg-white shadow-sm text-gray-400 hover:text-teal-600 hover:border-teal-100 flex items-center justify-center transition-colors">
-                    <RefreshCw className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button onClick={fetchReports}
+                        className="h-9 w-9 rounded-xl border border-gray-100 bg-white shadow-sm text-gray-400 hover:text-teal-600 hover:border-teal-100 flex items-center justify-center transition-colors">
+                        <RefreshCw className="h-4 w-4" />
+                    </button>
+                    <ExportMenu data={{
+                        title: "Home Care Visit Reports",
+                        subtitle: `${visits.length} visits`,
+                        columns: [
+                            { key: "patient", label: "Patient" }, { key: "visitDate", label: "Visit Date" },
+                            { key: "services", label: "Services" }, { key: "status", label: "Status" },
+                        ],
+                        rows: visits.map(v => ({
+                            patient: v.patientName || v.patientId, visitDate: fmtDate(v.visitDate),
+                            services: v.services.join("; "), status: v.status,
+                        })),
+                    }} />
+                </div>
             </div>
 
             <div className="relative max-w-sm">

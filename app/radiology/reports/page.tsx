@@ -7,6 +7,7 @@ import { db } from "@/lib/firebase";
 import { RadiologyOrder } from "@/types";
 import { motion } from "framer-motion";
 import { FileImage, Search, Download, RefreshCw, Scan } from "lucide-react";
+import { ExportMenu } from "@/components/ui/ExportMenu";
 
 const MODALITY_COLOR: Record<string, string> = {
     "X-RAY": "bg-blue-50 text-blue-700",
@@ -86,10 +87,24 @@ export default function RadiologyReportsPage() {
                         {loading ? "Loading…" : `${orders.length} completed ${orders.length === 1 ? "report" : "reports"}`}
                     </p>
                 </div>
-                <button onClick={fetchReports}
-                    className="h-9 w-9 rounded-xl border border-gray-100 bg-white shadow-sm text-gray-400 hover:text-violet-600 hover:border-violet-100 flex items-center justify-center transition-colors">
-                    <RefreshCw className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button onClick={fetchReports}
+                        className="h-9 w-9 rounded-xl border border-gray-100 bg-white shadow-sm text-gray-400 hover:text-violet-600 hover:border-violet-100 flex items-center justify-center transition-colors">
+                        <RefreshCw className="h-4 w-4" />
+                    </button>
+                    <ExportMenu data={{
+                        title: "Radiology Reports",
+                        subtitle: `${orders.length} completed reports`,
+                        columns: [
+                            { key: "patient", label: "Patient" }, { key: "modality", label: "Modality" },
+                            { key: "bodyPart", label: "Body Part" }, { key: "priority", label: "Priority" }, { key: "reportedAt", label: "Reported" },
+                        ],
+                        rows: orders.map(o => ({
+                            patient: o.patientName || o.patientId, modality: o.modality, bodyPart: o.bodyPart,
+                            priority: o.priority, reportedAt: fmtDateTime(o.reportedAt),
+                        })),
+                    }} />
+                </div>
             </div>
 
             <div className="relative max-w-sm">

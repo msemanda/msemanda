@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { BarChart3, CheckCircle2, AlertCircle, RefreshCw, Package, Truck, Activity } from "lucide-react";
+import { ExportMenu } from "@/components/ui/ExportMenu";
 
 export default function CssdReportsPage() {
     const [stats, setStats] = useState({ items: 0, cycles: 0, dispatches: 0, failed: 0, completed: 0 });
@@ -44,9 +45,23 @@ export default function CssdReportsPage() {
                     <h1 className="text-2xl font-black text-gray-900">CSSD Reports</h1>
                     <p className="text-sm text-gray-500 mt-0.5">Sterilization activity summary and performance metrics</p>
                 </div>
-                <button onClick={fetchData} className="h-10 w-10 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-blue-600 transition-all">
-                    <RefreshCw className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button onClick={fetchData} className="h-10 w-10 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-blue-600 transition-all">
+                        <RefreshCw className="h-4 w-4" />
+                    </button>
+                    <ExportMenu data={{
+                        title: "CSSD Reports",
+                        subtitle: `${stats.cycles} cycles · ${stats.completed} completed · ${stats.failed} failed`,
+                        columns: [
+                            { key: "cycleNo", label: "Cycle No" }, { key: "machine", label: "Machine" }, { key: "method", label: "Method" },
+                            { key: "itemCount", label: "Items" }, { key: "operator", label: "Operator" }, { key: "status", label: "Status" },
+                        ],
+                        rows: cycles.map(c => ({
+                            cycleNo: c.cycleNo, machine: c.machine, method: c.method,
+                            itemCount: c.itemCount, operator: c.operator, status: c.status,
+                        })),
+                    }} />
+                </div>
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">

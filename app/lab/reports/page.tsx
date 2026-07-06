@@ -7,6 +7,7 @@ import { db } from "@/lib/firebase";
 import { LabOrder } from "@/types";
 import { motion } from "framer-motion";
 import { BarChart3, Search, Download, FileText, RefreshCw, FlaskConical, Activity } from "lucide-react";
+import { ExportMenu } from "@/components/ui/ExportMenu";
 
 const FLAG_COLORS: Record<string, string> = {
     NORMAL: "bg-green-50 text-green-700 border-green-100",
@@ -138,10 +139,24 @@ export default function LabReportsPage() {
                         {loading ? "Loading…" : `${orders.length} completed ${orders.length === 1 ? "report" : "reports"} overall`}
                     </p>
                 </div>
-                <button onClick={fetchReports}
-                    className="h-9 w-9 rounded-xl border border-gray-100 bg-white shadow-sm text-gray-400 hover:text-amber-600 hover:border-amber-100 flex items-center justify-center transition-colors">
-                    <RefreshCw className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button onClick={fetchReports}
+                        className="h-9 w-9 rounded-xl border border-gray-100 bg-white shadow-sm text-gray-400 hover:text-amber-600 hover:border-amber-100 flex items-center justify-center transition-colors">
+                        <RefreshCw className="h-4 w-4" />
+                    </button>
+                    <ExportMenu data={{
+                        title: "Lab Reports",
+                        subtitle: `${PERIODS.find(p => p.value === period)?.label} · ${periodOrders.length} reports`,
+                        columns: [
+                            { key: "patient", label: "Patient" }, { key: "tests", label: "Tests" },
+                            { key: "priority", label: "Priority" }, { key: "completedAt", label: "Completed" },
+                        ],
+                        rows: periodOrders.map(o => ({
+                            patient: o.patientName || o.patientId, tests: o.tests.join("; "),
+                            priority: o.priority, completedAt: fmtDateTime(o.completedAt),
+                        })),
+                    }} />
+                </div>
             </div>
 
             <div className="flex gap-2 flex-wrap">
