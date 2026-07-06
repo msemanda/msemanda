@@ -278,9 +278,9 @@ export default function ReceptionistPaymentsPage() {
                                 <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Amount (UGX)</label>
                                 <div className="relative">
                                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-gray-400 pointer-events-none">UGX</span>
-                                    <Input type="number" required min="0" className="pl-12" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} />
+                                    <Input type="number" required min="0" readOnly className="pl-12 bg-gray-100 text-gray-500 cursor-not-allowed" value={form.amount} />
                                 </div>
-                                <p className="text-[10px] text-gray-400 ml-1">Auto-filled from the selected consultation type</p>
+                                <p className="text-[10px] text-gray-400 ml-1">Fixed by the selected consultation type — not editable</p>
                             </div>
                             {createError && (
                                 <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-xs font-semibold flex gap-2">

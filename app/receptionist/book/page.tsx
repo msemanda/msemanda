@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { collection, query, where, getDocs, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, orderBy, limit, getDocs, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { notify } from "@/lib/notify";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Stethoscope, User, CalendarDays, Clock,
-    CheckCircle2, ShieldCheck, ArrowRight, Search, UserCheck, X,
+    CheckCircle2, ShieldCheck, ArrowRight, Search, UserCheck, X, AlertCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 
@@ -57,6 +57,43 @@ export default function BookAppointmentPage() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
+
+    // Consultation fee gate — appointment can only be confirmed once paid
+    const [hasPaidFee, setHasPaidFee] = useState(false);
+    const [checkingFee, setCheckingFee] = useState(false);
+    const [feeChecked, setFeeChecked] = useState(false);
+
+    useEffect(() => {
+        const email = form.patientEmail.toLowerCase().trim();
+        if (!email || !email.includes("@")) {
+            setHasPaidFee(false);
+            setFeeChecked(false);
+            return;
+        }
+        let cancelled = false;
+        setCheckingFee(true);
+        setFeeChecked(false);
+        (async () => {
+            try {
+                const q = query(
+                    collection(db, "consultationFees"),
+                    where("patientEmail", "==", email),
+                    orderBy("createdAt", "desc"),
+                    limit(1)
+                );
+                const snap = await getDocs(q);
+                if (cancelled) return;
+                const latest = snap.docs[0]?.data() as { status?: string } | undefined;
+                setHasPaidFee(latest?.status === "PAID");
+            } catch (err) {
+                console.error(err);
+                if (!cancelled) setHasPaidFee(false);
+            } finally {
+                if (!cancelled) { setCheckingFee(false); setFeeChecked(true); }
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [form.patientEmail]);
 
     useEffect(() => {
         const fetchDoctors = async () => {
@@ -149,6 +186,7 @@ export default function BookAppointmentPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedDoctor) { setError("Please select a doctor."); return; }
+        if (!hasPaidFee) { setError("This patient hasn't paid the consultation fee yet. Create/confirm their payment before booking."); return; }
         setSubmitting(true);
         setError("");
         try {
@@ -405,6 +443,16 @@ export default function BookAppointmentPage() {
                 </div>
 
                 <AnimatePresence>
+                    {feeChecked && !checkingFee && !hasPaidFee && (
+                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                            className="p-3.5 rounded-xl bg-amber-50 border border-amber-100 text-amber-700 text-xs font-semibold flex gap-2">
+                            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                            <span>Patient hasn&apos;t paid the consultation fee yet. Booking is disabled until payment is confirmed on the Consultation Fees page.</span>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <AnimatePresence>
                     {error && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                             className="p-3.5 rounded-xl bg-red-50 border border-red-100 text-red-600 text-xs font-semibold flex gap-2">
@@ -413,7 +461,7 @@ export default function BookAppointmentPage() {
                     )}
                 </AnimatePresence>
 
-                <button type="submit" disabled={submitting || !selectedDoctor}
+                <button type="submit" disabled={submitting || !selectedDoctor || checkingFee || !hasPaidFee}
                     className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-bold flex items-center justify-center gap-2 transition-colors shadow-sm shadow-blue-600/20">
                     {submitting
                         ? <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full" />
