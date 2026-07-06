@@ -75,6 +75,41 @@ export default function BloodBankPage() {
 
     useEffect(() => { load(); }, [load]);
 
+    const handleRecordDonation = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const units = Number(form.units) || 0;
+        if (units <= 0) return;
+
+        setSaving(true);
+        try {
+            const existing = inventory.find(b => b.group === form.group);
+            if (existing) {
+                await updateDoc(doc(db, "bloodInventory", existing.id), {
+                    available: existing.available + units,
+                    lastDonorName: form.donorName.trim(),
+                    lastRecordedBy: profile?.name,
+                    updatedAt: serverTimestamp(),
+                });
+            } else {
+                await addDoc(collection(db, "bloodInventory"), {
+                    bloodGroup: form.group,
+                    available: units,
+                    reserved: 0,
+                    lastDonorName: form.donorName.trim(),
+                    lastRecordedBy: profile?.name,
+                    createdAt: serverTimestamp(),
+                });
+            }
+            setShowForm(false);
+            setForm({ donorName: "", group: BLOOD_GROUPS[0], units: "1" });
+            await load();
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setSaving(false);
+        }
+    };
+
     return (
         <div className="max-w-5xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
@@ -88,11 +123,48 @@ export default function BloodBankPage() {
                     <button onClick={load} className="text-gray-400 hover:text-red-600 transition-colors">
                         <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                     </button>
-                    <button className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold flex items-center gap-2 transition-colors">
+                    <button onClick={() => setShowForm(!showForm)} className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold flex items-center gap-2 transition-colors">
                         <Plus className="h-4 w-4" /> Record Donation
                     </button>
                 </div>
             </div>
+
+            <AnimatePresence>
+                {showForm && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                        className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 overflow-hidden">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-base font-black text-gray-900">Record Blood Donation</h2>
+                            <button onClick={() => setShowForm(false)} className="h-7 w-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50">
+                                <X className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleRecordDonation} className="space-y-4">
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Donor Name</label>
+                                    <Input required placeholder="Donor's full name" value={form.donorName} onChange={e => setForm(p => ({ ...p, donorName: e.target.value }))} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Blood Group</label>
+                                    <select className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 focus:bg-white focus:border-red-500 outline-none"
+                                        value={form.group} onChange={e => setForm(p => ({ ...p, group: e.target.value }))}>
+                                        {BLOOD_GROUPS.map(g => <option key={g}>{g}</option>)}
+                                    </select>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Units</label>
+                                    <Input type="number" min={1} required value={form.units} onChange={e => setForm(p => ({ ...p, units: e.target.value }))} />
+                                </div>
+                            </div>
+                            <button type="submit" disabled={saving}
+                                className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white text-sm font-bold flex items-center justify-center gap-2">
+                                {saving ? <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full" /> : "Save Donation"}
+                            </button>
+                        </form>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                 <h2 className="font-bold text-gray-900 mb-4">Blood Group Inventory</h2>
