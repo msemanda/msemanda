@@ -296,6 +296,45 @@ CREATE TABLE IF NOT EXISTS categories (
     updated_at  TIMESTAMPTZ
 );
 
+-- ── Security ──────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS security_shifts (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    data        JSONB NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS visitor_logs (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    data        JSONB NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+
+-- ── Optical ───────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS optical_exams (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    data        JSONB NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS optical_prescriptions (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    data        JSONB NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS optical_orders (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    data        JSONB NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+
 -- ── GIN indexes for JSONB querying ────────────────────────────────────────────
 
 CREATE INDEX IF NOT EXISTS idx_users_data              ON users              USING GIN (data);
@@ -335,3 +374,8 @@ CREATE INDEX IF NOT EXISTS idx_emergency_cases_data    ON emergency_cases    USI
 CREATE INDEX IF NOT EXISTS idx_pharmacy_stock_data     ON pharmacy_stock     USING GIN (data);
 CREATE INDEX IF NOT EXISTS idx_dispensing_records_data ON dispensing_records USING GIN (data);
 CREATE INDEX IF NOT EXISTS idx_categories_data         ON categories         USING GIN (data);
+CREATE INDEX IF NOT EXISTS idx_security_shifts_data    ON security_shifts    USING GIN (data);
+CREATE INDEX IF NOT EXISTS idx_visitor_logs_data       ON visitor_logs       USING GIN (data);
+CREATE INDEX IF NOT EXISTS idx_optical_exams_data      ON optical_exams      USING GIN (data);
+CREATE INDEX IF NOT EXISTS idx_optical_prescriptions_data ON optical_prescriptions USING GIN (data);
+CREATE INDEX IF NOT EXISTS idx_optical_orders_data     ON optical_orders     USING GIN (data);

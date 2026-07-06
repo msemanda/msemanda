@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { RoleSidebar, SidebarGroup } from "@/components/ui/RoleSidebar";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
@@ -6,35 +6,37 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, ClipboardList, CalendarClock, CheckSquare } from "lucide-react";
+import { LayoutDashboard, Eye, FileText, Package } from "lucide-react";
 
 const sidebarGroups: SidebarGroup[] = [
     { label: "Overview", items: [
-        { name: "Dashboard", href: "/housekeeping/dashboard", icon: LayoutDashboard },
+        { name: "Dashboard", href: "/optical/dashboard", icon: LayoutDashboard },
     ]},
-    { label: "Tasks", items: [
-        { name: "Cleaning Tasks", href: "/housekeeping/tasks", icon: ClipboardList },
-        { name: "Schedule", href: "/housekeeping/schedule", icon: CalendarClock },
-        { name: "Completed", href: "/housekeeping/completed", icon: CheckSquare },
+    { label: "Eye Clinic", items: [
+        { name: "Eye Exams", href: "/optical/exams", icon: Eye },
+        { name: "Prescriptions", href: "/optical/prescriptions", icon: FileText },
+        { name: "Dispensing", href: "/optical/dispensing", icon: Package },
     ]},
 ];
 
-export default function HousekeepingLayout({ children }: { children: React.ReactNode }) {
+export default function OpticalLayout({ children }: { children: React.ReactNode }) {
     const { profile, loading } = useAuth();
     const router = useRouter();
 
+    const allowed = (role?: string) => role === "OPTICIAN" || role === "OPTICIAN_ASSISTANT" || role === "ADMIN";
+
     useEffect(() => {
-        if (!loading && (!profile || (profile.role !== "ADMIN" && profile.role !== "CLEANER"))) {
+        if (!loading && (!profile || !allowed(profile.role))) {
             router.push("/login");
         }
     }, [profile, loading, router]);
 
-    if (loading) return <LoadingScreen label="Loading Housekeeping" />;
-    if (!profile || (profile.role !== "ADMIN" && profile.role !== "CLEANER")) return null;
+    if (loading) return <LoadingScreen label="Loading Optical" />;
+    if (!profile || !allowed(profile.role)) return null;
 
     return (
         <div className="flex h-screen bg-gray-50 overflow-hidden">
-            <RoleSidebar groups={sidebarGroups} roleLabel="Housekeeping" />
+            <RoleSidebar groups={sidebarGroups} roleLabel="Optical" />
             <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
                 <AnimatePresence mode="wait">
                     <motion.main key={profile?.uid} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="flex-1 p-4 pt-14 md:p-6">

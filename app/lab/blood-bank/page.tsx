@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import { Droplets, Plus, AlertCircle, CheckCircle2, RefreshCw } from "lucide-react";
-import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
+import { motion, AnimatePresence } from "framer-motion";
+import { Droplets, Plus, AlertCircle, CheckCircle2, RefreshCw, X } from "lucide-react";
+import { collection, getDocs, addDoc, updateDoc, doc, query, orderBy, limit, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toDate } from "@/lib/ts";
+import { useAuth } from "@/context/AuthContext";
+import { Input } from "@/components/ui/Input";
 
 interface BloodGroup {
     id: string;
@@ -24,10 +26,16 @@ interface BloodRequest {
     time: string;
 }
 
+const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
 export default function BloodBankPage() {
+    const { profile } = useAuth();
     const [inventory, setInventory] = useState<BloodGroup[]>([]);
     const [requests, setRequests] = useState<BloodRequest[]>([]);
     const [loading, setLoading] = useState(true);
+    const [showForm, setShowForm] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [form, setForm] = useState({ donorName: "", group: BLOOD_GROUPS[0], units: "1" });
 
     const load = useCallback(async () => {
         setLoading(true);

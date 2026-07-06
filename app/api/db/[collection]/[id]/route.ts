@@ -24,6 +24,9 @@ const ALLOWED = new Set([
     "incidents", "homeCareVisits", "emergencyCases",
     "pharmacyStock", "dispensingRecords", "categories",
     "feeSchedule", "messages", "notifications",
+    "securityShifts", "visitorLogs",
+    "opticalExams", "opticalPrescriptions", "opticalOrders",
+    "bloodInventory", "bloodRequests",
 ]);
 
 function tableName(col: string) {

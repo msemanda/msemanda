@@ -51,11 +51,43 @@ export const ALL_PERMISSIONS: PermissionDef[] = [
     { key: "cashier_expenses",     label: "Expense Recording",   description: "Record expense entries",                  category: "Finance" },
     { key: "fee_schedule",         label: "Fee Schedule",        description: "Manage consultation fee schedule pricing", category: "Finance" },
     { key: "cashier_reports",      label: "Financial Reports",   description: "View financial reports and analytics",    category: "Finance" },
+
+    // Security
+    { key: "security_shifts", label: "Duty Roster",       description: "Manage guard shift schedule and post assignments", category: "Security" },
+    { key: "visitor_log",     label: "Visitor Log",       description: "Check visitors in and out of the premises",        category: "Security" },
+
+    // Optical
+    { key: "optical_exams",         label: "Eye Exams",             description: "Record vision tests and diagnoses",         category: "Optical" },
+    { key: "optical_prescriptions", label: "Optical Prescriptions", description: "Write glasses / contact lens prescriptions", category: "Optical" },
+    { key: "optical_dispensing",    label: "Dispensing / Orders",   description: "Track frame & lens orders and pickups",      category: "Optical" },
 ];
 
 export const PERMISSION_CATEGORIES = [
-    "Clinical", "Scheduling", "Nursing", "Ancillary", "Specialty", "Reception", "Finance",
+    "Clinical", "Scheduling", "Nursing", "Ancillary", "Specialty", "Reception", "Finance", "Security", "Optical",
 ];
+
+// Default module access granted per role on account creation. ADMIN gets
+// everything; CLEANER has no permission-gated features of its own — the
+// Housekeeping module is gated by role check, not a permission key.
+export const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
+    ADMIN:               ALL_PERMISSIONS.map(p => p.key),
+    DOCTOR:              ["emr", "cpoe", "order_sets", "diagnostics", "prescriptions", "appointments", "ot", "home_care", "wellness"],
+    NURSE:               ["emr", "vitals", "nursing_orders", "ward_patients", "home_care"],
+    PHARMACY:            ["pharmacy"],
+    LAB_TECH:            ["lab_orders", "blood_bank"],
+    RADIOLOGY_TECH:      ["radiology_orders"],
+    PHYSIOTHERAPIST:     ["physiotherapy", "appointments"],
+    DENTIST:             ["dental", "prescriptions", "appointments"],
+    DIETITIAN:           ["dietary"],
+    EMERGENCY_STAFF:     ["emergency", "vitals", "ward_patients"],
+    RECEPTIONIST:        ["patient_admit", "patient_invite", "book_appt", "billing", "appointments"],
+    CASHIER:             ["cashier_billing", "cashier_transactions", "cashier_income", "cashier_expenses", "fee_schedule", "cashier_reports"],
+    CLEANER:             [],
+    SECURITY:            ["security_shifts", "visitor_log"],
+    OPTICIAN:            ["optical_exams", "optical_prescriptions", "optical_dispensing"],
+    OPTICIAN_ASSISTANT:  ["optical_dispensing"],
+    PATIENT:             [],
+};
 
 export const SPECIALIZATIONS = [
     "General Practice",

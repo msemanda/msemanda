@@ -24,6 +24,11 @@ const ROLE_COLORS: Record<string, string> = {
     EMERGENCY_STAFF: "bg-red-50 text-red-700 border-red-100",
     RECEPTIONIST: "bg-indigo-50 text-indigo-700 border-indigo-100",
     ADMIN: "bg-gray-50 text-gray-700 border-gray-200",
+    CASHIER: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100",
+    CLEANER: "bg-slate-50 text-slate-700 border-slate-100",
+    SECURITY: "bg-zinc-50 text-zinc-700 border-zinc-100",
+    OPTICIAN: "bg-cyan-50 text-cyan-700 border-cyan-100",
+    OPTICIAN_ASSISTANT: "bg-cyan-50 text-cyan-600 border-cyan-100",
 };
 
 export function TopNav({ role }: TopNavProps) {

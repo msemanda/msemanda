@@ -12,6 +12,10 @@ export const ROLES = [
     "DIETITIAN",
     "EMERGENCY_STAFF",
     "CASHIER",
+    "CLEANER",
+    "SECURITY",
+    "OPTICIAN",
+    "OPTICIAN_ASSISTANT",
     "PATIENT",
 ] as const;
 

@@ -36,6 +36,9 @@ yarn-error.log*
 # Firebase service account key — never commit
 scripts/serviceAccountKey.json
 
+# Generated staff credentials — plaintext temp passwords, never commit
+staff-credentials.csv
+
 # vercel
 .vercel
 

@@ -27,6 +27,12 @@ function getRoleDashboard(role: UserRole): string {
         case "DENTIST":         return "/dental/dashboard";
         case "DIETITIAN":       return "/dietary/dashboard";
         case "EMERGENCY_STAFF": return "/emergency/dashboard";
+        case "RECEPTIONIST":    return "/receptionist/dashboard";
+        case "CASHIER":         return "/cashier/dashboard";
+        case "CLEANER":         return "/housekeeping/dashboard";
+        case "SECURITY":        return "/security/dashboard";
+        case "OPTICIAN":
+        case "OPTICIAN_ASSISTANT": return "/optical/dashboard";
         default:                return "/login";
     }
 }
@@ -36,6 +42,9 @@ const ROLE_LABELS: Record<string, string> = {
     PHARMACY: "Pharmacist", NURSE: "Nurse", LAB_TECH: "Laboratory Technician",
     RADIOLOGY_TECH: "Radiology Technician", PHYSIOTHERAPIST: "Physiotherapist",
     DENTIST: "Dentist", DIETITIAN: "Dietitian", EMERGENCY_STAFF: "Emergency Staff",
+    RECEPTIONIST: "Receptionist", CASHIER: "Cashier / Accounts",
+    CLEANER: "Cleaner", SECURITY: "Security / Askari",
+    OPTICIAN: "Optician", OPTICIAN_ASSISTANT: "Optician Assistant",
 };
 
 const ROLE_COLORS: Record<string, string> = {
@@ -50,6 +59,12 @@ const ROLE_COLORS: Record<string, string> = {
     DENTIST: "bg-pink-50 text-pink-700 border-pink-100",
     DIETITIAN: "bg-emerald-50 text-emerald-700 border-emerald-100",
     EMERGENCY_STAFF: "bg-red-50 text-red-700 border-red-100",
+    RECEPTIONIST: "bg-indigo-50 text-indigo-700 border-indigo-100",
+    CASHIER: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100",
+    CLEANER: "bg-slate-50 text-slate-700 border-slate-100",
+    SECURITY: "bg-zinc-50 text-zinc-700 border-zinc-100",
+    OPTICIAN: "bg-cyan-50 text-cyan-700 border-cyan-100",
+    OPTICIAN_ASSISTANT: "bg-cyan-50 text-cyan-600 border-cyan-100",
 };
 
 const SUPERADMIN_EMAIL = "semandamoses91@gmail.com";

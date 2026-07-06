@@ -15,7 +15,8 @@ function getRolePath(role: string): string {
         RADIOLOGY_TECH: "/radiology/dashboard", PHYSIOTHERAPIST: "/physiotherapy/dashboard",
         DENTIST: "/dental/dashboard", DIETITIAN: "/dietary/dashboard",
         EMERGENCY_STAFF: "/emergency/dashboard", RECEPTIONIST: "/receptionist/dashboard",
-        CASHIER: "/cashier/dashboard",
+        CASHIER: "/cashier/dashboard", CLEANER: "/housekeeping/dashboard",
+        SECURITY: "/security/dashboard", OPTICIAN: "/optical/dashboard", OPTICIAN_ASSISTANT: "/optical/dashboard",
     };
     return map[role] || "/login";
 }

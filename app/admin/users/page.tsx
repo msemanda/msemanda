@@ -26,6 +26,9 @@ const ROLE_TABS: { value: UserRole | "ALL"; label: string }[] = [
     { value: "DIETITIAN", label: "Dietitians" },
     { value: "EMERGENCY_STAFF", label: "Emergency" },
     { value: "PHARMACY", label: "Pharmacy" },
+    { value: "CLEANER", label: "Cleaners" },
+    { value: "SECURITY", label: "Security" },
+    { value: "OPTICIAN", label: "Opticians" },
     { value: "PATIENT", label: "Patients" },
 ];
 
@@ -42,6 +45,10 @@ const ALL_ROLES: { value: UserRole; label: string }[] = [
     { value: "DIETITIAN", label: "Dietitian" },
     { value: "EMERGENCY_STAFF", label: "Emergency Staff" },
     { value: "CASHIER", label: "Cashier / Accounts" },
+    { value: "CLEANER", label: "Cleaner" },
+    { value: "SECURITY", label: "Security / Askari" },
+    { value: "OPTICIAN", label: "Optician" },
+    { value: "OPTICIAN_ASSISTANT", label: "Optician Assistant" },
     { value: "PATIENT", label: "Patient" },
 ];
 
@@ -58,6 +65,10 @@ const ROLE_COLORS: Record<string, string> = {
     DIETITIAN: "bg-emerald-50 text-emerald-700 border-emerald-100",
     EMERGENCY_STAFF: "bg-red-50 text-red-700 border-red-100",
     PHARMACY: "bg-sky-50 text-sky-700 border-sky-100",
+    CLEANER: "bg-slate-50 text-slate-700 border-slate-100",
+    SECURITY: "bg-zinc-50 text-zinc-700 border-zinc-100",
+    OPTICIAN: "bg-cyan-50 text-cyan-700 border-cyan-100",
+    OPTICIAN_ASSISTANT: "bg-cyan-50 text-cyan-600 border-cyan-100",
 };
 
 interface EditState {

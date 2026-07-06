@@ -23,6 +23,10 @@ function getRoleDashboard(role: UserRole): string {
         case "EMERGENCY_STAFF": return "/emergency/dashboard";
         case "RECEPTIONIST":    return "/receptionist/dashboard";
         case "CASHIER":         return "/cashier/dashboard";
+        case "CLEANER":         return "/housekeeping/dashboard";
+        case "SECURITY":        return "/security/dashboard";
+        case "OPTICIAN":
+        case "OPTICIAN_ASSISTANT": return "/optical/dashboard";
         default:                return "/login";
     }
 }

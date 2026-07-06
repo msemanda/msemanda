@@ -11,7 +11,11 @@ export type UserRole =
     | "DIETITIAN"
     | "EMERGENCY_STAFF"
     | "RECEPTIONIST"
-    | "CASHIER";
+    | "CASHIER"
+    | "CLEANER"
+    | "SECURITY"
+    | "OPTICIAN"
+    | "OPTICIAN_ASSISTANT";
 
 export interface UserProfile {
     uid: string;
