@@ -109,6 +109,18 @@ export const ORDER_TYPE_LABELS: Record<OrderType, string> = {
     PROCEDURE:  "Procedure",
 };
 
+// ── Consultation fee price list (label + default amount, used when creating a
+// consultationFees record — distinct from CONSULTATION_TYPES below, which is
+// just the plain label list) ───────────────────────────────────────────────
+export const CONSULTATION_FEE_TYPES = [
+    { label: "General Consultation",    amount: 30000 },
+    { label: "Specialist Consultation", amount: 80000 },
+    { label: "Emergency Consultation",  amount: 50000 },
+    { label: "Follow-up Visit",         amount: 15000 },
+    { label: "Dental Consultation",     amount: 40000 },
+    { label: "Physiotherapy Session",   amount: 35000 },
+] as const;
+
 // ── Pharmacy ───────────────────────────────────────────────────────────────────
 // This is only a list of *suggestions* shown in the category field's datalist —
 // the field itself is free text, so a new category can be added on the fly by

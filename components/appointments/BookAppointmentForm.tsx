@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { PhoneDuplicateGuard } from "@/components/patients/PhoneDuplicateGuard";
+import { CONSULTATION_FEE_TYPES } from "@/helpers/constants";
 
 const TIME_SLOTS = [
     "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
@@ -60,6 +61,8 @@ export function BookAppointmentForm({
         date: "",
         time: TIME_SLOTS[0],
         notes: "",
+        consultationType: CONSULTATION_FEE_TYPES[0].label as string,
+        feeAmount: String(CONSULTATION_FEE_TYPES[0].amount),
     });
 
     // Patient combobox
@@ -210,6 +213,27 @@ export function BookAppointmentForm({
         setSubmitting(true);
         setError("");
         try {
+            // No fee exists for this patient at all (not even an unpaid one) —
+            // create it now rather than leaving the appointment pointing at
+            // nothing payable. Reusing an existing PENDING/PATIENT_PAID fee
+            // (latestFeeId already set) is left alone so a repeat booking
+            // attempt doesn't spawn a duplicate fee.
+            let feeId = latestFeeId;
+            if (!hasPaidFee && !feeId) {
+                feeId = `fee_${Date.now()}`;
+                await setDoc(doc(db, "consultationFees", feeId), {
+                    patientName: form.patientName.trim(),
+                    patientEmail: form.patientEmail.toLowerCase().trim(),
+                    patientId: pickedPatient?.uid || null,
+                    consultationType: form.consultationType,
+                    amount: parseFloat(form.feeAmount) || 0,
+                    status: "PENDING",
+                    createdAt: serverTimestamp(),
+                    createdBy: profile?.uid,
+                    createdByName: profile?.name,
+                });
+            }
+
             const apptId = `appt_${Date.now()}`;
             await setDoc(doc(db, "appointments", apptId), {
                 patientName: form.patientName.trim(),
@@ -225,7 +249,7 @@ export function BookAppointmentForm({
                 // doctor as CONFIRMED once the linked consultation fee is paid
                 // (see cashier/fees confirm action, which flips this).
                 status: hasPaidFee ? "CONFIRMED" : "PENDING_PAYMENT",
-                feeId: latestFeeId,
+                feeId,
                 bookedBy: profile?.uid,
                 bookedByName: profile?.name,
                 bookedAt: serverTimestamp(),
@@ -260,7 +284,10 @@ export function BookAppointmentForm({
         setSelectedDoctor(null);
         setPickedPatient(null);
         setNameQuery("");
-        setForm({ patientName: "", patientEmail: "", patientPhone: "", date: "", time: TIME_SLOTS[0], notes: "" });
+        setForm({
+            patientName: "", patientEmail: "", patientPhone: "", date: "", time: TIME_SLOTS[0], notes: "",
+            consultationType: CONSULTATION_FEE_TYPES[0].label, feeAmount: String(CONSULTATION_FEE_TYPES[0].amount),
+        });
     };
 
     if (success) {
@@ -495,11 +522,40 @@ export function BookAppointmentForm({
                 </div>
 
                 <AnimatePresence>
+                    {feeChecked && !checkingFee && !hasPaidFee && !latestFeeId && (
+                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                            className="grid grid-cols-1 sm:grid-cols-2 gap-4 overflow-hidden">
+                            <div className="space-y-1.5">
+                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Consultation Type</label>
+                                <select
+                                    className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 focus:bg-white focus:border-blue-500 outline-none"
+                                    value={form.consultationType}
+                                    onChange={e => {
+                                        const t = CONSULTATION_FEE_TYPES.find(x => x.label === e.target.value);
+                                        setForm(p => ({ ...p, consultationType: e.target.value, feeAmount: t ? String(t.amount) : p.feeAmount }));
+                                    }}>
+                                    {CONSULTATION_FEE_TYPES.map(t => <option key={t.label} value={t.label}>{t.label}</option>)}
+                                </select>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Consultation Fee (UGX)</label>
+                                <Input type="number" min="0" readOnly className="bg-gray-100 text-gray-500 cursor-not-allowed" value={form.feeAmount} />
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <AnimatePresence>
                     {feeChecked && !checkingFee && !hasPaidFee && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                             className="p-3.5 rounded-xl bg-amber-50 border border-amber-100 text-amber-700 text-xs font-semibold flex gap-2">
                             <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                            <span>Patient hasn&apos;t paid the consultation fee yet. The slot will still be reserved as <span className="font-black">Pending Payment</span> and only appear in the doctor&apos;s queue once payment is confirmed on the Consultation Fees page.</span>
+                            <span>
+                                {latestFeeId
+                                    ? "Patient already has an unpaid consultation fee on file. "
+                                    : "A consultation fee will be created for this booking. "}
+                                The slot will still be reserved as <span className="font-black">Pending Payment</span> and only appear in the doctor&apos;s queue once payment is confirmed on the Consultation Fees page.
+                            </span>
                         </motion.div>
                     )}
                 </AnimatePresence>

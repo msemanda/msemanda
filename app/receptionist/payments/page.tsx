@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/Input";
 import { ExportMenu } from "@/components/ui/ExportMenu";
 import { buildReceiptDocument } from "@/lib/receipt";
 import { PhoneDuplicateGuard } from "@/components/patients/PhoneDuplicateGuard";
+import { CONSULTATION_FEE_TYPES } from "@/helpers/constants";
 
 interface KnownPatient { uid: string; name: string; email: string; phone?: string; }
 
@@ -35,15 +36,6 @@ interface FeeRecord {
     receiptNo?: string;
     cancelledBy?: string;
 }
-
-const CONSULTATION_TYPES = [
-    { label: "General Consultation",    amount: 30000 },
-    { label: "Specialist Consultation", amount: 80000 },
-    { label: "Emergency Consultation",  amount: 50000 },
-    { label: "Follow-up Visit",         amount: 15000 },
-    { label: "Dental Consultation",     amount: 40000 },
-    { label: "Physiotherapy Session",   amount: 35000 },
-];
 
 const METHOD_LABEL: Record<string, string> = {
     MOBILE_MONEY: "Mobile Money", CASH: "Cash",
@@ -68,8 +60,8 @@ export default function ReceptionistPaymentsPage() {
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({
         patientName: "", patientEmail: "", patientPhone: "",
-        consultationType: CONSULTATION_TYPES[0].label,
-        amount: CONSULTATION_TYPES[0].amount.toString(),
+        consultationType: CONSULTATION_FEE_TYPES[0].label as string,
+        amount: CONSULTATION_FEE_TYPES[0].amount.toString(),
     });
     const [creating, setCreating] = useState(false);
     const [createError, setCreateError] = useState("");
@@ -180,7 +172,7 @@ export default function ReceptionistPaymentsPage() {
             }
             setShowForm(false);
             setPickedPatient(null); setNameQuery("");
-            setForm({ patientName: "", patientEmail: "", patientPhone: "", consultationType: CONSULTATION_TYPES[0].label, amount: CONSULTATION_TYPES[0].amount.toString() });
+            setForm({ patientName: "", patientEmail: "", patientPhone: "", consultationType: CONSULTATION_FEE_TYPES[0].label, amount: CONSULTATION_FEE_TYPES[0].amount.toString() });
             fetchFees();
         } catch(err: any) {
             setCreateError(err.message || "Failed to create fee.");
@@ -320,10 +312,10 @@ export default function ReceptionistPaymentsPage() {
                                 <select className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                                     value={form.consultationType}
                                     onChange={e => {
-                                        const t = CONSULTATION_TYPES.find(x => x.label === e.target.value);
+                                        const t = CONSULTATION_FEE_TYPES.find(x => x.label === e.target.value);
                                         setForm(p => ({ ...p, consultationType: e.target.value, amount: t ? t.amount.toString() : p.amount }));
                                     }}>
-                                    {CONSULTATION_TYPES.map(t => <option key={t.label} value={t.label}>{t.label}</option>)}
+                                    {CONSULTATION_FEE_TYPES.map(t => <option key={t.label} value={t.label}>{t.label}</option>)}
                                 </select>
                             </div>
                             <div className="space-y-1.5">
