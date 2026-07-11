@@ -9,7 +9,7 @@ import { Transaction, INCOME_CATEGORIES, PaymentMethod } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     TrendingUp, Plus, X, CheckCircle2, RefreshCw,
-    ArrowUpRight, Search,
+    ArrowUpRight, Search, Lock,
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { ExportMenu } from "@/components/ui/ExportMenu";
@@ -23,6 +23,31 @@ const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
     { value: "INSURANCE", label: "Insurance" },
 ];
 
+interface FeeItem {
+    id: string;
+    name: string;
+    category: string;
+    amount: number;
+    active: boolean;
+}
+
+// Fee Schedule uses its own broad service categories (CONSULTATION, LAB, ...) —
+// map each to the closest income-report category so revenue reporting stays
+// consistent regardless of whether an amount was picked from the schedule or
+// entered manually under "Other Income".
+const FEE_CATEGORY_TO_INCOME_CATEGORY: Record<string, typeof INCOME_CATEGORIES[number]> = {
+    CONSULTATION: "Consultation Fee",
+    LAB: "Laboratory Fee",
+    RADIOLOGY: "Radiology Fee",
+    MEDICATION: "Pharmacy Sales",
+    NURSING: "Procedure Fee",
+    PROCEDURE: "Procedure Fee",
+    DIET: "Other Income",
+    OTHER: "Other Income",
+};
+
+const MANUAL_SERVICE = "__manual__";
+
 function fmt(n: number) { return "UGX " + n.toLocaleString("en-UG"); }
 
 export default function IncomePage() {
@@ -33,6 +58,8 @@ export default function IncomePage() {
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [search, setSearch] = useState("");
+    const [feeItems, setFeeItems] = useState<FeeItem[]>([]);
+    const [serviceId, setServiceId] = useState<string>(MANUAL_SERVICE);
     const [form, setForm] = useState<{
         description: string;
         category: typeof INCOME_CATEGORIES[number];
@@ -61,9 +88,35 @@ export default function IncomePage() {
         finally { setLoading(false); }
     };
 
-    useEffect(() => { fetchIncome(); }, []);
+    const fetchFeeSchedule = async () => {
+        try {
+            const snap = await getDocs(query(collection(db, "feeSchedule"), where("active", "==", true)));
+            setFeeItems(snap.docs.map(d => ({ id: d.id, ...d.data() } as FeeItem)));
+        } catch (err) { console.error(err); }
+    };
+
+    useEffect(() => { fetchIncome(); fetchFeeSchedule(); }, []);
 
     const total = entries.reduce((s, t) => s + t.amount, 0);
+    const isManual = serviceId === MANUAL_SERVICE;
+
+    const feeByCategory = feeItems.reduce<Record<string, FeeItem[]>>((acc, item) => {
+        (acc[item.category] ??= []).push(item);
+        return acc;
+    }, {});
+
+    const handleServiceChange = (id: string) => {
+        setServiceId(id);
+        if (id === MANUAL_SERVICE) return;
+        const item = feeItems.find(f => f.id === id);
+        if (!item) return;
+        setForm(p => ({
+            ...p,
+            description: item.name,
+            category: FEE_CATEGORY_TO_INCOME_CATEGORY[item.category] ?? "Other Income",
+            amount: String(item.amount),
+        }));
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -99,6 +152,7 @@ export default function IncomePage() {
             };
             setEntries(prev => [newEntry, ...prev]);
             setForm({ description: "", category: INCOME_CATEGORIES[0], amount: "", paymentMethod: "CASH", patientName: "", reference: "", notes: "" });
+            setServiceId(MANUAL_SERVICE);
             setSaved(true);
             setShowForm(false);
             setTimeout(() => setSaved(false), 3000);
@@ -153,6 +207,23 @@ export default function IncomePage() {
                                 </button>
                             </div>
                             <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Service</label>
+                                    <select value={serviceId} onChange={e => handleServiceChange(e.target.value)}
+                                        className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none transition-all cursor-pointer">
+                                        <option value={MANUAL_SERVICE}>— Manual entry / Other —</option>
+                                        {Object.entries(feeByCategory).map(([cat, items]) => (
+                                            <optgroup key={cat} label={cat}>
+                                                {items.map(item => (
+                                                    <option key={item.id} value={item.id}>{item.name} — UGX {item.amount.toLocaleString()}</option>
+                                                ))}
+                                            </optgroup>
+                                        ))}
+                                    </select>
+                                    <p className="text-[10px] text-gray-400 ml-1">
+                                        Picking a service from the Fee Schedule fills in the category and amount automatically. Choose "Manual entry" for anything not on the schedule.
+                                    </p>
+                                </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="col-span-2 space-y-1.5">
                                         <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Description *</label>
@@ -161,15 +232,26 @@ export default function IncomePage() {
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Category *</label>
-                                        <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value as typeof INCOME_CATEGORIES[number] }))}
-                                            className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none transition-all cursor-pointer">
+                                        <select
+                                            value={form.category}
+                                            disabled={!isManual}
+                                            onChange={e => setForm(p => ({ ...p, category: e.target.value as typeof INCOME_CATEGORIES[number] }))}
+                                            className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
                                             {INCOME_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                                         </select>
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Amount (UGX) *</label>
-                                        <Input required type="number" min="0" placeholder="0" value={form.amount}
-                                            onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} />
+                                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1 flex items-center gap-1">
+                                            Amount (UGX) * {!isManual && <Lock className="h-2.5 w-2.5 text-gray-400" />}
+                                        </label>
+                                        {isManual ? (
+                                            <Input required type="number" min="0" placeholder="0" value={form.amount}
+                                                onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} />
+                                        ) : (
+                                            <div className="h-11 w-full px-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-bold text-gray-700 flex items-center">
+                                                {fmt(Number(form.amount) || 0)}
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Payment Method</label>
