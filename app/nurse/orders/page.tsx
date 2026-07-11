@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ClipboardList, Search, CheckCircle2, RefreshCw } from "lucide-react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 import { toDate } from "@/lib/ts";
 
 interface NursingOrder {
@@ -30,10 +31,12 @@ const PRIORITY_BADGE: Record<string, string> = {
 };
 
 export default function NursingOrdersPage() {
+    const { profile } = useAuth();
     const [orders, setOrders] = useState<NursingOrder[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState("ALL");
+    const [acknowledging, setAcknowledging] = useState<string | null>(null);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -63,6 +66,19 @@ export default function NursingOrdersPage() {
     }, []);
 
     useEffect(() => { load(); }, [load]);
+
+    const handleAcknowledge = async (id: string) => {
+        setAcknowledging(id);
+        try {
+            await updateDoc(doc(db, "ipdOrders", id), {
+                status: "ACKNOWLEDGED",
+                acknowledgedBy: profile?.name,
+                acknowledgedAt: serverTimestamp(),
+            });
+            setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "ACKNOWLEDGED" } : o));
+        } catch (e) { console.error(e); }
+        finally { setAcknowledging(null); }
+    };
 
     const filtered = orders.filter(o => {
         const matchS = o.patient.toLowerCase().includes(search.toLowerCase()) || o.order.toLowerCase().includes(search.toLowerCase());
@@ -132,8 +148,11 @@ export default function NursingOrdersPage() {
                                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${PRIORITY_BADGE[o.priority] ?? "bg-gray-50 text-gray-600"}`}>{o.priority}</span>
                                         <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${STATUS_BADGE[o.status] ?? "bg-gray-50 text-gray-600"}`}>{o.status.replace("_", " ")}</span>
                                         {o.status === "PENDING" && (
-                                            <button className="text-xs font-bold text-white bg-green-600 hover:bg-green-700 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
-                                                <CheckCircle2 className="h-3 w-3" /> Acknowledge
+                                            <button onClick={() => handleAcknowledge(o.id)} disabled={acknowledging === o.id}
+                                                className="text-xs font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+                                                {acknowledging === o.id
+                                                    ? <div className="animate-spin h-3 w-3 border-2 border-white/30 border-t-white rounded-full" />
+                                                    : <><CheckCircle2 className="h-3 w-3" /> Acknowledge</>}
                                             </button>
                                         )}
                                     </div>

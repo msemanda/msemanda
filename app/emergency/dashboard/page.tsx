@@ -9,6 +9,7 @@ import { Ambulance, Users, AlertCircle, Clock, Activity, ArrowRight, RefreshCw }
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { SkeletonStatCard } from "@/components/ui/Skeleton";
+import Link from "next/link";
 
 interface EDPatient {
     id: string;
@@ -78,10 +79,6 @@ export default function EmergencyDashboard() {
                     <button onClick={load} className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors">
                         <RefreshCw className={`h-4 w-4 text-gray-600 ${loading ? "animate-spin" : ""}`} />
                     </button>
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-50 border border-red-100">
-                        <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                        <span className="text-xs font-black text-red-700">ED ACTIVE</span>
-                    </div>
                 </div>
             </div>
 
@@ -152,9 +149,9 @@ export default function EmergencyDashboard() {
                                         : <span className="text-amber-500 font-semibold">Unassigned</span>}
                                 </div>
                                 <Badge variant={p.status === "IN_TREATMENT" ? "blue" : "yellow"} className="shrink-0">{p.status?.replace("_", " ")}</Badge>
-                                <button className="shrink-0 text-xs font-bold text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+                                <Link href="/emergency/patients" className="shrink-0 text-xs font-bold text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
                                     View <ArrowRight className="h-3 w-3" />
-                                </button>
+                                </Link>
                             </motion.div>
                         );
                     })}

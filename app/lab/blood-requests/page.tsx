@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { FlaskConical, Search, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, serverTimestamp, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 import { toDate } from "@/lib/ts";
 
 interface BloodRequest {
@@ -33,9 +34,11 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export default function BloodRequestsPage() {
+    const { profile } = useAuth();
     const [requests, setRequests] = useState<BloodRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
+    const [processing, setProcessing] = useState<string | null>(null);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -73,6 +76,40 @@ export default function BloodRequestsPage() {
         r.bloodGroup.includes(search.toUpperCase())
     );
     const pendingCount = requests.filter(r => r.status === "PENDING").length;
+
+    const handleDecline = async (id: string) => {
+        setProcessing(id);
+        try {
+            await updateDoc(doc(db, "bloodRequests", id), {
+                status: "DECLINED",
+                declinedBy: profile?.name,
+                declinedAt: serverTimestamp(),
+            });
+            setRequests(prev => prev.map(r => r.id === id ? { ...r, status: "DECLINED" } : r));
+        } catch (e) { console.error(e); }
+        finally { setProcessing(null); }
+    };
+
+    const handleApproveIssue = async (r: BloodRequest) => {
+        setProcessing(r.id);
+        try {
+            const invSnap = await getDocs(query(collection(db, "bloodInventory"), where("bloodGroup", "==", r.bloodGroup)));
+            const stockDoc = invSnap.docs[0];
+            if (stockDoc) {
+                const available = Number(stockDoc.data().available ?? 0);
+                await updateDoc(doc(db, "bloodInventory", stockDoc.id), {
+                    available: Math.max(0, available - r.units),
+                });
+            }
+            await updateDoc(doc(db, "bloodRequests", r.id), {
+                status: "ISSUED",
+                issuedBy: profile?.name,
+                issuedAt: serverTimestamp(),
+            });
+            setRequests(prev => prev.map(x => x.id === r.id ? { ...x, status: "ISSUED" } : x));
+        } catch (e) { console.error(e); }
+        finally { setProcessing(null); }
+    };
 
     return (
         <div className="max-w-5xl mx-auto space-y-5">
@@ -137,10 +174,12 @@ export default function BloodRequestsPage() {
                             <p className="text-xs text-gray-600 ml-13">{r.reason}</p>
                             {r.status === "PENDING" && (
                                 <div className="flex gap-2 mt-3 justify-end">
-                                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-100 text-red-500 text-xs font-bold hover:bg-red-50 transition-colors">
+                                    <button onClick={() => handleDecline(r.id)} disabled={processing === r.id}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-100 text-red-500 text-xs font-bold hover:bg-red-50 disabled:opacity-50 transition-colors">
                                         <XCircle className="h-3.5 w-3.5" /> Decline
                                     </button>
-                                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors">
+                                    <button onClick={() => handleApproveIssue(r)} disabled={processing === r.id}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 disabled:opacity-50 transition-colors">
                                         <CheckCircle2 className="h-3.5 w-3.5" /> Approve & Issue
                                     </button>
                                 </div>

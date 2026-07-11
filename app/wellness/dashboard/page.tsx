@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Sparkles, Users, TrendingUp, Heart, ArrowRight, RefreshCw } from "lucide-react";
+import { Sparkles, Users, TrendingUp, ArrowRight, RefreshCw } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -32,6 +32,7 @@ const CATEGORY_VARIANT: Record<string, BadgeVariant> = {
 export default function WellnessDashboard() {
     const [programs, setPrograms] = useState<WellnessProgram[]>([]);
     const [enrolledCount, setEnrolledCount] = useState(0);
+    const [improvingCount, setImprovingCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
     const load = useCallback(async () => {
@@ -57,6 +58,9 @@ export default function WellnessDashboard() {
             setEnrolledCount(
                 enrollSnap.docs.filter(d => d.data().status === "ACTIVE").length
             );
+            setImprovingCount(
+                enrollSnap.docs.filter(d => d.data().trend === "IMPROVING").length
+            );
         } catch (e) {
             console.error(e);
         } finally {
@@ -67,10 +71,9 @@ export default function WellnessDashboard() {
     useEffect(() => { load(); }, [load]);
 
     const statCards = [
-        { label: "Active Programs",  value: String(programs.length), icon: Sparkles,   color: "text-purple-600", bg: "bg-purple-50" },
-        { label: "Enrolled Members", value: String(enrolledCount),   icon: Users,       color: "text-blue-600",   bg: "bg-blue-50"   },
-        { label: "Improved Health",  value: "—",                      icon: TrendingUp,  color: "text-green-600",  bg: "bg-green-50"  },
-        { label: "Satisfaction",     value: "—",                      icon: Heart,       color: "text-red-500",    bg: "bg-red-50"    },
+        { label: "Active Programs",  value: String(programs.length),  icon: Sparkles,   color: "text-purple-600", bg: "bg-purple-50" },
+        { label: "Enrolled Members", value: String(enrolledCount),    icon: Users,       color: "text-blue-600",   bg: "bg-blue-50"   },
+        { label: "Improving",        value: String(improvingCount),   icon: TrendingUp,  color: "text-green-600",  bg: "bg-green-50"  },
     ];
 
     return (

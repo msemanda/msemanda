@@ -86,10 +86,6 @@ export default function NurseDashboard() {
                         Ward overview &bull; {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}
                     </p>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-50 border border-green-100">
-                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-xs font-bold text-green-700">On Shift</span>
-                </div>
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

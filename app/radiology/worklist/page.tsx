@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Scan, Clock, RefreshCw } from "lucide-react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 interface WorklistItem {
@@ -18,10 +18,12 @@ interface WorklistItem {
     status: string;
 }
 
+// Matches the status vocabulary radiologyOrders is actually written with
+// (see app/radiology/dashboard/page.tsx's handleStart) — PENDING -> IN_PROGRESS -> COMPLETED.
 const STATUS_STYLE: Record<string, string> = {
-    SCANNING: "bg-blue-50 text-blue-700 border-blue-100",
-    QUEUED:   "bg-amber-50 text-amber-700 border-amber-100",
-    REPORTED: "bg-green-50 text-green-700 border-green-100",
+    IN_PROGRESS: "bg-blue-50 text-blue-700 border-blue-100",
+    PENDING:     "bg-amber-50 text-amber-700 border-amber-100",
+    COMPLETED:   "bg-green-50 text-green-700 border-green-100",
 };
 const MODALITY_COLOR: Record<string, string> = {
     "X-RAY":     "bg-blue-100 text-blue-700",
@@ -49,7 +51,7 @@ export default function WorklistPage() {
                     tech: ((r.tech ?? r.technician) as string) ?? "—",
                     startedAt: (r.startedAt as string | null) ?? null,
                     eta: (r.eta as string) ?? "—",
-                    status: (r.status as string) ?? "QUEUED",
+                    status: (r.status as string) ?? "PENDING",
                 };
             }));
         } catch (e) {
@@ -61,8 +63,16 @@ export default function WorklistPage() {
 
     useEffect(() => { load(); }, [load]);
 
-    const scanningCount = worklist.filter(w => w.status === "SCANNING").length;
-    const queuedCount = worklist.filter(w => w.status === "QUEUED").length;
+    const handleAdvance = async (item: WorklistItem) => {
+        const next = item.status === "PENDING" ? "IN_PROGRESS" : "COMPLETED";
+        try {
+            await updateDoc(doc(db, "radiologyOrders", item.id), { status: next, updatedAt: new Date().toISOString() });
+            setWorklist(prev => prev.map(w => w.id === item.id ? { ...w, status: next } : w));
+        } catch (e) { console.error(e); }
+    };
+
+    const scanningCount = worklist.filter(w => w.status === "IN_PROGRESS").length;
+    const queuedCount = worklist.filter(w => w.status === "PENDING").length;
 
     return (
         <div className="max-w-5xl mx-auto space-y-5">
@@ -108,10 +118,10 @@ export default function WorklistPage() {
                                         <Clock className="h-3.5 w-3.5 text-gray-400" />{w.eta}
                                     </p>
                                 </div>
-                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${STATUS_STYLE[w.status] ?? "bg-gray-50 text-gray-600 border-gray-100"}`}>{w.status}</span>
-                                {w.status !== "REPORTED" && (
-                                    <button className="text-xs font-bold text-violet-600 hover:bg-violet-50 px-3 py-1.5 rounded-lg transition-colors">
-                                        {w.status === "SCANNING" ? "Complete" : "Start"}
+                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${STATUS_STYLE[w.status] ?? "bg-gray-50 text-gray-600 border-gray-100"}`}>{w.status.replace("_", " ")}</span>
+                                {w.status !== "COMPLETED" && (
+                                    <button onClick={() => handleAdvance(w)} className="text-xs font-bold text-violet-600 hover:bg-violet-50 px-3 py-1.5 rounded-lg transition-colors">
+                                        {w.status === "IN_PROGRESS" ? "Complete" : "Start"}
                                     </button>
                                 )}
                             </div>

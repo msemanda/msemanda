@@ -60,7 +60,7 @@ export default function PharmacyDiagnosticDetail() {
             <div className="flex min-h-screen items-center justify-center bg-gray-50">
                 <div className="text-center">
                     <div className="animate-spin h-12 w-12 border-[5px] border-cyan-100 border-t-cyan-600 rounded-full mx-auto mb-8" />
-                    <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px]">Retrieving Clinical Node</p>
+                    <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px]">Loading prescription…</p>
                 </div>
             </div>
         );
@@ -97,7 +97,7 @@ export default function PharmacyDiagnosticDetail() {
                 <Button variant="ghost" size="sm" className="h-10 w-10 p-0 rounded-xl mr-4 hover:bg-white border hover:border-cyan-100 transition-all">
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
-                <span className="text-sm font-black uppercase tracking-widest">Return to Command Center</span>
+                <span className="text-sm font-black uppercase tracking-widest">Back to Dashboard</span>
             </Link>
 
             <div className="space-y-10">
@@ -109,13 +109,9 @@ export default function PharmacyDiagnosticDetail() {
                             </div>
                         </div>
                         <div>
-                            <h1 className="text-4xl font-black text-gray-900 tracking-tight">Prescription Directive</h1>
-                            <p className="text-gray-500 font-medium">Resolution Ref: <span className="text-cyan-600 font-black">#{diagnostic.id.substring(0, 12).toUpperCase()}</span></p>
+                            <h1 className="text-4xl font-black text-gray-900 tracking-tight">Prescription Details</h1>
+                            <p className="text-gray-500 font-medium">Reference: <span className="text-cyan-600 font-black">#{diagnostic.id.substring(0, 12).toUpperCase()}</span></p>
                         </div>
-                    </div>
-                    <div className="px-8 py-3 bg-teal-50 border border-teal-100 rounded-2xl flex items-center gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-teal-600" />
-                        <span className="text-sm font-black text-teal-700 uppercase tracking-widest">Verified by physician</span>
                     </div>
                 </div>
 
@@ -123,7 +119,7 @@ export default function PharmacyDiagnosticDetail() {
                     <section className="md:col-span-2 space-y-8">
                         <div className="bg-glass rounded-[40px] p-10 shadow-premium border border-white">
                             <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-10 flex items-center">
-                                <User className="h-4 w-4 mr-3 text-cyan-500" /> Subject Identity
+                                <User className="h-4 w-4 mr-3 text-cyan-500" /> Patient
                             </h3>
                             <div className="flex flex-col sm:flex-row gap-10">
                                 <div className="h-24 w-24 rounded-[32px] bg-gray-50 flex items-center justify-center text-4xl font-black text-cyan-700 border border-gray-100">
@@ -132,11 +128,7 @@ export default function PharmacyDiagnosticDetail() {
                                 <div className="space-y-4">
                                     <div>
                                         <p className="text-3xl font-black text-gray-900 leading-none mb-2">{diagnostic.patientName}</p>
-                                        <p className="text-sm font-bold text-gray-400">Identity UUID: {diagnostic.patientId}</p>
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <div className="px-4 py-1.5 bg-cyan-50 text-cyan-700 text-[10px] font-black rounded-xl uppercase tracking-widest">Authorized</div>
-                                        <div className="px-4 py-1.5 bg-gray-50 text-gray-400 text-[10px] font-black rounded-xl uppercase tracking-widest border border-gray-100">Patient Node</div>
+                                        <p className="text-sm font-bold text-gray-400">Patient ID: {diagnostic.patientId}</p>
                                     </div>
                                 </div>
                             </div>
@@ -144,7 +136,7 @@ export default function PharmacyDiagnosticDetail() {
 
                         <div className="bg-glass rounded-[40px] p-10 shadow-premium border border-white">
                             <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-10 flex items-center">
-                                <Activity className="h-4 w-4 mr-3 text-cyan-500" /> Diagnostic Assessment
+                                <Activity className="h-4 w-4 mr-3 text-cyan-500" /> Diagnosis
                             </h3>
                             <div className="space-y-8">
                                 <div className="p-8 bg-gray-50/50 rounded-3xl border border-gray-100 flex items-start gap-6 leading-relaxed italic text-gray-700 font-bold">
@@ -158,16 +150,16 @@ export default function PharmacyDiagnosticDetail() {
                     <section className="space-y-8">
                         <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-[40px] p-10 shadow-2xl text-white">
                             <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-10 flex items-center">
-                                <Calendar className="h-4 w-4 mr-3 text-cyan-500" /> Fulfillment Timeline
+                                <Calendar className="h-4 w-4 mr-3 text-cyan-500" /> Schedule
                             </h3>
                             <div className="space-y-10">
                                 <div>
-                                    <p className="text-[11px] font-black text-gray-500 uppercase tracking-widest mb-4">Commencement</p>
+                                    <p className="text-[11px] font-black text-gray-500 uppercase tracking-widest mb-4">Start Date</p>
                                     <p className="text-2xl font-black text-cyan-400">{diagnostic.fromDate}</p>
                                 </div>
                                 <div className="h-px bg-white/5 w-full" />
                                 <div>
-                                    <p className="text-[11px] font-black text-gray-500 uppercase tracking-widest mb-4">Completion</p>
+                                    <p className="text-[11px] font-black text-gray-500 uppercase tracking-widest mb-4">End Date</p>
                                     <p className="text-2xl font-black text-orange-400">{diagnostic.toDate}</p>
                                 </div>
                             </div>
@@ -175,18 +167,14 @@ export default function PharmacyDiagnosticDetail() {
 
                         <div className="bg-glass rounded-[40px] p-10 shadow-premium border border-white">
                             <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-10 flex items-center">
-                                <Pill className="h-4 w-4 mr-3 text-cyan-500" /> Prescribed Protocol
+                                <Pill className="h-4 w-4 mr-3 text-cyan-500" /> Medication
                             </h3>
                             <div className="space-y-6">
                                 <div>
                                     <p className="text-3xl font-black text-gray-900 mb-2 truncate">{diagnostic.medicines}</p>
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-2 w-2 bg-teal-500 rounded-full" />
-                                        <p className="text-sm font-black text-teal-600 uppercase tracking-tighter">Cycle: {diagnostic.treatmentCycle}</p>
-                                    </div>
                                 </div>
                                 <div className="p-4 bg-cyan-50 rounded-2xl border border-cyan-100">
-                                    <p className="text-[9px] font-black text-cyan-600 uppercase tracking-[0.2em] mb-1">Standard Dosage</p>
+                                    <p className="text-[9px] font-black text-cyan-600 uppercase tracking-[0.2em] mb-1">Dosage</p>
                                     <p className="text-sm font-black text-cyan-900 italic">"{diagnostic.dosage}"</p>
                                 </div>
                             </div>
@@ -205,9 +193,6 @@ export default function PharmacyDiagnosticDetail() {
                                 ? <><span className="animate-spin h-6 w-6 border-[3px] border-white/30 border-t-white rounded-full inline-block" /> Processing…</>
                                 : <><CheckCircle2 className="h-6 w-6" /> Confirm Fulfillment</>
                         }
-                    </Button>
-                    <Button variant="outline" className="h-20 px-10 rounded-[32px] border-gray-100 text-gray-400 font-black uppercase tracking-widest hover:bg-white hover:text-red-500 hover:border-red-100 transition-all">
-                        Report Issue
                     </Button>
                 </div>
             </div>

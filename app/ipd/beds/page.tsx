@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { BedDouble, RefreshCw, Search } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { BedDouble, RefreshCw, Search, Plus, X } from "lucide-react";
 
 interface Bed {
+    id: string;
     number: string;
     ward: string;
     occupied: boolean;
@@ -14,7 +16,6 @@ interface Bed {
 }
 
 const WARDS = ["General", "ICU", "Pediatrics", "Maternity", "Surgery", "Orthopedics", "Neurology"];
-const BED_COUNTS: Record<string, number> = { General: 20, ICU: 8, Pediatrics: 8, Maternity: 10, Surgery: 6, Orthopedics: 5, Neurology: 3 };
 
 const WARD_BADGE: Record<string, string> = {
     General: "bg-blue-50 text-blue-700 border-blue-100",
@@ -27,33 +28,60 @@ const WARD_BADGE: Record<string, string> = {
 };
 
 export default function IpdBedsPage() {
+    const { profile } = useAuth();
     const [beds, setBeds] = useState<Bed[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedWard, setSelectedWard] = useState("all");
     const [search, setSearch] = useState("");
+    const [showForm, setShowForm] = useState(false);
+    const [form, setForm] = useState({ ward: WARDS[0], number: "" });
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => { fetchBeds(); }, []);
 
     const fetchBeds = async () => {
         setLoading(true);
         try {
-            const snap = await getDocs(collection(db, "ipdAdmissions"));
-            const admitted = snap.docs
+            const [bedSnap, admSnap] = await Promise.all([
+                getDocs(collection(db, "beds")),
+                getDocs(collection(db, "ipdAdmissions")),
+            ]);
+            const admitted = admSnap.docs
                 .map(d => ({ id: d.id, ...d.data() } as any))
                 .filter(a => a.status === "ADMITTED");
 
-            const allBeds: Bed[] = [];
-            WARDS.forEach(ward => {
-                const count = BED_COUNTS[ward] || 5;
-                for (let i = 1; i <= count; i++) {
-                    const num = `${ward.slice(0, 3).toUpperCase()}-${String(i).padStart(2, "0")}`;
-                    const patient = admitted.find((a: any) => a.bedNumber === num);
-                    allBeds.push({ number: num, ward, occupied: !!patient, patientName: patient?.patientName, admittedAt: patient?.admittedAt });
-                }
-            });
-            setBeds(allBeds);
+            setBeds(bedSnap.docs.map(d => {
+                const data = d.data() as any;
+                const patient = admitted.find((a: any) => a.bedNumber === data.number);
+                return {
+                    id: d.id,
+                    number: data.number,
+                    ward: data.ward,
+                    occupied: !!patient,
+                    patientName: patient?.patientName,
+                    admittedAt: patient?.admittedAt,
+                };
+            }));
         } catch(e) { console.error(e); }
         finally { setLoading(false); }
+    };
+
+    const handleAddBed = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!form.number.trim()) return;
+        setSaving(true);
+        try {
+            await addDoc(collection(db, "beds"), {
+                ward: form.ward,
+                number: form.number.trim().toUpperCase(),
+                createdBy: profile?.name,
+                createdAt: serverTimestamp(),
+            });
+            setForm({ ward: WARDS[0], number: "" });
+            setShowForm(false);
+            await fetchBeds();
+        } catch (e) { console.error(e); }
+        finally { setSaving(false); }
     };
 
     const filtered = beds.filter(b => {
@@ -71,12 +99,44 @@ export default function IpdBedsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-gray-900">Bed Management</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">Real-time bed availability across all wards</p>
+                    <p className="text-sm text-gray-500 mt-0.5">Bed availability across all wards</p>
                 </div>
-                <button onClick={fetchBeds} className="h-10 w-10 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-blue-600 transition-all">
-                    <RefreshCw className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button onClick={fetchBeds} className="h-10 w-10 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-blue-600 transition-all">
+                        <RefreshCw className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => setShowForm(!showForm)}
+                        className="h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold flex items-center gap-1.5 transition-colors">
+                        <Plus className="h-3.5 w-3.5" /> Add Bed
+                    </button>
+                </div>
             </div>
+
+            {showForm && (
+                <form onSubmit={handleAddBed} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col sm:flex-row gap-3 items-end">
+                    <div className="flex-1 w-full">
+                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Ward</label>
+                        <select value={form.ward} onChange={e => setForm(f => ({ ...f, ward: e.target.value }))}
+                            className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-white text-sm font-medium outline-none focus:border-blue-500">
+                            {WARDS.map(w => <option key={w} value={w}>{w}</option>)}
+                        </select>
+                    </div>
+                    <div className="flex-1 w-full">
+                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Bed Number</label>
+                        <input required placeholder="e.g. GEN-01" value={form.number}
+                            onChange={e => setForm(f => ({ ...f, number: e.target.value }))}
+                            className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-white text-sm font-medium outline-none focus:border-blue-500" />
+                    </div>
+                    <button type="submit" disabled={saving}
+                        className="h-11 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-bold shrink-0">
+                        {saving ? "Saving…" : "Save"}
+                    </button>
+                    <button type="button" onClick={() => setShowForm(false)}
+                        className="h-11 w-11 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 shrink-0">
+                        <X className="h-4 w-4" />
+                    </button>
+                </form>
+            )}
 
             <div className="grid grid-cols-3 gap-4">
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
@@ -113,10 +173,16 @@ export default function IpdBedsPage() {
                 <div className="flex items-center justify-center py-16 bg-white rounded-2xl border border-gray-100">
                     <div className="animate-spin h-8 w-8 border-[3px] border-blue-100 border-t-blue-600 rounded-full" />
                 </div>
+            ) : beds.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border border-dashed border-gray-200 text-center">
+                    <BedDouble className="h-10 w-10 text-gray-200 mb-3" />
+                    <p className="text-sm font-black text-gray-900 mb-1">No beds registered yet</p>
+                    <p className="text-xs text-gray-400">Use "Add Bed" above to register each ward's physical beds.</p>
+                </div>
             ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     {filtered.map(bed => (
-                        <div key={bed.number} className={`rounded-2xl border p-4 transition-all ${
+                        <div key={bed.id} className={`rounded-2xl border p-4 transition-all ${
                             bed.occupied
                                 ? "bg-red-50 border-red-100"
                                 : "bg-green-50 border-green-100"
@@ -128,7 +194,7 @@ export default function IpdBedsPage() {
                                 }`}>{bed.occupied ? "Occupied" : "Free"}</span>
                             </div>
                             <p className="text-sm font-black text-gray-900">{bed.number}</p>
-                            <p className="text-[10px] text-gray-500 mt-0.5">{bed.ward}</p>
+                            <p className={`text-[10px] mt-0.5 inline-block px-1.5 py-0.5 rounded-md border ${WARD_BADGE[bed.ward] || "bg-gray-50 text-gray-600 border-gray-100"}`}>{bed.ward}</p>
                             {bed.occupied && bed.patientName && (
                                 <p className="text-[10px] font-semibold text-red-600 mt-1 truncate">{bed.patientName}</p>
                             )}

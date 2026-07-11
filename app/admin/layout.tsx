@@ -42,7 +42,7 @@ export default function AdminLayout({
                             <Logo size={80} />
                         </motion.div>
                     </div>
-                    <p className="mt-6 text-xs font-black text-gray-400 uppercase tracking-[0.3em] animate-pulse">Initializing Terminal</p>
+                    <p className="mt-6 text-xs font-black text-gray-400 uppercase tracking-[0.3em] animate-pulse">Loading Admin Portal</p>
                 </motion.div>
             </div>
         );

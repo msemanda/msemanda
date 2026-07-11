@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { CheckSquare, Search, AlertCircle, RefreshCw } from "lucide-react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 import { toDate } from "@/lib/ts";
 
 interface TestItem {
@@ -37,11 +38,13 @@ const PRIORITY_BADGE: Record<string, string> = {
 };
 
 export default function ResultsEntryPage() {
+    const { profile } = useAuth();
     const [pending, setPending] = useState<LabOrder[]>([]);
     const [completed, setCompleted] = useState<LabOrder[]>([]);
     const [loading, setLoading] = useState(true);
     const [values, setValues] = useState<Record<string, string>>({});
     const [search, setSearch] = useState("");
+    const [submitting, setSubmitting] = useState<string | null>(null);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -78,6 +81,24 @@ export default function ResultsEntryPage() {
 
     const filteredPending = pending.filter(o => o.patient.toLowerCase().includes(search.toLowerCase()));
     const filteredCompleted = completed.filter(o => o.patient.toLowerCase().includes(search.toLowerCase()));
+
+    const handleSubmitResults = async (order: LabOrder) => {
+        setSubmitting(order.id);
+        try {
+            const updatedTests = order.tests.map(t => ({
+                ...t,
+                value: values[`${order.id}-${t.name}`] || t.value || "",
+            }));
+            await updateDoc(doc(db, "labOrders", order.id), {
+                tests: updatedTests,
+                status: "COMPLETED",
+                completedBy: profile?.name,
+                completedAt: serverTimestamp(),
+            });
+            await load();
+        } catch (e) { console.error(e); }
+        finally { setSubmitting(null); }
+    };
 
     return (
         <div className="max-w-5xl mx-auto space-y-5">
@@ -140,8 +161,11 @@ export default function ResultsEntryPage() {
                                     </div>
                                 )}
                                 <div className="flex justify-end mt-4">
-                                    <button className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition-colors">
-                                        Submit Results
+                                    <button
+                                        onClick={() => handleSubmitResults(o)}
+                                        disabled={submitting === o.id || o.tests.some(t => !values[`${o.id}-${t.name}`]?.trim())}
+                                        className="px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-colors">
+                                        {submitting === o.id ? "Saving…" : "Submit Results"}
                                     </button>
                                 </div>
                             </motion.div>

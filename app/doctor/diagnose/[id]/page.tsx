@@ -129,7 +129,7 @@ export default function DiagnosisEntryPage() {
     return (
         <div className="max-w-6xl mx-auto py-12 px-6 pb-32">
             <Link href="/doctor/dashboard" className="group inline-flex items-center text-gray-400 hover:text-cyan-600 mb-12 transition-colors font-black uppercase tracking-widest text-[10px]">
-                <ArrowLeft className="mr-3 h-4 w-4 group-hover:-translate-x-1 transition-transform" /> Back to Intelligence Queue
+                <ArrowLeft className="mr-3 h-4 w-4 group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
             </Link>
 
             <motion.div
@@ -146,13 +146,13 @@ export default function DiagnosisEntryPage() {
                             {patient?.name.charAt(0)}
                         </div>
                         <div className="text-center md:text-left">
-                            <h1 className="text-4xl font-black tracking-tight mb-2">Patient <span className="text-cyan-400">Diagnosis</span> Portal</h1>
+                            <h1 className="text-4xl font-black tracking-tight mb-2">Patient <span className="text-cyan-400">Diagnosis</span></h1>
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
                                 <p className="text-gray-400 font-bold flex items-center bg-white/5 px-4 py-2 rounded-2xl backdrop-blur-sm border border-white/10 uppercase tracking-tighter text-xs">
-                                    <User className="h-4 w-4 mr-2 text-cyan-400" /> Subject: {patient?.name}
+                                    <User className="h-4 w-4 mr-2 text-cyan-400" /> Patient: {patient?.name}
                                 </p>
                                 <p className="text-gray-400 font-bold flex items-center bg-white/5 px-4 py-2 rounded-2xl backdrop-blur-sm border border-white/10 uppercase tracking-tighter text-xs">
-                                    <FileText className="h-4 w-4 mr-2 text-teal-400" /> Node ID: {(id as string).substring(0, 12).toUpperCase()}
+                                    <FileText className="h-4 w-4 mr-2 text-teal-400" /> Patient ID: {(id as string).substring(0, 12).toUpperCase()}
                                 </p>
                             </div>
                         </div>
@@ -164,7 +164,7 @@ export default function DiagnosisEntryPage() {
                         <div className="space-y-10">
                             <div className="space-y-2">
                                 <h3 className="text-xl font-black text-gray-900 flex items-center gap-4">
-                                    <FileText className="h-6 w-6 text-cyan-500" /> Clinical Assessment
+                                    <FileText className="h-6 w-6 text-cyan-500" /> Diagnosis
                                 </h3>
                                 <p className="text-sm text-gray-400 font-medium">Document your findings and predictive outcomes.</p>
                             </div>
@@ -181,7 +181,7 @@ export default function DiagnosisEntryPage() {
                                     />
                                 </div>
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Temporal Protocol</label>
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Usage Directions</label>
                                     <textarea
                                         className="w-full h-32 rounded-[32px] border border-gray-100 bg-white px-8 py-6 text-sm font-medium transition-all placeholder:text-gray-300 focus:bg-white focus:border-cyan-200 focus:ring-8 focus:ring-cyan-500/5 shadow-sm outline-none resize-none"
                                         required
@@ -196,25 +196,25 @@ export default function DiagnosisEntryPage() {
                         <div className="space-y-10">
                             <div className="space-y-2">
                                 <h3 className="text-xl font-black text-gray-900 flex items-center gap-4">
-                                    <Pill className="h-6 w-6 text-teal-600" /> Pharmacy Directive
+                                    <Pill className="h-6 w-6 text-teal-600" /> Prescription
                                 </h3>
-                                <p className="text-sm text-gray-400 font-medium">Authorize medication and specify dosage cycles.</p>
+                                <p className="text-sm text-gray-400 font-medium">Prescribe medication and specify dosage.</p>
                             </div>
 
                             <div className="space-y-8">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Prescribed Items</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Medicines</label>
                                         <Input
                                             className="h-16 rounded-2xl border-gray-100 bg-white px-6 font-bold"
                                             required
-                                            placeholder="e.g. Amoxicillin Node"
+                                            placeholder="e.g. Amoxicillin"
                                             value={formData.medicines}
                                             onChange={(e) => setFormData({ ...formData, medicines: e.target.value })}
                                         />
                                     </div>
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Dosage Pattern</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Dosage</label>
                                         <Input
                                             className="h-16 rounded-2xl border-gray-100 bg-white px-6 font-bold"
                                             required
@@ -227,7 +227,7 @@ export default function DiagnosisEntryPage() {
 
                                 <div className="grid grid-cols-2 gap-8">
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Cycle Start</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Start Date</label>
                                         <Input
                                             className="h-16 rounded-2xl border-gray-100 bg-white px-6 font-bold appearance-none"
                                             type="date"
@@ -237,7 +237,7 @@ export default function DiagnosisEntryPage() {
                                         />
                                     </div>
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Cycle Termination</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">End Date</label>
                                         <Input
                                             className="h-16 rounded-2xl border-gray-100 bg-white px-6 font-bold"
                                             type="date"
@@ -249,14 +249,14 @@ export default function DiagnosisEntryPage() {
                                 </div>
 
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Fulfilment Partner</label>
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Pharmacy</label>
                                     <select
                                         className="w-full h-16 rounded-2xl border border-gray-100 bg-white px-6 text-sm font-bold transition-all focus:border-cyan-200 focus:ring-8 focus:ring-cyan-500/5 outline-none shadow-sm"
                                         required
                                         value={formData.pharmacyId}
                                         onChange={(e) => setFormData({ ...formData, pharmacyId: e.target.value })}
                                     >
-                                        <option value="">Select Priority Pharmacy Location</option>
+                                        <option value="">Select Pharmacy</option>
                                         {pharmacies.map(ph => (
                                             <option key={ph.uid} value={ph.uid}>{ph.name}</option>
                                         ))}
@@ -269,10 +269,10 @@ export default function DiagnosisEntryPage() {
                     <div className="pt-12 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-8">
                         <div className="flex items-center gap-4 bg-gray-50/50 px-6 py-3 rounded-2xl border border-gray-100">
                             <Calendar className="h-5 w-5 text-gray-400" />
-                            <p className="text-xs font-black text-gray-500 uppercase tracking-widest">Protocol Date: <span className="text-cyan-600 ml-1">{new Date().toLocaleDateString()}</span></p>
+                            <p className="text-xs font-black text-gray-500 uppercase tracking-widest">Date: <span className="text-cyan-600 ml-1">{new Date().toLocaleDateString()}</span></p>
                         </div>
                         <Button type="submit" className="h-20 px-16 text-xl font-black rounded-[28px] shadow-heavy group/btn w-full md:w-auto" disabled={processing}>
-                            {processing ? "Syncing Directive..." : "Authorize Diagnostic Report"}
+                            {processing ? "Saving…" : "Save Diagnosis"}
                             <ArrowRight className="ml-4 h-6 w-6 group-hover/btn:translate-x-2 transition-transform" />
                         </Button>
                     </div>

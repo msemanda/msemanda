@@ -201,7 +201,6 @@ export default function PatientDashboard() {
                     <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-5 text-white shadow-xl relative overflow-hidden">
                         <div className="relative z-10">
                             <h3 className="text-sm font-black mb-1">Patient Profile</h3>
-                            <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">Verified Identity</span>
                             <div className="mt-4 space-y-4">
                                 <div>
                                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Medical ID</p>

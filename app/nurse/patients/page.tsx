@@ -32,6 +32,7 @@ export default function WardPatientsPage() {
     const [patients, setPatients] = useState<WardPatient[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
+    const [wardFilter, setWardFilter] = useState("All");
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -64,9 +65,12 @@ export default function WardPatientsPage() {
 
     useEffect(() => { load(); }, [load]);
 
+    const wards = ["All", ...Array.from(new Set(patients.map(p => p.ward))).filter(Boolean)];
+
     const filtered = patients.filter(p =>
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.bed.toLowerCase().includes(search.toLowerCase())
+        (wardFilter === "All" || p.ward === wardFilter) &&
+        (p.name.toLowerCase().includes(search.toLowerCase()) ||
+         p.bed.toLowerCase().includes(search.toLowerCase()))
     );
 
     return (
@@ -96,9 +100,13 @@ export default function WardPatientsPage() {
                             placeholder="Search patient or bed..."
                         />
                     </div>
-                    <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-100 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
-                        <Filter className="h-3.5 w-3.5" /> Filter
-                    </button>
+                    <div className="relative">
+                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+                        <select value={wardFilter} onChange={e => setWardFilter(e.target.value)}
+                            className="pl-8 pr-3 py-2 rounded-xl border border-gray-100 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors bg-white appearance-none outline-none focus:ring-2 focus:ring-blue-500/20">
+                            {wards.map(w => <option key={w} value={w}>{w === "All" ? "All Wards" : w}</option>)}
+                        </select>
+                    </div>
                 </div>
 
                 {loading ? (

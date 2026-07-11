@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Home, Users, CalendarDays, MapPin, CheckCircle2, Clock, ArrowRight, RefreshCw } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect, useCallback } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toDate } from "@/lib/ts";
 import { HomeCareVisit } from "@/types";
@@ -33,6 +33,7 @@ export default function HomeCareDashboard() {
     const { profile } = useAuth();
     const [allVisits, setAllVisits] = useState<VisitRow[]>([]);
     const [loading, setLoading] = useState(true);
+    const [starting, setStarting] = useState<string | null>(null);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -67,6 +68,15 @@ export default function HomeCareDashboard() {
         (toDate(a.visitDate)?.getTime() ?? 0) - (toDate(b.visitDate)?.getTime() ?? 0)
     );
 
+    const handleStartVisit = async (visitId: string) => {
+        setStarting(visitId);
+        try {
+            await updateDoc(doc(db, "homeCareVisits", visitId), { status: "IN_PROGRESS" });
+            setAllVisits(prev => prev.map(v => v.id === visitId ? { ...v, status: "IN_PROGRESS" } : v));
+        } catch (e) { console.error(e); }
+        finally { setStarting(null); }
+    };
+
     return (
         <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
@@ -82,10 +92,6 @@ export default function HomeCareDashboard() {
                     <button onClick={load} className="text-gray-400 hover:text-blue-600 transition-colors">
                         <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                     </button>
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 border border-blue-100">
-                        <MapPin className="h-4 w-4 text-blue-600" />
-                        <span className="text-xs font-bold text-blue-700">Kampala Zone</span>
-                    </div>
                 </div>
             </div>
 
@@ -153,8 +159,9 @@ export default function HomeCareDashboard() {
                                         </div>
                                     </div>
                                     {v.status === "SCHEDULED" && (
-                                        <button className="shrink-0 text-xs font-bold text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
-                                            Start <ArrowRight className="h-3 w-3" />
+                                        <button onClick={() => handleStartVisit(v.id)} disabled={starting === v.id}
+                                            className="shrink-0 text-xs font-bold text-blue-600 hover:bg-blue-50 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+                                            {starting === v.id ? "Starting…" : <>Start <ArrowRight className="h-3 w-3" /></>}
                                         </button>
                                     )}
                                 </div>

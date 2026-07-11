@@ -294,7 +294,7 @@ export interface HomeCareVisit {
     duration: number;
     services: string[];
     vitals?: Vitals;
-    status: "SCHEDULED" | "COMPLETED" | "CANCELLED" | "MISSED";
+    status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "MISSED";
     notes?: string;
     nextVisit?: any;
 }

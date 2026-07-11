@@ -12,19 +12,23 @@ import { Badge, type BadgeVariant } from "@/components/ui/Badge";
 import { SkeletonStatCard, SkeletonRow } from "@/components/ui/Skeleton";
 
 export default function IpdDashboard() {
-    const [stats, setStats] = useState({ admitted: 0, available: 0, discharged: 0, transferred: 0, totalBeds: 60 });
+    const [stats, setStats] = useState({ admitted: 0, available: 0, discharged: 0, transferred: 0, totalBeds: 0 });
     const [recent, setRecent] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetch = async () => {
             try {
-                const snap = await getDocs(collection(db, "ipdAdmissions"));
-                const all = snap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+                const [admSnap, bedSnap] = await Promise.all([
+                    getDocs(collection(db, "ipdAdmissions")),
+                    getDocs(collection(db, "beds")),
+                ]);
+                const all = admSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+                const totalBeds = bedSnap.docs.length;
                 const admitted = all.filter(a => a.status === "ADMITTED").length;
                 const discharged = all.filter(a => a.status === "DISCHARGED").length;
                 const transferred = all.filter(a => a.status === "TRANSFERRED").length;
-                setStats({ admitted, available: Math.max(0, 60 - admitted), discharged, transferred, totalBeds: 60 });
+                setStats({ admitted, available: Math.max(0, totalBeds - admitted), discharged, transferred, totalBeds });
                 setRecent(all.filter(a => a.status === "ADMITTED").slice(0, 8));
             } catch(e) { console.error(e); }
             finally { setLoading(false); }
@@ -32,7 +36,7 @@ export default function IpdDashboard() {
         fetch();
     }, []);
 
-    const occupancy = Math.round((stats.admitted / stats.totalBeds) * 100);
+    const occupancy = stats.totalBeds > 0 ? Math.round((stats.admitted / stats.totalBeds) * 100) : 0;
 
     const cards = [
         { label: "Currently Admitted", value: stats.admitted, icon: BedDouble, color: "bg-blue-50 text-blue-600", border: "border-blue-100", href: "/ipd/admissions" },

@@ -10,9 +10,6 @@ import {
     Stethoscope,
     Calendar,
     CreditCard,
-    TrendingUp,
-    Search,
-    Bell,
     Activity,
     RefreshCw,
 } from "lucide-react";
@@ -176,18 +173,6 @@ export default function AdminDashboard() {
                     <h1 className="text-xl font-black text-slate-900 tracking-tight">Admin Dashboard</h1>
                     <p className="text-sm text-slate-500 mt-0.5">RHD Medical Services &mdash; system overview</p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button className="h-9 w-9 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-slate-400 hover:text-cyan-600 transition-all shadow-sm">
-                        <Search className="h-4 w-4" />
-                    </button>
-                    <button className="h-9 w-9 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-slate-400 hover:text-cyan-600 transition-all shadow-sm relative">
-                        <Bell className="h-4 w-4" />
-                        <span className="absolute top-2 right-2 h-1.5 w-1.5 bg-cyan-500 rounded-full" />
-                    </button>
-                    <div className="h-9 px-4 rounded-xl bg-slate-900 text-cyan-400 font-black text-[10px] uppercase tracking-wider flex items-center gap-2 shadow-sm">
-                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Live
-                    </div>
-                </div>
             </div>
 
             {/* Stat cards */}
@@ -212,9 +197,6 @@ export default function AdminDashboard() {
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.name}</p>
                                         <p className="text-xl font-black text-slate-900">{stat.value}</p>
-                                    </div>
-                                    <div className="flex items-center text-[10px] font-bold text-teal-600 bg-teal-50 w-fit px-2 py-1 rounded-lg">
-                                        <TrendingUp className="h-2.5 w-2.5 mr-1" /> Live
                                     </div>
                                 </div>
                             </Card>
@@ -269,8 +251,8 @@ export default function AdminDashboard() {
                         </div>
                         <div className="relative z-10 flex flex-col gap-4">
                             <div>
-                                <h3 className="text-base font-black mb-0.5">Live Nodes</h3>
-                                <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Central Processing</p>
+                                <h3 className="text-base font-black mb-0.5">System Health</h3>
+                                <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Live Metrics</p>
                             </div>
 
                             <div className="space-y-4">

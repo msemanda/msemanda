@@ -119,7 +119,7 @@ export default function CashierDashboard() {
                     <div className="bg-red-500 hover:bg-red-600 transition-colors rounded-2xl p-5 text-white cursor-pointer">
                         <div className="flex items-center gap-3 mb-2">
                             <TrendingDown className="h-5 w-5" />
-                            <span className="font-black text-sm">Record1 Expense</span>
+                            <span className="font-black text-sm">Record Expense</span>
                         </div>
                         <p className="text-xs text-red-100">Salaries, supplies, utilities, maintenance…</p>
                     </div>

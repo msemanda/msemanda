@@ -17,7 +17,6 @@ import {
     Activity,
     Search,
     Calendar,
-    ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
@@ -65,8 +64,8 @@ export default function DoctorDiagnosticsPage() {
                     </Button>
                 </Link>
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">Diagnostic Ledger</h1>
-                    <p className="text-gray-500 font-medium">Historical clinical assessments and authored reports.</p>
+                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">Diagnostic History</h1>
+                    <p className="text-gray-500 font-medium">Your historical clinical assessments and reports.</p>
                 </div>
             </div>
 
@@ -94,7 +93,7 @@ export default function DoctorDiagnosticsPage() {
                 {loading ? (
                     <div className="p-32 text-center bg-glass rounded-[40px] border border-white/60 shadow-premium">
                         <div className="animate-spin h-10 w-10 border-4 border-cyan-100 border-t-cyan-600 rounded-full mx-auto mb-6" />
-                        <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Accessing Medical Ledger</p>
+                        <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Loading records…</p>
                     </div>
                 ) : filteredReports.length === 0 ? (
                     <div className="p-32 text-center bg-glass rounded-[40px] border border-white/60 shadow-premium">
@@ -122,12 +121,12 @@ export default function DoctorDiagnosticsPage() {
                                             </div>
                                             <div>
                                                 <h3 className="text-xl font-black text-gray-900 mb-1">{report.patientName}</h3>
-                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Node ID: {report.patientId.substring(0, 10)}</p>
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Patient ID: {report.patientId.substring(0, 10)}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-10">
                                             <div className="text-right">
-                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Authenticated On</p>
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Date</p>
                                                 <div className="flex items-center text-sm font-black text-gray-900">
                                                     <Calendar className="h-4 w-4 mr-2 text-cyan-600" />
                                                     {fmtDate(report.createdAt, 'N/A')}
@@ -143,34 +142,22 @@ export default function DoctorDiagnosticsPage() {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
                                         <div className="bg-gray-50/50 p-6 rounded-3xl border border-gray-100 group-hover:bg-white transition-all">
-                                            <p className="text-[10px] font-black text-cyan-600 uppercase tracking-widest mb-3">Clinical Assessment</p>
+                                            <p className="text-[10px] font-black text-cyan-600 uppercase tracking-widest mb-3">Diagnosis</p>
                                             <p className="text-sm text-gray-700 font-medium leading-relaxed italic line-clamp-3">"{report.predictions}"</p>
                                         </div>
                                         <div className="bg-gray-50/50 p-6 rounded-3xl border border-gray-100 group-hover:bg-white transition-all">
-                                            <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest mb-3">Therapeutic Mix</p>
+                                            <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest mb-3">Medication</p>
                                             <div className="flex items-start gap-4">
                                                 <Pill className="h-5 w-5 text-gray-400 shrink-0" />
                                                 <div>
                                                     <p className="text-sm font-black text-gray-900">{report.medicines}</p>
-                                                    <p className="text-xs text-gray-500 font-medium mt-1 uppercase tracking-tighter">Cycle: {report.treatmentCycle}</p>
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="bg-gray-50/50 p-6 rounded-3xl border border-gray-100 group-hover:bg-white transition-all">
-                                            <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-3">Fulfillment Node</p>
+                                            <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-3">Pharmacy</p>
                                             <p className="text-sm font-black text-gray-900 truncate">{report.pharmacyName || "Internal System"}</p>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mt-1">{report.pharmacyId.substring(0, 12)}</p>
                                         </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-between pt-6 border-t border-gray-50">
-                                        <div className="flex gap-4">
-                                            <span className="text-[10px] font-black bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full uppercase tracking-widest">Digital Authored</span>
-                                            <span className="text-[10px] font-black bg-teal-50 text-teal-700 px-3 py-1.5 rounded-full uppercase tracking-widest">System Verified</span>
-                                        </div>
-                                        <Button variant="ghost" className="text-cyan-600 font-black text-xs uppercase tracking-widest hover:bg-cyan-50 rounded-xl px-6 group/btn">
-                                            Full Resolution <ChevronRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                                        </Button>
                                     </div>
                                 </div>
                             </motion.div>

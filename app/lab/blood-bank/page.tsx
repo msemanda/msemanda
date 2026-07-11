@@ -36,6 +36,7 @@ export default function BloodBankPage() {
     const [showForm, setShowForm] = useState(false);
     const [saving, setSaving] = useState(false);
     const [form, setForm] = useState({ donorName: "", group: BLOOD_GROUPS[0], units: "1" });
+    const [fulfilling, setFulfilling] = useState<string | null>(null);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -108,6 +109,25 @@ export default function BloodBankPage() {
         } finally {
             setSaving(false);
         }
+    };
+
+    const handleFulfill = async (request: BloodRequest) => {
+        setFulfilling(request.id);
+        try {
+            const matchingStock = inventory.find(b => b.group === request.group);
+            if (matchingStock && matchingStock.available >= request.units) {
+                await updateDoc(doc(db, "bloodInventory", matchingStock.id), {
+                    available: matchingStock.available - request.units,
+                });
+            }
+            await updateDoc(doc(db, "bloodRequests", request.id), {
+                status: "FULFILLED",
+                fulfilledBy: profile?.name,
+                fulfilledAt: serverTimestamp(),
+            });
+            await load();
+        } catch (e) { console.error(e); }
+        finally { setFulfilling(null); }
     };
 
     return (
@@ -236,8 +256,9 @@ export default function BloodBankPage() {
                                         {r.status}
                                     </span>
                                     {r.status === "PENDING" && (
-                                        <button className="text-xs font-bold text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
-                                            Fulfill
+                                        <button onClick={() => handleFulfill(r)} disabled={fulfilling === r.id}
+                                            className="text-xs font-bold text-blue-600 hover:text-blue-700 disabled:opacity-50 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
+                                            {fulfilling === r.id ? "Fulfilling…" : "Fulfill"}
                                         </button>
                                     )}
                                 </div>
