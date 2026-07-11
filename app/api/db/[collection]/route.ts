@@ -36,11 +36,29 @@ const ALLOWED = new Set([
     "messages", "notifications",
     "securityShifts", "visitorLogs",
     "opticalExams", "opticalPrescriptions", "opticalOrders",
+    "beds",
 ]);
 
 function tableName(col: string) {
     // camelCase → snake_case
     return col.replace(/([A-Z])/g, "_$1").toLowerCase();
+}
+
+// Tables are normally pre-created via helpers/schema.sql, but that's a manual
+// step — lazily create on first use so a newly-added collection (like this
+// route's ALLOWED entry) works immediately without a separate migration run.
+const ensuredTables = new Set<string>();
+async function ensureTable(table: string): Promise<void> {
+    if (ensuredTables.has(table)) return;
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS ${table} (
+            id          TEXT        PRIMARY KEY DEFAULT substr(replace(gen_random_uuid()::text, '-', ''), 1, 20),
+            data        JSONB       NOT NULL DEFAULT '{}',
+            created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at  TIMESTAMPTZ
+        )
+    `);
+    ensuredTables.add(table);
 }
 
 export async function GET(req: NextRequest, { params }: Params) {
@@ -66,6 +84,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     if (!ALLOWED.has(col)) return respond({ error: "Unknown collection" }, 404);
 
     const table = tableName(col);
+    await ensureTable(table);
 
     let sql = `SELECT * FROM ${table}`;
     const values: unknown[] = [];
@@ -153,6 +172,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     if (!ALLOWED.has(col)) return respond({ error: "Unknown collection" }, 404);
 
     const table = tableName(col);
+    await ensureTable(table);
 
     const client = await pool.connect();
     try {

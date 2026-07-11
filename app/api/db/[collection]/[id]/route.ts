@@ -29,10 +29,28 @@ const ALLOWED = new Set([
     "securityShifts", "visitorLogs",
     "opticalExams", "opticalPrescriptions", "opticalOrders",
     "bloodInventory", "bloodRequests",
+    "beds", "dentalCharts",
 ]);
 
 function tableName(col: string) {
     return col.replace(/([A-Z])/g, "_$1").toLowerCase();
+}
+
+// Mirrors the lazy table creation in the sibling [collection]/route.ts —
+// tables are normally pre-created via helpers/schema.sql, but that's a
+// manual step, so a newly-whitelisted collection works immediately here too.
+const ensuredTables = new Set<string>();
+async function ensureTable(table: string): Promise<void> {
+    if (ensuredTables.has(table)) return;
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS ${table} (
+            id          TEXT        PRIMARY KEY DEFAULT substr(replace(gen_random_uuid()::text, '-', ''), 1, 20),
+            data        JSONB       NOT NULL DEFAULT '{}',
+            created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at  TIMESTAMPTZ
+        )
+    `);
+    ensuredTables.add(table);
 }
 
 async function log(req: NextRequest, method: string, path: string, status: number, opts: {
@@ -58,6 +76,7 @@ export async function GET(req: NextRequest, { params }: Params) {
         await log(req, "GET", path, 404, { started, responseBody: { error: "Unknown collection" } });
         return NextResponse.json({ error: "Unknown collection" }, { status: 404 });
     }
+    await ensureTable(tableName(col));
 
     const client = await pool.connect();
     try {
@@ -91,6 +110,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         await log(req, "PATCH", path, 404, { started, requestBody: body, responseBody: { error: "Unknown collection" } });
         return NextResponse.json({ error: "Unknown collection" }, { status: 404 });
     }
+    await ensureTable(tableName(col));
 
     const client = await pool.connect();
     try {
@@ -122,6 +142,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
         await log(req, "PUT", path, 404, { started, requestBody: body, responseBody: { error: "Unknown collection" } });
         return NextResponse.json({ error: "Unknown collection" }, { status: 404 });
     }
+    await ensureTable(table);
 
     const client = await pool.connect();
     try {
@@ -157,6 +178,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
         await log(req, "DELETE", path, 404, { started, responseBody: { error: "Unknown collection" } });
         return NextResponse.json({ error: "Unknown collection" }, { status: 404 });
     }
+    await ensureTable(tableName(col));
 
     const client = await pool.connect();
     try {

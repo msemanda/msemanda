@@ -36,6 +36,7 @@ export default function IpdBedsPage() {
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({ ward: WARDS[0], number: "" });
     const [saving, setSaving] = useState(false);
+    const [error, setError] = useState("");
 
     useEffect(() => { fetchBeds(); }, []);
 
@@ -70,6 +71,7 @@ export default function IpdBedsPage() {
         e.preventDefault();
         if (!form.number.trim()) return;
         setSaving(true);
+        setError("");
         try {
             await addDoc(collection(db, "beds"), {
                 ward: form.ward,
@@ -80,7 +82,10 @@ export default function IpdBedsPage() {
             setForm({ ward: WARDS[0], number: "" });
             setShowForm(false);
             await fetchBeds();
-        } catch (e) { console.error(e); }
+        } catch (e: any) {
+            console.error(e);
+            setError(e?.message || "Failed to add bed. Please try again.");
+        }
         finally { setSaving(false); }
     };
 
@@ -113,28 +118,33 @@ export default function IpdBedsPage() {
             </div>
 
             {showForm && (
-                <form onSubmit={handleAddBed} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col sm:flex-row gap-3 items-end">
-                    <div className="flex-1 w-full">
-                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Ward</label>
-                        <select value={form.ward} onChange={e => setForm(f => ({ ...f, ward: e.target.value }))}
-                            className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-white text-sm font-medium outline-none focus:border-blue-500">
-                            {WARDS.map(w => <option key={w} value={w}>{w}</option>)}
-                        </select>
+                <form onSubmit={handleAddBed} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
+                    <div className="flex flex-col sm:flex-row gap-3 items-end">
+                        <div className="flex-1 w-full">
+                            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Ward</label>
+                            <select value={form.ward} onChange={e => setForm(f => ({ ...f, ward: e.target.value }))}
+                                className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-white text-sm font-medium outline-none focus:border-blue-500">
+                                {WARDS.map(w => <option key={w} value={w}>{w}</option>)}
+                            </select>
+                        </div>
+                        <div className="flex-1 w-full">
+                            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Bed Number</label>
+                            <input required placeholder="e.g. GEN-01" value={form.number}
+                                onChange={e => setForm(f => ({ ...f, number: e.target.value }))}
+                                className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-white text-sm font-medium outline-none focus:border-blue-500" />
+                        </div>
+                        <button type="submit" disabled={saving}
+                            className="h-11 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-bold shrink-0">
+                            {saving ? "Saving…" : "Save"}
+                        </button>
+                        <button type="button" onClick={() => { setShowForm(false); setError(""); }}
+                            className="h-11 w-11 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 shrink-0">
+                            <X className="h-4 w-4" />
+                        </button>
                     </div>
-                    <div className="flex-1 w-full">
-                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Bed Number</label>
-                        <input required placeholder="e.g. GEN-01" value={form.number}
-                            onChange={e => setForm(f => ({ ...f, number: e.target.value }))}
-                            className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-white text-sm font-medium outline-none focus:border-blue-500" />
-                    </div>
-                    <button type="submit" disabled={saving}
-                        className="h-11 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-bold shrink-0">
-                        {saving ? "Saving…" : "Save"}
-                    </button>
-                    <button type="button" onClick={() => setShowForm(false)}
-                        className="h-11 w-11 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 shrink-0">
-                        <X className="h-4 w-4" />
-                    </button>
+                    {error && (
+                        <p className="text-xs font-semibold text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{error}</p>
+                    )}
                 </form>
             )}
 

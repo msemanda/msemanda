@@ -571,6 +571,23 @@ CREATE TABLE IF NOT EXISTS notifications (
 CREATE INDEX IF NOT EXISTS idx_notifications_target_uid ON notifications ((data->>'targetUid'));
 CREATE INDEX IF NOT EXISTS idx_notifications_target_role ON notifications ((data->>'targetRole'));
 
+-- ── Beds (physical bed inventory per ward) ────────────────────────────────────
+CREATE TABLE IF NOT EXISTS beds (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_beds_ward ON beds ((data->>'ward'));
+
+-- ── Dental charts (per-patient tooth condition map) ───────────────────────────
+CREATE TABLE IF NOT EXISTS dental_charts (
+    id          TEXT        PRIMARY KEY DEFAULT short_id(),
+    data        JSONB       NOT NULL DEFAULT '{}',
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
+);
+
 -- ============================================================
 -- Done. Run this file against the ehealth database:
 --   psql -U postgres -d ehealth -f schema.sql

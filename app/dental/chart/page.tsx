@@ -64,6 +64,7 @@ export default function DentalChart() {
     const [loadingChart, setLoadingChart] = useState(false);
     const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
     const [saving, setSaving] = useState(false);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         getDocs(query(collection(db, "users"), where("role", "==", "PATIENT")))
@@ -94,6 +95,7 @@ export default function DentalChart() {
     const setCondition = async (option: { label: string; color: string }) => {
         if (!selectedPatient || selectedTooth === null) return;
         setSaving(true);
+        setError("");
         try {
             const next = { ...chart };
             if (option.label === "Healthy") {
@@ -109,7 +111,10 @@ export default function DentalChart() {
             }, { merge: true });
             setChart(next);
             setSelectedTooth(null);
-        } catch (e) { console.error(e); }
+        } catch (e: any) {
+            console.error(e);
+            setError(e?.message || "Failed to save. Please try again.");
+        }
         finally { setSaving(false); }
     };
 
@@ -206,6 +211,9 @@ export default function DentalChart() {
                                     </button>
                                 ))}
                             </div>
+                        )}
+                        {error && (
+                            <p className="text-xs font-semibold text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2 mt-3">{error}</p>
                         )}
                     </div>
 
