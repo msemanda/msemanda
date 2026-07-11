@@ -27,12 +27,13 @@ interface FeeRecord {
     patientEmail: string;
     amount: number;
     consultationType: string;
-    status: "PENDING" | "PATIENT_PAID" | "PAID";
+    status: "PENDING" | "PATIENT_PAID" | "PAID" | "CANCELLED";
     paymentMethod?: string;
     paymentReference?: string;
     createdAt?: any;
     paidAt?: any;
     receiptNo?: string;
+    cancelledBy?: string;
 }
 
 const CONSULTATION_TYPES = [
@@ -53,9 +54,10 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }>
     PENDING:      { label: "Awaiting Patient",    color: "bg-gray-50 text-gray-500 border-gray-100",   icon: Clock },
     PATIENT_PAID: { label: "Submitted — Pending Finance Approval", color: "bg-amber-50 text-amber-700 border-amber-100", icon: Clock },
     PAID:         { label: "Confirmed by Finance", color: "bg-green-50 text-green-700 border-green-100", icon: CheckCircle2 },
+    CANCELLED:    { label: "Cancelled",           color: "bg-gray-50 text-gray-400 border-gray-100",   icon: X },
 };
 
-type Tab = "all" | "PENDING" | "PATIENT_PAID" | "PAID";
+type Tab = "all" | "PENDING" | "PATIENT_PAID" | "PAID" | "CANCELLED";
 
 export default function ReceptionistPaymentsPage() {
     const { profile } = useAuth();
@@ -180,11 +182,13 @@ export default function ReceptionistPaymentsPage() {
         PENDING: fees.filter(f => f.status === "PENDING").length,
         PATIENT_PAID: fees.filter(f => f.status === "PATIENT_PAID").length,
         PAID: fees.filter(f => f.status === "PAID").length,
+        CANCELLED: fees.filter(f => f.status === "CANCELLED").length,
     };
 
     const TAB_LABELS: Record<Tab, string> = {
         all: "All", PENDING: "Awaiting Patient",
         PATIENT_PAID: "Pending Finance", PAID: "Confirmed",
+        CANCELLED: "Cancelled",
     };
 
     return (
@@ -333,7 +337,7 @@ export default function ReceptionistPaymentsPage() {
             {/* Tabs + search */}
             <div className="flex flex-col sm:flex-row gap-3">
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-1.5 flex gap-1 flex-wrap">
-                    {(["all", "PENDING", "PATIENT_PAID", "PAID"] as Tab[]).map(t => (
+                    {(["all", "PENDING", "PATIENT_PAID", "PAID", "CANCELLED"] as Tab[]).map(t => (
                         <button key={t} onClick={() => setTab(t)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                                 tab === t ? "bg-blue-600 text-white" : "text-gray-500 hover:bg-gray-50"

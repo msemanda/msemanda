@@ -24,7 +24,7 @@ interface FeeRecord {
     patientId?: string;
     amount: number;
     consultationType: string;
-    status: "PENDING" | "PATIENT_PAID" | "PAID";
+    status: "PENDING" | "PATIENT_PAID" | "PAID" | "CANCELLED";
     paymentMethod?: string;
     paymentReference?: string;
     createdAt?: any;
@@ -32,6 +32,7 @@ interface FeeRecord {
     paidAt?: any;
     collectedBy?: string;
     receiptNo?: string;
+    cancelledBy?: string;
 }
 
 const METHOD_ICON: Record<string, any> = {
@@ -49,12 +50,13 @@ const METHOD_LABEL: Record<string, string> = {
     INSURANCE: "Insurance",
 };
 
-type Tab = "submitted" | "pending" | "paid";
+type Tab = "submitted" | "pending" | "paid" | "cancelled";
 
 const TAB_CONFIG: Record<Tab, { label: string; status: string; color: string }> = {
     submitted: { label: "Awaiting Approval", status: "PATIENT_PAID", color: "bg-amber-500" },
     pending:   { label: "Not Yet Paid",       status: "PENDING",      color: "bg-blue-600" },
     paid:      { label: "Confirmed",          status: "PAID",         color: "bg-blue-600" },
+    cancelled: { label: "Cancelled",          status: "CANCELLED",    color: "bg-gray-500" },
 };
 
 export default function CashierFeesPage() {
@@ -64,19 +66,20 @@ export default function CashierFeesPage() {
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState<string | null>(null);
     const [search, setSearch] = useState("");
-    const [counts, setCounts] = useState({ submitted: 0, pending: 0, paid: 0 });
+    const [counts, setCounts] = useState({ submitted: 0, pending: 0, paid: 0, cancelled: 0 });
 
     useEffect(() => { fetchFees(); }, [tab]);
 
     useEffect(() => {
         const fetchCounts = async () => {
             try {
-                const [s, p, d] = await Promise.all([
+                const [s, p, d, c] = await Promise.all([
                     getDocs(query(collection(db, "consultationFees"), where("status", "==", "PATIENT_PAID"))),
                     getDocs(query(collection(db, "consultationFees"), where("status", "==", "PENDING"))),
                     getDocs(query(collection(db, "consultationFees"), where("status", "==", "PAID"))),
+                    getDocs(query(collection(db, "consultationFees"), where("status", "==", "CANCELLED"))),
                 ]);
-                setCounts({ submitted: s.size, pending: p.size, paid: d.size });
+                setCounts({ submitted: s.size, pending: p.size, paid: d.size, cancelled: c.size });
             } catch(e) { console.error(e); }
         };
         fetchCounts();
@@ -200,6 +203,41 @@ export default function CashierFeesPage() {
         finally { setProcessing(null); }
     };
 
+    /** Removes a stale fee no one ever followed through on (ignored/orphaned) — cancels it and any slot reserved against it. */
+    const handleCancelFee = async (fee: FeeRecord) => {
+        setProcessing(`void-${fee.id}`);
+        try {
+            await updateDoc(doc(db, "consultationFees", fee.id), {
+                status: "CANCELLED",
+                cancelledBy: profile?.name,
+                cancelledAt: serverTimestamp(),
+            });
+
+            const apptSnap = await getDocs(query(
+                collection(db, "appointments"),
+                where("feeId", "==", fee.id),
+                where("status", "==", "PENDING_PAYMENT")
+            ));
+            for (const apptDoc of apptSnap.docs) {
+                await updateDoc(doc(db, "appointments", apptDoc.id), { status: "CANCELLED" });
+            }
+
+            if (fee.patientId) {
+                await notify({
+                    targetUid: fee.patientId,
+                    type:      "payment",
+                    title:     "Consultation fee cancelled",
+                    body:      `Your ${fee.consultationType} fee (UGX ${fee.amount.toLocaleString()}) has been cancelled${apptSnap.docs.length ? ", and the reserved appointment slot released" : ""}. Contact reception if this wasn't expected.`,
+                    link:      "/patient/records",
+                });
+            }
+
+            setFees(prev => prev.filter(f => f.id !== fee.id));
+            setCounts(prev => ({ ...prev, pending: prev.pending - 1, cancelled: prev.cancelled + 1 }));
+        } catch(e) { console.error(e); }
+        finally { setProcessing(null); }
+    };
+
     const filtered = fees.filter(f =>
         !search ||
         f.patientName.toLowerCase().includes(search.toLowerCase()) ||
@@ -268,7 +306,10 @@ export default function CashierFeesPage() {
                 <div className="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border border-dashed border-gray-200 text-center">
                     <CreditCard className="h-10 w-10 text-gray-200 mb-3" />
                     <p className="text-sm font-black text-gray-900 mb-1">
-                        {tab === "submitted" ? "No submissions awaiting approval" : tab === "pending" ? "No outstanding fees" : "No confirmed payments yet"}
+                        {tab === "submitted" ? "No submissions awaiting approval"
+                            : tab === "pending" ? "No outstanding fees"
+                            : tab === "cancelled" ? "No cancelled fees"
+                            : "No confirmed payments yet"}
                     </p>
                 </div>
             ) : (
@@ -284,7 +325,10 @@ export default function CashierFeesPage() {
                                     <div className="flex items-start justify-between gap-4 flex-wrap">
                                         <div className="flex items-center gap-3 min-w-0">
                                             <div className={`h-11 w-11 rounded-xl flex items-center justify-center font-black text-sm shrink-0 ${
-                                                tab === "submitted" ? "bg-amber-50 text-amber-700" : tab === "paid" ? "bg-green-50 text-green-700" : "bg-blue-50 text-blue-600"
+                                                tab === "submitted" ? "bg-amber-50 text-amber-700"
+                                                    : tab === "paid" ? "bg-green-50 text-green-700"
+                                                    : tab === "cancelled" ? "bg-gray-100 text-gray-400"
+                                                    : "bg-blue-50 text-blue-600"
                                             }`}>
                                                 {fee.patientName?.charAt(0) || "?"}
                                             </div>
@@ -322,8 +366,28 @@ export default function CashierFeesPage() {
                                                     <Clock className="h-3 w-3" /> Awaiting patient payment
                                                 </span>
                                             )}
+                                            {fee.status === "CANCELLED" && (
+                                                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-gray-50 text-gray-400 border border-gray-100 flex items-center gap-1">
+                                                    <XCircle className="h-3 w-3" /> Cancelled{fee.cancelledBy ? ` by ${fee.cancelledBy}` : ""}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
+
+                                    {/* Not-yet-paid fees have no payment method to review yet — offer to void ignored/orphaned ones */}
+                                    {tab === "pending" && (
+                                        <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+                                            <p className="text-xs text-gray-400 font-semibold flex items-center gap-1.5">
+                                                <Clock className="h-3.5 w-3.5" /> No payment submitted yet
+                                            </p>
+                                            <button onClick={() => handleCancelFee(fee)} disabled={!!processing}
+                                                className="h-9 px-4 rounded-xl border border-red-100 text-red-500 hover:bg-red-50 text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50">
+                                                {processing === `void-${fee.id}`
+                                                    ? <div className="animate-spin h-3.5 w-3.5 border-2 border-red-200 border-t-red-500 rounded-full"/>
+                                                    : <><XCircle className="h-3.5 w-3.5"/> Cancel Fee</>}
+                                            </button>
+                                        </div>
+                                    )}
 
                                     {/* Payment details row (submitted or paid) */}
                                     {fee.paymentMethod && (
