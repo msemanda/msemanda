@@ -1,5 +1,5 @@
 import type { ReportColumn, ReportDocument } from "@/lib/export";
-import { COMPANY_NAME, BRAND_RED_RGB, BRAND_GRAY_RGB, getLogoDataUrl, formatGeneratedAt, slugify, triggerDownload } from "@/lib/reportBranding";
+import { COMPANY_NAME, COMPANY_POSSESSIVE, SLOGAN, BRAND_RED_RGB, BRAND_GRAY_RGB, getLogoDataUrl, formatGeneratedAt, slugify, triggerDownload } from "@/lib/reportBranding";
 
 type RowRecord = Record<string, string | number>;
 
@@ -36,7 +36,11 @@ export async function generatePDF(doc: ReportDocument): Promise<Blob> {
     pdf.setFontSize(7);
     pdf.setFont("helvetica", "normal");
     pdf.setTextColor(...MUTED);
-    pdf.text("OFFICIAL DOCUMENT", marginX + (logo ? 36 : 0), cursorY + 22);
+    // English line only — jsPDF's built-in Helvetica font has no Ethiopic/Ge'ez
+    // glyphs, so the logo's translated line ("ንሕና ንሕክም ኣምላኹ ይምሕር") would render
+    // as blank boxes here. The preview, print, and Excel outputs all show both
+    // lines since browsers/Excel have proper Unicode font fallback.
+    pdf.text(SLOGAN, marginX + (logo ? 36 : 0), cursorY + 22);
 
     // Letterhead divider — matches the print/preview header rule.
     cursorY += 38;
@@ -187,7 +191,7 @@ export async function generatePDF(doc: ReportDocument): Promise<Blob> {
         pdf.text(`${COMPANY_NAME} · Page ${i} of ${pageCount}`, marginX, pageHeight - 26);
         pdf.setFontSize(6.5);
         pdf.setTextColor(209, 213, 219);
-        pdf.text("This is a system-generated document from RHD Medical Services' e-Health platform.", marginX, pageHeight - 16);
+        pdf.text(`This is a system-generated document from ${COMPANY_POSSESSIVE} e-Health platform.`, marginX, pageHeight - 16);
     }
 
     return pdf.output("blob");

@@ -1,6 +1,7 @@
 import type { ReportDocument, ReportSection } from "@/lib/export";
 import { fmtDateTime } from "@/lib/ts";
 import { CURRENCY, generateReceiptNo } from "@/helpers/constants";
+import { COMPANY_NAME } from "@/lib/reportBranding";
 
 export interface ReceiptLineItem {
     description: string;
@@ -74,7 +75,7 @@ export function buildReceiptDocument(input: ReceiptInput): ReportDocument {
 
     sections.push({
         kind: "text",
-        text: "Thank you for choosing RHD Medical Services. This is a system-generated receipt and does not require a signature or stamp to be valid.",
+        text: `Thank you for choosing ${COMPANY_NAME}. This is a system-generated receipt and does not require a signature or stamp to be valid.`,
     });
 
     return {

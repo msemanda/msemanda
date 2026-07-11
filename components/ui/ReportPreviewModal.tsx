@@ -7,6 +7,7 @@ import { Table, TableHead, TableRow, TableHeaderCell, TableBody, TableCell, Tabl
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 import { downloadCSV, printReportDocument, type ReportDocument } from "@/lib/export";
+import { COMPANY_NAME, COMPANY_POSSESSIVE, SLOGAN, SLOGAN_TRANSLATION } from "@/lib/reportBranding";
 
 interface ReportPreviewModalProps {
     open: boolean;
@@ -79,8 +80,9 @@ export function ReportPreviewModal({ open, onClose, data }: ReportPreviewModalPr
                 <div className="flex items-center gap-2.5 pb-4 mb-4 border-b-2 border-blue-600">
                     <Logo size={32} />
                     <div>
-                        <p className="text-[11px] font-black text-blue-700 uppercase tracking-wider leading-none">RHD Medical Services</p>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-1">Official Document</p>
+                        <p className="text-[11px] font-black text-blue-700 uppercase tracking-wider leading-none">{COMPANY_NAME}</p>
+                        <p className="text-[8px] font-bold text-gray-400 tracking-wide mt-1">{SLOGAN}</p>
+                        <p className="text-[8px] text-gray-300 mt-0.5">{SLOGAN_TRANSLATION}</p>
                     </div>
                 </div>
                 <h3 className="text-base font-black text-gray-900">{data.title}</h3>
@@ -147,8 +149,8 @@ export function ReportPreviewModal({ open, onClose, data }: ReportPreviewModalPr
                 </div>
 
                 <div className="mt-5 pt-3 border-t border-gray-100 text-center">
-                    <p className="text-[10px] text-gray-400">RHD Medical Services</p>
-                    <p className="text-[9px] text-gray-300 italic mt-0.5">This is a system-generated document from RHD Medical Services&apos; e-Health platform.</p>
+                    <p className="text-[10px] text-gray-400">{COMPANY_NAME}</p>
+                    <p className="text-[9px] text-gray-300 italic mt-0.5">This is a system-generated document from {COMPANY_POSSESSIVE} e-Health platform.</p>
                 </div>
             </div>
         </Modal>

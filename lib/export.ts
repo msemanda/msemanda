@@ -1,4 +1,4 @@
-import { COMPANY_NAME, LOGO_PATH, PRINT_STYLES, formatGeneratedAt, slugify, triggerDownload } from "@/lib/reportBranding";
+import { COMPANY_NAME, COMPANY_POSSESSIVE, LOGO_PATH, PRINT_STYLES, SLOGAN, SLOGAN_TRANSLATION, formatGeneratedAt, slugify, triggerDownload } from "@/lib/reportBranding";
 
 export interface ReportColumn {
     key: string;
@@ -140,7 +140,8 @@ export function printReportDocument(doc: ReportDocument): void {
         <img src="${LOGO_PATH}" alt="${escapeHtml(COMPANY_NAME)}" />
         <div>
             <div class="report-company">${escapeHtml(COMPANY_NAME)}</div>
-            <div class="report-company-sub">Official Document</div>
+            <div class="report-slogan">${escapeHtml(SLOGAN)}</div>
+            <div class="report-slogan-translation">${escapeHtml(SLOGAN_TRANSLATION)}</div>
         </div>
     </div>
     <h1>${escapeHtml(doc.title)}</h1>
@@ -149,7 +150,7 @@ export function printReportDocument(doc: ReportDocument): void {
     ${body}
     <div class="report-footer">
         <div>${escapeHtml(COMPANY_NAME)} · Generated ${escapeHtml(generatedAt)}</div>
-        <div class="report-footer-disclaimer">This is a system-generated document from RHD Medical Services' e-Health platform.</div>
+        <div class="report-footer-disclaimer">This is a system-generated document from ${escapeHtml(COMPANY_POSSESSIVE)} e-Health platform.</div>
     </div>
 </body>
 </html>

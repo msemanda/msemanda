@@ -1,5 +1,13 @@
 export const COMPANY_NAME = "RHD Medical Services";
+// Possessive of a name already ending in "s" takes just an apostrophe ("Services'"),
+// not an extra "s" ("Services's") — computed once so every export surface agrees.
+export const COMPANY_POSSESSIVE = COMPANY_NAME.endsWith("s") ? `${COMPANY_NAME}'` : `${COMPANY_NAME}'s`;
 export const LOGO_PATH = "/imgs/logo-mark.png";
+
+// Exactly as printed on the logo (public/imgs/logo-mark.png) — English line plus its
+// translation directly beneath it on the seal. Kept verbatim, not re-cased or reworded.
+export const SLOGAN = "WE TREAT GOD HEALS";
+export const SLOGAN_TRANSLATION = "ንሕና ንሕክም ኣምላኹ ይምሕር";
 
 // Sampled from app/globals.css brand tokens (jsPDF/exceljs need raw hex/RGB, not CSS vars).
 export const BRAND_RED = "#cc141a";
@@ -60,7 +68,8 @@ export const PRINT_STYLES = `
     .report-header { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; margin-bottom: 18px; border-bottom: 2px solid ${BRAND_RED}; }
     .report-header img { height: 40px; width: 40px; border-radius: 9999px; object-fit: cover; }
     .report-company { font-size: 11px; font-weight: 800; color: ${BRAND_RED}; text-transform: uppercase; letter-spacing: 0.06em; }
-    .report-company-sub { font-size: 9px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1px; }
+    .report-slogan { font-size: 8px; font-weight: 700; color: #9ca3af; letter-spacing: 0.03em; margin-top: 2px; }
+    .report-slogan-translation { font-size: 8px; color: #b8bec7; margin-top: 1px; }
     h1 { font-size: 20px; font-weight: 800; margin: 0 0 2px; }
     p.subtitle { font-size: 12px; color: #6b7280; margin: 0 0 4px; }
     p.meta { font-size: 11px; color: #9ca3af; margin: 0 0 20px; }

@@ -1,5 +1,5 @@
 import type { ReportColumn, ReportDocument } from "@/lib/export";
-import { COMPANY_NAME, getLogoDataUrl, formatGeneratedAt, slugify, triggerDownload } from "@/lib/reportBranding";
+import { COMPANY_NAME, COMPANY_POSSESSIVE, SLOGAN, SLOGAN_TRANSLATION, getLogoDataUrl, formatGeneratedAt, slugify, triggerDownload } from "@/lib/reportBranding";
 
 type RowRecord = Record<string, string | number>;
 
@@ -34,6 +34,11 @@ export async function generateExcel(doc: ReportDocument): Promise<Blob> {
     const companyCell = sheet.getCell(currentRow, logoEmbedded ? 2 : 1);
     companyCell.value = COMPANY_NAME;
     companyCell.font = { bold: true, color: { argb: BRAND_RED_ARGB }, size: 11 };
+    currentRow += 1;
+
+    const sloganCell = sheet.getCell(currentRow, logoEmbedded ? 2 : 1);
+    sloganCell.value = `${SLOGAN}  ·  ${SLOGAN_TRANSLATION}`;
+    sloganCell.font = { size: 8, color: { argb: MUTED_ARGB } };
     currentRow += 1;
 
     sheet.getCell(currentRow, 1).value = doc.title;
@@ -112,7 +117,7 @@ export async function generateExcel(doc: ReportDocument): Promise<Blob> {
                 currentRow += 2;
             }
         }
-        sheet.getCell(currentRow, 1).value = "This is a system-generated document from RHD Medical Services' e-Health platform.";
+        sheet.getCell(currentRow, 1).value = `This is a system-generated document from ${COMPANY_POSSESSIVE} e-Health platform.`;
         sheet.getCell(currentRow, 1).font = { italic: true, size: 8, color: { argb: MUTED_ARGB } };
     }
 
