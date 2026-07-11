@@ -6,6 +6,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/postgres";
+import { getAuthPayload } from "@/lib/auth";
+import { logRequest, getClientIp } from "@/lib/request-log";
 
 type Params = { params: Promise<{ collection: string }> };
 
@@ -42,11 +44,28 @@ function tableName(col: string) {
 }
 
 export async function GET(req: NextRequest, { params }: Params) {
+    const started = Date.now();
     const { collection: col } = await params;
-    if (!ALLOWED.has(col)) return NextResponse.json({ error: "Unknown collection" }, { status: 404 });
+    const path = `/api/db/${col}`;
+    const auth = await getAuthPayload();
+    const { searchParams } = new URL(req.url);
+    const queryObj = Object.fromEntries(searchParams.entries());
+
+    const respond = async (body: unknown, status: number) => {
+        await logRequest({
+            method: "GET", path, status,
+            userEmail: auth?.email, userUid: auth?.uid,
+            ip: getClientIp(req), userAgent: req.headers.get("user-agent"),
+            durationMs: Date.now() - started,
+            query: queryObj,
+            responseBody: body,
+        });
+        return NextResponse.json(body as object, { status });
+    };
+
+    if (!ALLOWED.has(col)) return respond({ error: "Unknown collection" }, 404);
 
     const table = tableName(col);
-    const { searchParams } = new URL(req.url);
 
     let sql = `SELECT * FROM ${table}`;
     const values: unknown[] = [];
@@ -94,18 +113,46 @@ export async function GET(req: NextRequest, { params }: Params) {
     try {
         const result = await client.query(sql, values);
         const rows = result.rows.map(r => ({ id: r.id, ...r.data }));
+        // Log a count, not the full list — list responses can be large and this
+        // is an audit trail, not a data export.
+        await logRequest({
+            method: "GET", path, status: 200,
+            userEmail: auth?.email, userUid: auth?.uid,
+            ip: getClientIp(req), userAgent: req.headers.get("user-agent"),
+            durationMs: Date.now() - started,
+            query: queryObj,
+            responseBody: { count: rows.length },
+        });
         return NextResponse.json(rows);
+    } catch (err) {
+        return await respond({ error: (err as Error).message }, 500);
     } finally {
         client.release();
     }
 }
 
 export async function POST(req: NextRequest, { params }: Params) {
+    const started = Date.now();
     const { collection: col } = await params;
-    if (!ALLOWED.has(col)) return NextResponse.json({ error: "Unknown collection" }, { status: 404 });
+    const path = `/api/db/${col}`;
+    const auth = await getAuthPayload();
+    const body = await req.json();
+
+    const respond = async (resBody: unknown, status: number) => {
+        await logRequest({
+            method: "POST", path, status,
+            userEmail: auth?.email, userUid: auth?.uid,
+            ip: getClientIp(req), userAgent: req.headers.get("user-agent"),
+            durationMs: Date.now() - started,
+            requestBody: body,
+            responseBody: resBody,
+        });
+        return NextResponse.json(resBody as object, { status });
+    };
+
+    if (!ALLOWED.has(col)) return respond({ error: "Unknown collection" }, 404);
 
     const table = tableName(col);
-    const body = await req.json();
 
     const client = await pool.connect();
     try {
@@ -113,7 +160,9 @@ export async function POST(req: NextRequest, { params }: Params) {
             `INSERT INTO ${table} (data, created_at) VALUES ($1::jsonb, NOW()) RETURNING id`,
             [JSON.stringify(body)]
         );
-        return NextResponse.json({ id: result.rows[0].id }, { status: 201 });
+        return await respond({ id: result.rows[0].id }, 201);
+    } catch (err) {
+        return await respond({ error: (err as Error).message }, 500);
     } finally {
         client.release();
     }

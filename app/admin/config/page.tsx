@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
+import SystemLogsPanel from "@/components/admin/SystemLogsPanel";
 
 interface SystemConfig {
     facilityName: string;
@@ -92,12 +93,11 @@ function Toggle({ checked, onChange, label, description }: {
     );
 }
 
-type DbProvider = "neon" | "local" | "firebase";
+type DbProvider = "neon" | "local";
 
 const DB_PROVIDERS: { value: DbProvider; label: string; description: string }[] = [
-    { value: "neon",     label: "Neon (cloud Postgres)", description: "Managed Postgres over the internet — use for production / shared access" },
-    { value: "local",    label: "Local Postgres",        description: "Postgres on this machine — fastest for development, no network needed" },
-    { value: "firebase", label: "Firebase",               description: "Google Firestore — requires a server service-account key to enable" },
+    { value: "neon",  label: "Neon (cloud Postgres)", description: "Managed Postgres over the internet — use for production / shared access" },
+    { value: "local", label: "Local Postgres",        description: "Postgres on this machine — fastest for development, no network needed" },
 ];
 
 export default function SystemConfigPage() {
@@ -343,7 +343,7 @@ export default function SystemConfigPage() {
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {DB_PROVIDERS.map(p => {
                             const active = dbProvider === p.value;
                             const isSwitching = dbSwitching === p.value;
@@ -371,6 +371,16 @@ export default function SystemConfigPage() {
                             );
                         })}
                     </div>
+                </motion.div>
+
+                {/* System Logs */}
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.25 }}
+                    className="lg:col-span-2"
+                >
+                    <SystemLogsPanel />
                 </motion.div>
             </div>
 

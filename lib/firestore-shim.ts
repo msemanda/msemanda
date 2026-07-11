@@ -1,10 +1,12 @@
 /**
  * Drop-in replacement for firebase/firestore.
- * Active when next.config.ts aliases 'firebase/firestore' → this file (ISDBREMOTE=false).
- * Routes all Firestore calls to /api/db/* REST endpoints backed by PostgreSQL.
+ * next.config.ts aliases every `firebase/firestore` import to this file, so no
+ * real Firebase package is involved. Routes all calls to /api/db/* REST
+ * endpoints backed by PostgreSQL (Neon or local — see lib/db-provider.ts).
  */
 
-export type DocumentData = Record<string, unknown>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- matches firebase/firestore's real (loose) DocumentData type, which the rest of the app is written against
+export type DocumentData = { [field: string]: any };
 
 // ── Internal types ────────────────────────────────────────────────────────────
 
@@ -20,6 +22,7 @@ interface SnapshotDoc { id: string; data(): DocumentData; exists(): boolean }
 interface QuerySnapshot {
     docs: SnapshotDoc[];
     size: number;
+    empty: boolean;
     forEach(cb: (doc: SnapshotDoc) => void): void;
 }
 
@@ -123,7 +126,7 @@ export async function getDocs(queryOrCol: QueryRef | CollectionRef): Promise<Que
 
     const rows = await pgFetch(`${colName}?${params}`) as (DocumentData & { id: string })[];
     const docs = rows.map(makeDoc);
-    return { docs, size: docs.length, forEach: (cb) => docs.forEach(cb) };
+    return { docs, size: docs.length, empty: docs.length === 0, forEach: (cb) => docs.forEach(cb) };
 }
 
 export async function getDoc(docRef: DocRef): Promise<SnapshotDoc> {

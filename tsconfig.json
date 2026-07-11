@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "firebase/firestore": ["./lib/firestore-shim.ts"]
     }
   },
   "include": [

@@ -1,9 +1,10 @@
 -- ============================================================
 -- RHONA e-Health PostgreSQL Schema
--- Mirrors all Firestore collections used in the application.
--- Each table stores document data in a JSONB `data` column
--- so the front-end can switch between Firebase and PostgreSQL
--- transparently (via ISDBREMOTE flag in helpers/constants.tsx).
+-- One table per collection, each storing document data in a JSONB
+-- `data` column — this app has no Firebase/Firestore dependency;
+-- collection names are just historical naming from before the
+-- migration to Postgres. Active provider (neon/local) is chosen
+-- via DB_PROVIDER in .env.local — see lib/db-provider.ts.
 --
 -- Connection: jdbc:postgresql://localhost:5432/ehealth
 -- User: postgres  Password: sema

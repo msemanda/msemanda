@@ -1,33 +1,11 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { type Analytics, isSupported as analyticsIsSupported, getAnalytics } from "firebase/analytics";
-
-// Firebase is used ONLY for authentication (login, signup, auth state).
-// All data storage goes to Neon/local PostgreSQL by default — the webpack/turbopack
-// alias in next.config.ts replaces every "firebase/firestore" import (including the
-// getFirestore call below) with the firestore-shim at build time, so `db`
-// becomes a lightweight proxy that routes to Postgres. Live Firestore writes only
-// happen when DB_PROVIDER=firebase, via the server-side Admin SDK — see lib/db-provider.ts.
-const firebaseConfig = {
-  apiKey: "AIzaSyAGQ05zweOEObV2SV4UQ1ZVTmhfkKTh8vA",
-  authDomain: "ehealth-8989d.firebaseapp.com",
-  projectId: "ehealth-8989d",
-  storageBucket: "ehealth-8989d.firebasestorage.app",
-  messagingSenderId: "87503451704",
-  appId: "1:87503451704:web:fd964134585841b0a918cd",
-  measurementId: "G-6RP6EGHGRR",
-};
-
-const app  = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getFirestore(app);
-
-let analytics: Analytics | null = null;
-if (typeof window !== "undefined") {
-  analyticsIsSupported().then(supported => {
-    if (supported) analytics = getAnalytics(app);
-  });
-}
-
-export { app, auth, db, analytics };
+// This project no longer uses Firebase for anything. Authentication is a custom
+// JWT + bcrypt stack backed by Postgres (see lib/auth.ts, lib/auth-db.ts), and
+// all data storage goes through Neon/local PostgreSQL.
+//
+// `db` exists only because ~140 pages still write `import { db } from
+// "@/lib/firebase"` alongside `import { collection, getDocs, ... } from
+// "firebase/firestore"`. That second import is aliased at build time (see
+// next.config.ts) to lib/firestore-shim.ts, which routes every call to Postgres
+// via /api/db/* REST routes and ignores this handle entirely — it's an inert
+// placeholder kept only to satisfy those call sites without touching all of them.
+export const db = { __pg: true } as const;

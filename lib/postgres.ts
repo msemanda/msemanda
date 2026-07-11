@@ -41,11 +41,7 @@ function buildPool(kind: "neon" | "local"): Pool {
 }
 
 function getActivePool(): Pool {
-    const provider = getDbProvider();
-    if (provider === "firebase") {
-        throw new Error("DB_PROVIDER is 'firebase' — Postgres is not the active data source");
-    }
-    const kind = provider === "neon" ? "neon" : "local";
+    const kind = getDbProvider();
     if (!pools[kind]) pools[kind] = buildPool(kind);
     return pools[kind]!;
 }

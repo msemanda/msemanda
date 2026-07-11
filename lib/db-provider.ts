@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 const ENV_PATH = path.resolve(process.cwd(), ".env.local");
-const PROVIDERS = ["neon", "local", "firebase"] as const;
+const PROVIDERS = ["neon", "local"] as const;
 export type DbProvider = typeof PROVIDERS[number];
 
 function isDbProvider(value: string): value is DbProvider {

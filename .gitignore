@@ -33,9 +33,6 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
-# Firebase service account key — never commit
-scripts/serviceAccountKey.json
-
 # Generated staff credentials — plaintext temp passwords, never commit
 staff-credentials.csv
 
