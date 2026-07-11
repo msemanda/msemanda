@@ -26,7 +26,8 @@ interface LabOrder {
 interface BloodUnit {
     id: string;
     bloodGroup: string;
-    units: number;
+    available: number;
+    reserved: number;
 }
 
 const PRIORITY_VARIANT: Record<string, "red" | "yellow" | "blue"> = {
@@ -48,12 +49,20 @@ export default function LabDashboard() {
             try {
                 const [orderSnap, bloodSnap] = await Promise.all([
                     getDocs(query(collection(db, "cpoeOrders"), where("orderType", "==", "LAB"))),
-                    getDocs(collection(db, "bloodBank")),
+                    getDocs(collection(db, "bloodInventory")),
                 ]);
                 const rows = orderSnap.docs.map(d => ({ id: d.id, ...d.data() } as LabOrder));
                 rows.sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
                 setOrders(rows);
-                setBlood(bloodSnap.docs.map(d => ({ id: d.id, ...d.data() } as BloodUnit)));
+                setBlood(bloodSnap.docs.map(d => {
+                    const r = d.data();
+                    return {
+                        id: d.id,
+                        bloodGroup: ((r.bloodGroup ?? r.group) as string) ?? "?",
+                        available: Number(r.available ?? r.availableUnits ?? 0),
+                        reserved: Number(r.reserved ?? r.reservedUnits ?? 0),
+                    } as BloodUnit;
+                }));
             } catch (e) {
                 console.error(e);
             } finally {
@@ -66,7 +75,7 @@ export default function LabDashboard() {
     const pending   = orders.filter(o => o.status === "PENDING" || o.status === "IN_PROGRESS");
     const completed = orders.filter(o => o.status === "COMPLETED");
     const critical  = orders.filter(o => o.priority === "STAT" && o.status !== "COMPLETED");
-    const totalBlood = blood.reduce((sum, b) => sum + (b.units ?? 0), 0);
+    const totalBlood = blood.reduce((sum, b) => sum + (b.available ?? 0), 0);
 
     const filtered = pending.filter(o =>
         !search || o.patientName?.toLowerCase().includes(search.toLowerCase()) || o.detail?.toLowerCase().includes(search.toLowerCase())
@@ -199,11 +208,11 @@ export default function LabDashboard() {
                         )}
                         <div className="grid grid-cols-4 gap-1.5">
                             {blood.map((b) => {
-                                const low = (b.units ?? 0) < 5;
+                                const low = (b.available ?? 0) < 5;
                                 const cell = (
                                     <div className={`text-center p-1.5 rounded-lg ${low ? "bg-red-50 border border-red-100" : "bg-gray-50"}`}>
                                         <p className="text-xs font-black text-gray-900">{b.bloodGroup}</p>
-                                        <p className={`text-[10px] font-bold ${low ? "text-red-600" : "text-gray-500"}`}>{b.units}u</p>
+                                        <p className={`text-[10px] font-bold ${low ? "text-red-600" : "text-gray-500"}`}>{b.available}u</p>
                                     </div>
                                 );
                                 return low ? (
