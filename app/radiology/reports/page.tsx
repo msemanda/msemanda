@@ -6,8 +6,9 @@ import { fmtDateTime } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { RadiologyOrder } from "@/types";
 import { motion } from "framer-motion";
-import { FileImage, Search, Download, RefreshCw, Scan } from "lucide-react";
+import { FileImage, Search, RefreshCw, Scan } from "lucide-react";
 import { ExportMenu } from "@/components/ui/ExportMenu";
+import type { ReportDocument, ReportSection } from "@/lib/export";
 
 const MODALITY_COLOR: Record<string, string> = {
     "X-RAY": "bg-blue-50 text-blue-700",
@@ -57,23 +58,22 @@ export default function RadiologyReportsPage() {
             o.patientId.toLowerCase().includes(q);
     });
 
-    const handlePrint = (order: RadiologyOrder) => {
-        const w = window.open("", "_blank");
-        if (!w) return;
-        w.document.write(`
-            <html><head><title>Radiology Report — ${order.patientName || order.patientId}</title>
-            <style>body{font-family:sans-serif;padding:32px;max-width:700px;margin:auto}h1{font-size:20px}h2{font-size:14px;color:#555;border-bottom:1px solid #eee;padding-bottom:6px;margin-top:20px}p{font-size:13px;color:#333;margin:6px 0}.label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:4px}.box{background:#f8f8f8;border-radius:8px;padding:12px;margin-top:6px}@media print{button{display:none}}</style>
-            </head><body>
-            <h1>Radiology Report</h1>
-            <p><strong>Patient:</strong> ${order.patientName || order.patientId}</p>
-            <p><strong>Modality:</strong> ${order.modality} &nbsp; <strong>Body Part:</strong> ${order.bodyPart} &nbsp; <strong>Priority:</strong> ${order.priority}</p>
-            <p><strong>Reported:</strong> ${fmtDateTime(order.reportedAt)}</p>
-            ${order.findings ? `<h2>Findings</h2><div class="box"><p>${order.findings}</p></div>` : ""}
-            ${order.impression ? `<h2>Impression</h2><div class="box"><p>${order.impression}</p></div>` : ""}
-            <br/><button onclick="window.print()">Print / Save PDF</button>
-            </body></html>
-        `);
-        w.document.close();
+    const buildRadiologyRecordDocument = (order: RadiologyOrder): ReportDocument => {
+        const sections: ReportSection[] = [
+            {
+                kind: "keyvalue",
+                fields: [
+                    { label: "Patient", value: order.patientName || order.patientId },
+                    { label: "Modality", value: order.modality },
+                    { label: "Body Part", value: order.bodyPart },
+                    { label: "Priority", value: order.priority },
+                    { label: "Reported", value: fmtDateTime(order.reportedAt) },
+                ],
+            },
+        ];
+        if (order.findings) sections.push({ kind: "text", heading: "Findings", text: order.findings });
+        if (order.impression) sections.push({ kind: "text", heading: "Impression", text: order.impression });
+        return { title: `Radiology Report — ${order.patientName || order.patientId}`, sections };
     };
 
     return (
@@ -145,10 +145,7 @@ export default function RadiologyReportsPage() {
                                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${PRIORITY_COLOR[order.priority]}`}>
                                         {order.priority}
                                     </span>
-                                    <button onClick={() => handlePrint(order)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-100 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors">
-                                        <Download className="h-3.5 w-3.5" /> PDF
-                                    </button>
+                                    <ExportMenu variant="icon" label="Export report" data={buildRadiologyRecordDocument(order)} />
                                 </div>
                             </div>
                             <div className="space-y-3">

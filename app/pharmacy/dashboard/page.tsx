@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { PharmacyProfile } from "@/types";
 import { motion } from "framer-motion";
+import { SkeletonRow } from "@/components/ui/Skeleton";
 
 export default function PharmacyDashboard() {
     const { profile: userProfile } = useAuth();
@@ -106,8 +107,8 @@ export default function PharmacyDashboard() {
             </div>
 
             {loading ? (
-                <div className="flex items-center justify-center py-16 bg-white rounded-2xl border border-gray-100">
-                    <div className="animate-spin h-8 w-8 border-[3px] border-cyan-100 border-t-cyan-600 rounded-full" />
+                <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
+                    {Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}
                 </div>
             ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border border-dashed border-gray-200 text-center">

@@ -6,6 +6,9 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { motion } from "framer-motion";
 import { Scan, Clock, CheckCircle2, AlertCircle, FileImage } from "lucide-react";
+import { Card } from "@/components/ui/Card";
+import { Badge, type BadgeVariant } from "@/components/ui/Badge";
+import { SkeletonStatCard, SkeletonRow } from "@/components/ui/Skeleton";
 
 interface RadiologyOrder {
     id: string;
@@ -18,8 +21,8 @@ interface RadiologyOrder {
     scheduledTime: string;
 }
 
-const PRIORITY_CLASS: Record<string, string> = { STAT: "badge-red", URGENT: "badge-yellow", ROUTINE: "badge-blue" };
-const STATUS_CLASS:   Record<string, string> = { PENDING: "badge-blue", IN_PROGRESS: "badge-yellow", COMPLETED: "badge-green" };
+const PRIORITY_VARIANT: Record<string, BadgeVariant> = { STAT: "red", URGENT: "yellow", ROUTINE: "blue" };
+const STATUS_VARIANT:   Record<string, BadgeVariant> = { PENDING: "blue", IN_PROGRESS: "yellow", COMPLETED: "green" };
 const MODALITY_COLOR: Record<string, string> = {
     CT: "bg-blue-100 text-blue-700", MRI: "bg-purple-100 text-purple-700",
     "X-RAY": "bg-gray-100 text-gray-700", ULTRASOUND: "bg-teal-100 text-teal-700",
@@ -66,16 +69,18 @@ export default function RadiologyDashboard() {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((s, i) => {
-                    const Icon = s.icon;
-                    return (
-                        <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="stat-card">
-                            <div className={`inline-flex p-2.5 rounded-xl ${s.bg} mb-3`}><Icon className={`h-5 w-5 ${s.color}`} /></div>
-                            <p className="text-2xl font-black text-gray-900">{loading ? "—" : s.value}</p>
-                            <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
-                        </motion.div>
-                    );
-                })}
+                {loading
+                    ? Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)
+                    : stats.map((s, i) => {
+                        const Icon = s.icon;
+                        return (
+                            <Card key={s.label} variant="interactive" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="p-6">
+                                <div className={`inline-flex p-2.5 rounded-xl ${s.bg} mb-3`}><Icon className={`h-5 w-5 ${s.color}`} /></div>
+                                <p className="text-2xl font-black text-gray-900">{s.value}</p>
+                                <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
+                            </Card>
+                        );
+                    })}
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -86,7 +91,7 @@ export default function RadiologyDashboard() {
                     <span className="text-xs text-gray-400 font-semibold">{orders.length} studies</span>
                 </div>
                 <div className="divide-y divide-gray-50">
-                    {loading && <div className="px-5 py-8 text-center text-sm text-gray-400">Loading worklist…</div>}
+                    {loading && Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}
                     {!loading && orders.length === 0 && (
                         <div className="px-5 py-8 text-center text-sm text-gray-400">No radiology orders today</div>
                     )}
@@ -103,10 +108,8 @@ export default function RadiologyDashboard() {
                                     {item.scheduledTime && ` · ${item.scheduledTime}`}
                                 </p>
                             </div>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${PRIORITY_CLASS[item.priority] ?? "badge-blue"}`}>{item.priority}</span>
-                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${STATUS_CLASS[item.status] ?? "badge-blue"}`}>
-                                {item.status?.replace("_", " ")}
-                            </span>
+                            <Badge variant={PRIORITY_VARIANT[item.priority] ?? "blue"} size="sm">{item.priority}</Badge>
+                            <Badge variant={STATUS_VARIANT[item.status] ?? "blue"}>{item.status?.replace("_", " ")}</Badge>
                             {item.status !== "COMPLETED" && (
                                 <button
                                     onClick={() => handleStart(item)}

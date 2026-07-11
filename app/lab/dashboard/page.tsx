@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
-import { motion } from "framer-motion";
 import { FlaskConical, Clock, CheckCircle2, AlertCircle, Droplets, TrendingUp, Search } from "lucide-react";
 import Link from "next/link";
+import { Card } from "@/components/ui/Card";
+import { Modal } from "@/components/ui/Modal";
+import { Badge } from "@/components/ui/Badge";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { SkeletonStatCard, SkeletonRow } from "@/components/ui/Skeleton";
 
 interface LabOrder {
     id: string;
@@ -24,10 +28,10 @@ interface BloodUnit {
     units: number;
 }
 
-const PRIORITY: Record<string, string> = {
-    STAT:    "badge-red",
-    URGENT:  "badge-yellow",
-    ROUTINE: "badge-blue",
+const PRIORITY_VARIANT: Record<string, "red" | "yellow" | "blue"> = {
+    STAT: "red",
+    URGENT: "yellow",
+    ROUTINE: "blue",
 };
 
 export default function LabDashboard() {
@@ -36,6 +40,7 @@ export default function LabDashboard() {
     const [blood, setBlood]       = useState<BloodUnit[]>([]);
     const [search, setSearch]     = useState("");
     const [loading, setLoading]   = useState(true);
+    const [selectedOrder, setSelectedOrder] = useState<LabOrder | null>(null);
 
     useEffect(() => {
         async function load() {
@@ -87,19 +92,28 @@ export default function LabDashboard() {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((s, i) => {
-                    const Icon = s.icon;
-                    return (
-                        <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="stat-card">
-                            <div className={`inline-flex p-2.5 rounded-xl ${s.bg} mb-3`}>
-                                <Icon className={`h-5 w-5 ${s.color}`} />
-                            </div>
-                            <p className="text-2xl font-black text-gray-900">{loading ? "—" : s.value}</p>
-                            <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
-                            <p className="text-[10px] text-gray-400 mt-1">{s.trend}</p>
-                        </motion.div>
-                    );
-                })}
+                {loading
+                    ? Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)
+                    : stats.map((s, i) => {
+                        const Icon = s.icon;
+                        return (
+                            <Card
+                                key={s.label}
+                                variant="interactive"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.07 }}
+                                className="p-6"
+                            >
+                                <div className={`inline-flex p-2.5 rounded-xl ${s.bg} mb-3`}>
+                                    <Icon className={`h-5 w-5 ${s.color}`} />
+                                </div>
+                                <p className="text-2xl font-black text-gray-900">{s.value}</p>
+                                <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
+                                <p className="text-[10px] text-gray-400 mt-1">{s.trend}</p>
+                            </Card>
+                        );
+                    })}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -118,16 +132,20 @@ export default function LabDashboard() {
                         </div>
                     </div>
                     <div className="divide-y divide-gray-50">
-                        {loading && <div className="px-5 py-8 text-center text-sm text-gray-400">Loading orders…</div>}
+                        {loading && Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}
                         {!loading && filtered.length === 0 && (
                             <div className="px-5 py-8 text-center text-sm text-gray-400">No pending orders</div>
                         )}
                         {filtered.map((o) => (
-                            <div key={o.id} className="px-5 py-3.5 hover:bg-gray-50 transition-colors">
+                            <button
+                                key={o.id}
+                                onClick={() => setSelectedOrder(o)}
+                                className="w-full text-left px-5 py-3.5 hover:bg-gray-50 transition-colors"
+                            >
                                 <div className="flex items-center justify-between mb-1">
                                     <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-black text-gray-400">#{o.id.slice(-6).toUpperCase()}</span>
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${PRIORITY[o.priority] ?? "badge-blue"}`}>{o.priority}</span>
+                                        <Badge variant={PRIORITY_VARIANT[o.priority] ?? "blue"} size="sm">{o.priority}</Badge>
                                     </div>
                                     <span className="text-xs text-gray-400 flex items-center gap-1">
                                         <Clock className="h-3 w-3" />
@@ -136,7 +154,7 @@ export default function LabDashboard() {
                                 </div>
                                 <p className="text-sm font-bold text-gray-900">{o.patientName}</p>
                                 <p className="text-xs text-gray-500 mt-0.5">{o.tests} &bull; <span className="text-gray-400">{o.orderedBy}</span></p>
-                            </div>
+                            </button>
                         ))}
                     </div>
                 </div>
@@ -177,16 +195,57 @@ export default function LabDashboard() {
                             <p className="text-xs text-gray-400">No blood bank records</p>
                         )}
                         <div className="grid grid-cols-4 gap-1.5">
-                            {blood.map((b) => (
-                                <div key={b.id} className={`text-center p-1.5 rounded-lg ${(b.units ?? 0) < 5 ? "bg-red-50 border border-red-100" : "bg-gray-50"}`}>
-                                    <p className="text-xs font-black text-gray-900">{b.bloodGroup}</p>
-                                    <p className={`text-[10px] font-bold ${(b.units ?? 0) < 5 ? "text-red-600" : "text-gray-500"}`}>{b.units}u</p>
-                                </div>
-                            ))}
+                            {blood.map((b) => {
+                                const low = (b.units ?? 0) < 5;
+                                const cell = (
+                                    <div className={`text-center p-1.5 rounded-lg ${low ? "bg-red-50 border border-red-100" : "bg-gray-50"}`}>
+                                        <p className="text-xs font-black text-gray-900">{b.bloodGroup}</p>
+                                        <p className={`text-[10px] font-bold ${low ? "text-red-600" : "text-gray-500"}`}>{b.units}u</p>
+                                    </div>
+                                );
+                                return low ? (
+                                    <Tooltip key={b.id} content="Low stock — below 5 units">{cell}</Tooltip>
+                                ) : (
+                                    <div key={b.id}>{cell}</div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
             </div>
+
+            <Modal
+                open={selectedOrder !== null}
+                onClose={() => setSelectedOrder(null)}
+                title={selectedOrder?.patientName}
+                description={selectedOrder ? `Order #${selectedOrder.id.slice(-6).toUpperCase()}` : undefined}
+            >
+                {selectedOrder && (
+                    <div className="space-y-4">
+                        <Badge variant={PRIORITY_VARIANT[selectedOrder.priority] ?? "blue"}>{selectedOrder.priority}</Badge>
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                            <div>
+                                <p className="text-gray-400">Tests</p>
+                                <p className="font-bold text-gray-900">{selectedOrder.tests}</p>
+                            </div>
+                            <div>
+                                <p className="text-gray-400">Ordered by</p>
+                                <p className="font-bold text-gray-900">{selectedOrder.orderedBy}</p>
+                            </div>
+                            <div>
+                                <p className="text-gray-400">Ordered at</p>
+                                <p className="font-bold text-gray-900">
+                                    {selectedOrder.orderedAt ? new Date(selectedOrder.orderedAt).toLocaleString("en-GB") : "—"}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-gray-400">Status</p>
+                                <p className="font-bold text-gray-900">{selectedOrder.status}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </div>
     );
 }

@@ -6,6 +6,9 @@ import { useState, useEffect, useCallback } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
+import { Card } from "@/components/ui/Card";
+import { Badge, type BadgeVariant } from "@/components/ui/Badge";
+import { SkeletonStatCard, SkeletonRow } from "@/components/ui/Skeleton";
 
 interface WellnessProgram {
     id: string;
@@ -18,12 +21,12 @@ interface WellnessProgram {
     facilitator: string;
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-    CHRONIC_DISEASE: "bg-red-50 text-red-700 border-red-100",
-    FITNESS: "bg-blue-50 text-blue-700 border-blue-100",
-    MENTAL_HEALTH: "bg-purple-50 text-purple-700 border-purple-100",
-    NUTRITION: "bg-green-50 text-green-700 border-green-100",
-    PREVENTIVE: "bg-teal-50 text-teal-700 border-teal-100",
+const CATEGORY_VARIANT: Record<string, BadgeVariant> = {
+    CHRONIC_DISEASE: "red",
+    FITNESS: "blue",
+    MENTAL_HEALTH: "purple",
+    NUTRITION: "green",
+    PREVENTIVE: "teal",
 };
 
 export default function WellnessDashboard() {
@@ -64,10 +67,10 @@ export default function WellnessDashboard() {
     useEffect(() => { load(); }, [load]);
 
     const statCards = [
-        { label: "Active Programs",  value: loading ? "…" : String(programs.length), icon: Sparkles,   color: "text-purple-600", bg: "bg-purple-50" },
-        { label: "Enrolled Members", value: loading ? "…" : String(enrolledCount),   icon: Users,       color: "text-blue-600",   bg: "bg-blue-50"   },
-        { label: "Improved Health",  value: "—",                                      icon: TrendingUp,  color: "text-green-600",  bg: "bg-green-50"  },
-        { label: "Satisfaction",     value: "—",                                      icon: Heart,       color: "text-red-500",    bg: "bg-red-50"    },
+        { label: "Active Programs",  value: String(programs.length), icon: Sparkles,   color: "text-purple-600", bg: "bg-purple-50" },
+        { label: "Enrolled Members", value: String(enrolledCount),   icon: Users,       color: "text-blue-600",   bg: "bg-blue-50"   },
+        { label: "Improved Health",  value: "—",                      icon: TrendingUp,  color: "text-green-600",  bg: "bg-green-50"  },
+        { label: "Satisfaction",     value: "—",                      icon: Heart,       color: "text-red-500",    bg: "bg-red-50"    },
     ];
 
     return (
@@ -85,16 +88,18 @@ export default function WellnessDashboard() {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {statCards.map((s, i) => {
-                    const Icon = s.icon;
-                    return (
-                        <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="stat-card">
-                            <div className={`inline-flex p-2.5 rounded-xl ${s.bg} mb-3`}><Icon className={`h-5 w-5 ${s.color}`} /></div>
-                            <p className="text-2xl font-black text-gray-900">{s.value}</p>
-                            <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
-                        </motion.div>
-                    );
-                })}
+                {loading
+                    ? Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)
+                    : statCards.map((s, i) => {
+                        const Icon = s.icon;
+                        return (
+                            <Card key={s.label} variant="interactive" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="p-6">
+                                <div className={`inline-flex p-2.5 rounded-xl ${s.bg} mb-3`}><Icon className={`h-5 w-5 ${s.color}`} /></div>
+                                <p className="text-2xl font-black text-gray-900">{s.value}</p>
+                                <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
+                            </Card>
+                        );
+                    })}
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -105,9 +110,7 @@ export default function WellnessDashboard() {
                     </Link>
                 </div>
                 {loading ? (
-                    <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin h-5 w-5 border-[3px] border-purple-100 border-t-purple-500 rounded-full" />
-                    </div>
+                    <div className="divide-y divide-gray-50">{Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)}</div>
                 ) : programs.length === 0 ? (
                     <p className="text-center text-gray-400 py-8 text-xs">No active wellness programs</p>
                 ) : (
@@ -118,9 +121,7 @@ export default function WellnessDashboard() {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
                                         <p className="text-sm font-bold text-gray-900">{p.name}</p>
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${CATEGORY_COLORS[p.category] ?? "bg-gray-50 text-gray-600 border-gray-100"}`}>
-                                            {p.category.replace(/_/g, " ")}
-                                        </span>
+                                        <Badge variant={CATEGORY_VARIANT[p.category] ?? "neutral"} size="sm">{p.category.replace(/_/g, " ")}</Badge>
                                     </div>
                                     <p className="text-xs text-gray-400">{p.sessions} &bull; {p.duration} &bull; {p.facilitator}</p>
                                 </div>

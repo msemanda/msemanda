@@ -6,6 +6,9 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { motion } from "framer-motion";
 import { Apple, Users, UtensilsCrossed, AlertCircle } from "lucide-react";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { SkeletonStatCard, SkeletonRow } from "@/components/ui/Skeleton";
 
 interface DietPlan {
     id: string;
@@ -75,16 +78,18 @@ export default function DietaryDashboard() {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((s, i) => {
-                    const Icon = s.icon;
-                    return (
-                        <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="stat-card">
-                            <div className={`inline-flex p-2.5 rounded-xl ${s.bg} mb-3`}><Icon className={`h-5 w-5 ${s.color}`} /></div>
-                            <p className="text-2xl font-black text-gray-900">{loading ? "—" : s.value}</p>
-                            <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
-                        </motion.div>
-                    );
-                })}
+                {loading
+                    ? Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)
+                    : stats.map((s, i) => {
+                        const Icon = s.icon;
+                        return (
+                            <Card key={s.label} variant="interactive" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="p-6">
+                                <div className={`inline-flex p-2.5 rounded-xl ${s.bg} mb-3`}><Icon className={`h-5 w-5 ${s.color}`} /></div>
+                                <p className="text-2xl font-black text-gray-900">{s.value}</p>
+                                <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
+                            </Card>
+                        );
+                    })}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -94,7 +99,7 @@ export default function DietaryDashboard() {
                         <h2 className="font-bold text-gray-900">Active Diet Plans</h2>
                     </div>
                     <div className="divide-y divide-gray-50">
-                        {loading && <div className="px-5 py-8 text-center text-sm text-gray-400">Loading diet plans…</div>}
+                        {loading && Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}
                         {!loading && plans.length === 0 && (
                             <div className="px-5 py-8 text-center text-sm text-gray-400">No active diet plans — create DIET orders from the doctor&apos;s CPOE module</div>
                         )}
@@ -121,9 +126,9 @@ export default function DietaryDashboard() {
                                     )}
                                 </div>
                                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                    {p.dietType && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full badge-green">{p.dietType}</span>}
+                                    {p.dietType && <Badge variant="green" size="sm">{p.dietType}</Badge>}
                                     {(p.restrictions ?? []).map((r) => (
-                                        <span key={r} className="text-[10px] font-semibold px-2 py-0.5 rounded-full badge-red">{r}</span>
+                                        <Badge key={r} variant="red" size="sm">{r}</Badge>
                                     ))}
                                 </div>
                             </motion.div>

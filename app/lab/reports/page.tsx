@@ -6,8 +6,9 @@ import { fmtDateTime, tsMs } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { LabOrder } from "@/types";
 import { motion } from "framer-motion";
-import { BarChart3, Search, Download, FileText, RefreshCw, FlaskConical, Activity } from "lucide-react";
+import { BarChart3, Search, FileText, RefreshCw, FlaskConical, Activity } from "lucide-react";
 import { ExportMenu } from "@/components/ui/ExportMenu";
+import type { ReportDocument, ReportSection } from "@/lib/export";
 
 const FLAG_COLORS: Record<string, string> = {
     NORMAL: "bg-green-50 text-green-700 border-green-100",
@@ -104,28 +105,41 @@ export default function LabReportsPage() {
             o.patientId.toLowerCase().includes(q);
     });
 
-    const handlePrint = (order: LabOrder) => {
-        const w = window.open("", "_blank");
-        if (!w) return;
-        w.document.write(`
-            <html><head><title>Lab Report — ${order.patientName || order.patientId}</title>
-            <style>body{font-family:sans-serif;padding:32px;max-width:700px;margin:auto}h1{font-size:20px}h2{font-size:14px;color:#555;border-bottom:1px solid #eee;padding-bottom:6px}table{width:100%;border-collapse:collapse;margin-top:12px}td,th{padding:8px 10px;text-align:left;border-bottom:1px solid #f0f0f0;font-size:13px}th{background:#f8f8f8;font-weight:700}@media print{button{display:none}}</style>
-            </head><body>
-            <h1>Laboratory Report</h1>
-            <p><strong>Patient:</strong> ${order.patientName || order.patientId} &nbsp; <strong>Priority:</strong> ${order.priority}</p>
-            <p><strong>Ordered:</strong> ${fmtDateTime(order.orderedAt)} &nbsp; <strong>Completed:</strong> ${fmtDateTime(order.completedAt)}</p>
-            <h2>Tests Ordered</h2>
-            <p>${order.tests.join(", ")}</p>
-            ${order.results?.length ? `
-            <h2>Results</h2>
-            <table><tr><th>Test</th><th>Value</th><th>Unit</th><th>Ref Range</th><th>Flag</th></tr>
-            ${order.results.map(r => `<tr><td>${r.testName}</td><td>${r.value}</td><td>${r.unit}</td><td>${r.referenceRange}</td><td>${r.flag || "—"}</td></tr>`).join("")}
-            </table>` : ""}
-            ${order.notes ? `<h2>Notes</h2><p>${order.notes}</p>` : ""}
-            <br/><button onclick="window.print()">Print / Save PDF</button>
-            </body></html>
-        `);
-        w.document.close();
+    const buildLabRecordDocument = (order: LabOrder): ReportDocument => {
+        const sections: ReportSection[] = [
+            {
+                kind: "keyvalue",
+                fields: [
+                    { label: "Patient", value: order.patientName || order.patientId },
+                    { label: "Priority", value: order.priority },
+                    { label: "Ordered", value: fmtDateTime(order.orderedAt) },
+                    { label: "Completed", value: fmtDateTime(order.completedAt) },
+                ],
+            },
+            { kind: "text", heading: "Tests Ordered", text: order.tests.join(", ") },
+        ];
+        if (order.results?.length) {
+            sections.push({
+                kind: "table",
+                heading: "Results",
+                columns: [
+                    { key: "testName", label: "Test" },
+                    { key: "value", label: "Value" },
+                    { key: "unit", label: "Unit" },
+                    { key: "referenceRange", label: "Ref Range" },
+                    { key: "flag", label: "Flag" },
+                ],
+                rows: order.results.map(r => ({
+                    testName: r.testName,
+                    value: r.value,
+                    unit: r.unit,
+                    referenceRange: r.referenceRange,
+                    flag: r.flag || "—",
+                })),
+            });
+        }
+        if (order.notes) sections.push({ kind: "text", heading: "Notes", text: order.notes });
+        return { title: `Lab Report — ${order.patientName || order.patientId}`, sections };
     };
 
     return (
@@ -245,10 +259,7 @@ export default function LabReportsPage() {
                                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${PRIORITY_COLOR[order.priority]}`}>
                                         {order.priority}
                                     </span>
-                                    <button onClick={() => handlePrint(order)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-100 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors">
-                                        <Download className="h-3.5 w-3.5" /> PDF
-                                    </button>
+                                    <ExportMenu variant="icon" label="Export report" data={buildLabRecordDocument(order)} />
                                 </div>
                             </div>
 

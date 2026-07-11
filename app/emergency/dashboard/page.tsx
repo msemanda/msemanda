@@ -6,6 +6,9 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Ambulance, Users, AlertCircle, Clock, Activity, ArrowRight, RefreshCw } from "lucide-react";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { SkeletonStatCard } from "@/components/ui/Skeleton";
 
 interface EDPatient {
     id: string;
@@ -83,16 +86,18 @@ export default function EmergencyDashboard() {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((s, i) => {
-                    const Icon = s.icon;
-                    return (
-                        <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="stat-card">
-                            <div className={`inline-flex p-2.5 rounded-xl ${s.bg} mb-3`}><Icon className={`h-5 w-5 ${s.color}`} /></div>
-                            <p className="text-2xl font-black text-gray-900">{loading ? "—" : s.value}</p>
-                            <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
-                        </motion.div>
-                    );
-                })}
+                {loading
+                    ? Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)
+                    : stats.map((s, i) => {
+                        const Icon = s.icon;
+                        return (
+                            <Card key={s.label} variant="interactive" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="p-6">
+                                <div className={`inline-flex p-2.5 rounded-xl ${s.bg} mb-3`}><Icon className={`h-5 w-5 ${s.color}`} /></div>
+                                <p className="text-2xl font-black text-gray-900">{s.value}</p>
+                                <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
+                            </Card>
+                        );
+                    })}
             </div>
 
             <div className="flex gap-2 flex-wrap">
@@ -146,9 +151,7 @@ export default function EmergencyDashboard() {
                                         ? <span className="font-semibold">{p.assignedDoctor}</span>
                                         : <span className="text-amber-500 font-semibold">Unassigned</span>}
                                 </div>
-                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 ${
-                                    p.status === "IN_TREATMENT" ? "badge-blue" : "badge-yellow"
-                                }`}>{p.status?.replace("_", " ")}</span>
+                                <Badge variant={p.status === "IN_TREATMENT" ? "blue" : "yellow"} className="shrink-0">{p.status?.replace("_", " ")}</Badge>
                                 <button className="shrink-0 text-xs font-bold text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
                                     View <ArrowRight className="h-3 w-3" />
                                 </button>

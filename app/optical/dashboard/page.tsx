@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { fmtDate, tsMs } from "@/lib/ts";
-import { motion } from "framer-motion";
 import { Eye, FileText, PackageCheck } from "lucide-react";
 import Link from "next/link";
+import { Card } from "@/components/ui/Card";
+import { SkeletonStatCard, SkeletonRow } from "@/components/ui/Skeleton";
 
 export default function OpticalDashboard() {
     const [stats, setStats] = useState({ examsToday: 0, totalPrescriptions: 0, awaitingPickup: 0 });
@@ -57,19 +58,20 @@ export default function OpticalDashboard() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {cards.map((c, i) => {
-                    const Icon = c.icon;
-                    return (
-                        <motion.div key={c.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-                            className={`bg-white rounded-2xl border ${c.border} shadow-sm p-5`}>
-                            <div className={`h-10 w-10 rounded-xl ${c.color} flex items-center justify-center mb-3`}>
-                                <Icon className="h-5 w-5" />
-                            </div>
-                            <p className="text-2xl font-black text-gray-900">{loading ? "—" : c.value}</p>
-                            <p className="text-xs text-gray-500 mt-0.5 font-medium">{c.label}</p>
-                        </motion.div>
-                    );
-                })}
+                {loading
+                    ? Array.from({ length: 3 }).map((_, i) => <SkeletonStatCard key={i} />)
+                    : cards.map((c, i) => {
+                        const Icon = c.icon;
+                        return (
+                            <Card key={c.label} variant="interactive" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="p-5">
+                                <div className={`h-10 w-10 rounded-xl ${c.color} flex items-center justify-center mb-3`}>
+                                    <Icon className="h-5 w-5" />
+                                </div>
+                                <p className="text-2xl font-black text-gray-900">{c.value}</p>
+                                <p className="text-xs text-gray-500 mt-0.5 font-medium">{c.label}</p>
+                            </Card>
+                        );
+                    })}
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -78,7 +80,7 @@ export default function OpticalDashboard() {
                     <Link href="/optical/exams" className="text-xs font-bold text-blue-600 hover:underline">View all</Link>
                 </div>
                 {loading ? (
-                    <div className="flex items-center justify-center py-14"><div className="animate-spin h-6 w-6 border-[3px] border-blue-100 border-t-blue-600 rounded-full" /></div>
+                    <div className="divide-y divide-gray-50">{Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}</div>
                 ) : recentExams.length === 0 ? (
                     <div className="py-14 text-center">
                         <Eye className="h-10 w-10 text-gray-200 mx-auto mb-3" />

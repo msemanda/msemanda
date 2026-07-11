@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { motion } from "framer-motion";
-import { Building2, TrendingDown, FileText, RefreshCw } from "lucide-react";
+import { Building2, TrendingDown, FileText } from "lucide-react";
 import Link from "next/link";
+import { Card } from "@/components/ui/Card";
+import { SkeletonStatCard, SkeletonRow } from "@/components/ui/Skeleton";
 
 export default function AssetsDashboard() {
     const [stats, setStats] = useState({ total: 0, totalValue: 0, categories: 0 });
@@ -40,23 +41,24 @@ export default function AssetsDashboard() {
             </div>
 
             <div className="grid grid-cols-3 gap-4">
-                {[
-                    { label: "Total Assets", value: loading ? "â€”" : stats.total.toString(), icon: Building2, color: "bg-blue-50 text-blue-600", border: "border-blue-100" },
-                    { label: "Total Value (UGX)", value: loading ? "â€”" : stats.totalValue.toLocaleString(), icon: FileText, color: "bg-green-50 text-green-600", border: "border-green-100" },
-                    { label: "Asset Categories", value: loading ? "â€”" : stats.categories.toString(), icon: TrendingDown, color: "bg-purple-50 text-purple-600", border: "border-purple-100" },
-                ].map((c, i) => {
-                    const Icon = c.icon;
-                    return (
-                        <motion.div key={c.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-                            className={`bg-white rounded-2xl border ${c.border} shadow-sm p-5`}>
-                            <div className={`h-10 w-10 rounded-xl ${c.color} flex items-center justify-center mb-3`}>
-                                <Icon className="h-5 w-5" />
-                            </div>
-                            <p className="text-2xl font-black text-gray-900">{c.value}</p>
-                            <p className="text-xs text-gray-500 mt-0.5 font-medium">{c.label}</p>
-                        </motion.div>
-                    );
-                })}
+                {loading
+                    ? Array.from({ length: 3 }).map((_, i) => <SkeletonStatCard key={i} />)
+                    : [
+                        { label: "Total Assets", value: stats.total.toString(), icon: Building2, color: "bg-blue-50 text-blue-600" },
+                        { label: "Total Value (UGX)", value: stats.totalValue.toLocaleString(), icon: FileText, color: "bg-green-50 text-green-600" },
+                        { label: "Asset Categories", value: stats.categories.toString(), icon: TrendingDown, color: "bg-purple-50 text-purple-600" },
+                    ].map((c, i) => {
+                        const Icon = c.icon;
+                        return (
+                            <Card key={c.label} variant="interactive" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="p-5">
+                                <div className={`h-10 w-10 rounded-xl ${c.color} flex items-center justify-center mb-3`}>
+                                    <Icon className="h-5 w-5" />
+                                </div>
+                                <p className="text-2xl font-black text-gray-900">{c.value}</p>
+                                <p className="text-xs text-gray-500 mt-0.5 font-medium">{c.label}</p>
+                            </Card>
+                        );
+                    })}
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -65,7 +67,7 @@ export default function AssetsDashboard() {
                     <Link href="/assets/register" className="text-xs font-bold text-blue-600 hover:underline">View all</Link>
                 </div>
                 {loading ? (
-                    <div className="flex items-center justify-center py-14"><div className="animate-spin h-6 w-6 border-[3px] border-blue-100 border-t-blue-600 rounded-full"/></div>
+                    <div className="divide-y divide-gray-50">{Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}</div>
                 ) : recent.length === 0 ? (
                     <div className="py-14 text-center">
                         <Building2 className="h-10 w-10 text-gray-200 mx-auto mb-3"/>

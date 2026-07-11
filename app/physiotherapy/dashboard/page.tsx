@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
-import { motion } from "framer-motion";
 import { Users, CalendarDays, TrendingUp, CheckCircle2, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { Card } from "@/components/ui/Card";
+import { Badge, type BadgeVariant } from "@/components/ui/Badge";
+import { SkeletonStatCard, SkeletonRow } from "@/components/ui/Skeleton";
 
 interface PhysioSession {
     id: string;
@@ -18,10 +20,10 @@ interface PhysioSession {
     status: string;
 }
 
-const PROGRESS_CLASS: Record<string, string> = {
-    IMPROVING: "badge-green",
-    STABLE:    "badge-blue",
-    DECLINING: "badge-red",
+const PROGRESS_VARIANT: Record<string, BadgeVariant> = {
+    IMPROVING: "green",
+    STABLE:    "blue",
+    DECLINING: "red",
 };
 
 export default function PhysioDashboard() {
@@ -71,16 +73,18 @@ export default function PhysioDashboard() {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((s, i) => {
-                    const Icon = s.icon;
-                    return (
-                        <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="stat-card">
-                            <div className={`inline-flex p-2.5 rounded-xl ${s.bg} mb-3`}><Icon className={`h-5 w-5 ${s.color}`} /></div>
-                            <p className="text-2xl font-black text-gray-900">{loading ? "—" : s.value}</p>
-                            <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
-                        </motion.div>
-                    );
-                })}
+                {loading
+                    ? Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)
+                    : stats.map((s, i) => {
+                        const Icon = s.icon;
+                        return (
+                            <Card key={s.label} variant="interactive" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="p-6">
+                                <div className={`inline-flex p-2.5 rounded-xl ${s.bg} mb-3`}><Icon className={`h-5 w-5 ${s.color}`} /></div>
+                                <p className="text-2xl font-black text-gray-900">{s.value}</p>
+                                <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
+                            </Card>
+                        );
+                    })}
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -91,7 +95,7 @@ export default function PhysioDashboard() {
                     </Link>
                 </div>
                 <div className="divide-y divide-gray-50">
-                    {loading && <div className="px-5 py-8 text-center text-sm text-gray-400">Loading sessions…</div>}
+                    {loading && Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}
                     {!loading && todaySessions.length === 0 && (
                         <div className="px-5 py-8 text-center text-sm text-gray-400">No physiotherapy sessions scheduled today</div>
                     )}
@@ -110,11 +114,7 @@ export default function PhysioDashboard() {
                                     {s.sessionNumber ? ` · Session ${s.sessionNumber}` : ""}
                                 </p>
                             </div>
-                            {s.progress && (
-                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${PROGRESS_CLASS[s.progress] ?? "badge-blue"}`}>
-                                    {s.progress}
-                                </span>
-                            )}
+                            {s.progress && <Badge variant={PROGRESS_VARIANT[s.progress] ?? "blue"}>{s.progress}</Badge>}
                             <button className="text-xs font-bold text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
                                 Start
                             </button>

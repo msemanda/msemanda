@@ -8,6 +8,9 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toDate } from "@/lib/ts";
 import { HomeCareVisit } from "@/types";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { SkeletonStatCard, SkeletonRow } from "@/components/ui/Skeleton";
 
 type VisitRow = HomeCareVisit & { address?: string; distance?: string; scheduledTime?: string };
 
@@ -54,10 +57,10 @@ export default function HomeCareDashboard() {
     ).size;
 
     const stats = [
-        { label: "Active Home Patients", value: loading ? "…" : String(activePatients), icon: Users,        color: "text-blue-600",  bg: "bg-blue-50"  },
-        { label: "Visits Today",         value: loading ? "…" : String(todayVisits.length), icon: CalendarDays, color: "text-green-600", bg: "bg-green-50" },
-        { label: "Completed",            value: loading ? "…" : String(completedToday),    icon: CheckCircle2, color: "text-teal-600",  bg: "bg-teal-50"  },
-        { label: "Upcoming",             value: loading ? "…" : String(upcomingToday),     icon: Clock,        color: "text-amber-600", bg: "bg-amber-50" },
+        { label: "Active Home Patients", value: String(activePatients),      icon: Users,        color: "text-blue-600",  bg: "bg-blue-50"  },
+        { label: "Visits Today",         value: String(todayVisits.length),  icon: CalendarDays, color: "text-green-600", bg: "bg-green-50" },
+        { label: "Completed",            value: String(completedToday),      icon: CheckCircle2, color: "text-teal-600",  bg: "bg-teal-50"  },
+        { label: "Upcoming",             value: String(upcomingToday),       icon: Clock,        color: "text-amber-600", bg: "bg-amber-50" },
     ];
 
     const sortedVisits = [...todayVisits].sort((a, b) =>
@@ -87,24 +90,27 @@ export default function HomeCareDashboard() {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((s, i) => {
-                    const Icon = s.icon;
-                    return (
-                        <motion.div
-                            key={s.label}
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.07 }}
-                            className="stat-card"
-                        >
-                            <div className={`inline-flex p-2.5 rounded-xl ${s.bg} mb-3`}>
-                                <Icon className={`h-5 w-5 ${s.color}`} />
-                            </div>
-                            <p className="text-2xl font-black text-gray-900">{s.value}</p>
-                            <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
-                        </motion.div>
-                    );
-                })}
+                {loading
+                    ? Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)
+                    : stats.map((s, i) => {
+                        const Icon = s.icon;
+                        return (
+                            <Card
+                                key={s.label}
+                                variant="interactive"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.07 }}
+                                className="p-6"
+                            >
+                                <div className={`inline-flex p-2.5 rounded-xl ${s.bg} mb-3`}>
+                                    <Icon className={`h-5 w-5 ${s.color}`} />
+                                </div>
+                                <p className="text-2xl font-black text-gray-900">{s.value}</p>
+                                <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
+                            </Card>
+                        );
+                    })}
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -113,9 +119,7 @@ export default function HomeCareDashboard() {
                     <span className="text-xs text-gray-400 font-semibold">{todayVisits.length} scheduled</span>
                 </div>
                 {loading ? (
-                    <div className="flex items-center justify-center py-16">
-                        <div className="animate-spin h-6 w-6 border-[3px] border-blue-100 border-t-blue-500 rounded-full" />
-                    </div>
+                    <div className="divide-y divide-gray-50">{Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}</div>
                 ) : sortedVisits.length === 0 ? (
                     <p className="text-center text-gray-400 py-16 text-xs font-bold uppercase tracking-widest">No visits scheduled today</p>
                 ) : (
@@ -135,9 +139,7 @@ export default function HomeCareDashboard() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between mb-1">
                                             <p className="text-sm font-bold text-gray-900">{v.patientName ?? "—"}</p>
-                                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${v.status === "COMPLETED" ? "badge-green" : "badge-blue"}`}>
-                                                {v.status}
-                                            </span>
+                                            <Badge variant={v.status === "COMPLETED" ? "green" : "blue"}>{v.status}</Badge>
                                         </div>
                                         {v.address && (
                                             <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1.5">

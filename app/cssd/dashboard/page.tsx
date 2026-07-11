@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { collection, query, getDocs, where } from "firebase/firestore";
 import { tsMs } from "@/lib/ts";
 import { db } from "@/lib/firebase";
-import { motion } from "framer-motion";
 import { RefreshCw, PackageCheck, Clock, CheckCircle2, XCircle, ClipboardList } from "lucide-react";
 import Link from "next/link";
+import { Card } from "@/components/ui/Card";
+import { Badge, type BadgeVariant } from "@/components/ui/Badge";
+import { SkeletonStatCard, SkeletonRow } from "@/components/ui/Skeleton";
 
 export default function CssdDashboard() {
     const [stats, setStats] = useState({ pending: 0, inCycle: 0, completed: 0, failed: 0 });
@@ -38,12 +40,12 @@ export default function CssdDashboard() {
         { label: "Failed / Rejected", value: stats.failed, icon: XCircle, color: "bg-red-50 text-red-500", border: "border-red-100" },
     ];
 
-    const STATUS_BADGE: Record<string,string> = {
-        PENDING: "bg-amber-50 text-amber-700 border-amber-100",
-        IN_CYCLE: "bg-blue-50 text-blue-700 border-blue-100",
-        COMPLETED: "bg-green-50 text-green-700 border-green-100",
-        FAILED: "bg-red-50 text-red-500 border-red-100",
-        DISPATCHED: "bg-purple-50 text-purple-700 border-purple-100",
+    const STATUS_BADGE: Record<string, BadgeVariant> = {
+        PENDING: "yellow",
+        IN_CYCLE: "blue",
+        COMPLETED: "green",
+        FAILED: "red",
+        DISPATCHED: "purple",
     };
 
     return (
@@ -59,19 +61,20 @@ export default function CssdDashboard() {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {cards.map((c, i) => {
-                    const Icon = c.icon;
-                    return (
-                        <motion.div key={c.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-                            className={`bg-white rounded-2xl border ${c.border} shadow-sm p-5`}>
-                            <div className={`h-10 w-10 rounded-xl ${c.color} flex items-center justify-center mb-3`}>
-                                <Icon className="h-5 w-5" />
-                            </div>
-                            <p className="text-2xl font-black text-gray-900">{loading ? "â€”" : c.value}</p>
-                            <p className="text-xs text-gray-500 mt-0.5 font-medium">{c.label}</p>
-                        </motion.div>
-                    );
-                })}
+                {loading
+                    ? Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)
+                    : cards.map((c, i) => {
+                        const Icon = c.icon;
+                        return (
+                            <Card key={c.label} variant="interactive" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="p-5">
+                                <div className={`h-10 w-10 rounded-xl ${c.color} flex items-center justify-center mb-3`}>
+                                    <Icon className="h-5 w-5" />
+                                </div>
+                                <p className="text-2xl font-black text-gray-900">{c.value}</p>
+                                <p className="text-xs text-gray-500 mt-0.5 font-medium">{c.label}</p>
+                            </Card>
+                        );
+                    })}
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -80,7 +83,7 @@ export default function CssdDashboard() {
                     <Link href="/cssd/items" className="text-xs font-bold text-blue-600 hover:underline">View all</Link>
                 </div>
                 {loading ? (
-                    <div className="flex items-center justify-center py-14"><div className="animate-spin h-6 w-6 border-[3px] border-blue-100 border-t-blue-600 rounded-full"/></div>
+                    <div className="divide-y divide-gray-50">{Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}</div>
                 ) : recent.length === 0 ? (
                     <div className="py-14 text-center">
                         <PackageCheck className="h-10 w-10 text-gray-200 mx-auto mb-3"/>
@@ -103,9 +106,9 @@ export default function CssdDashboard() {
                                     <td className="px-4 py-3 text-xs text-gray-500">{item.ward || "â€”"}</td>
                                     <td className="px-4 py-3 text-xs text-gray-500">{item.submittedBy || "â€”"}</td>
                                     <td className="px-4 py-3">
-                                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${STATUS_BADGE[item.status] || "bg-gray-50 text-gray-600 border-gray-100"}`}>
-                                            {item.status?.replace(/_/g," ") || "â€”"}
-                                        </span>
+                                        <Badge variant={STATUS_BADGE[item.status] ?? "neutral"}>
+                                            {item.status?.replace(/_/g, " ") || "â€”"}
+                                        </Badge>
                                     </td>
                                 </tr>
                             ))}

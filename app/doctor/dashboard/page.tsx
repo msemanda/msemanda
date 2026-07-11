@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { Badge, type BadgeVariant } from "@/components/ui/Badge";
+import { SkeletonRow } from "@/components/ui/Skeleton";
 
 interface QueueEntry {
     id: string;
@@ -22,11 +24,11 @@ interface QueueEntry {
     status: string;
 }
 
-const STATUS_STYLE: Record<string, string> = {
-    SCHEDULED: "bg-gray-50 text-gray-500",
-    CALLED:    "bg-amber-50 text-amber-700",
-    COMPLETED: "bg-green-50 text-green-700",
-    CANCELLED: "bg-red-50 text-red-500",
+const STATUS_VARIANT: Record<string, BadgeVariant> = {
+    SCHEDULED: "neutral",
+    CALLED:    "yellow",
+    COMPLETED: "green",
+    CANCELLED: "red",
 };
 
 export default function DoctorDashboard() {
@@ -123,9 +125,7 @@ export default function DoctorDashboard() {
                         </div>
 
                         {loading ? (
-                            <div className="py-16 flex items-center justify-center gap-2 text-gray-400 text-sm">
-                                <Loader2 className="h-5 w-5 animate-spin" /> Loading your queue…
-                            </div>
+                            <div className="divide-y divide-gray-50">{Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}</div>
                         ) : queue.length === 0 ? (
                             <div className="py-16 text-center">
                                 <div className="h-14 w-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -156,9 +156,7 @@ export default function DoctorDashboard() {
                                                     {entry.notes && (
                                                         <span className="text-xs text-gray-400 truncate max-w-[180px]">{entry.notes}</span>
                                                     )}
-                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_STYLE[entry.status]}`}>
-                                                        {entry.status}
-                                                    </span>
+                                                    <Badge variant={STATUS_VARIANT[entry.status] ?? "neutral"} size="sm">{entry.status}</Badge>
                                                 </div>
                                             </div>
                                         </div>

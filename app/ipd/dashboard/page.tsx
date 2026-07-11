@@ -7,6 +7,9 @@ import { db } from "@/lib/firebase";
 import { motion } from "framer-motion";
 import { BedDouble, UserPlus, LogOut, ArrowRightLeft, Activity } from "lucide-react";
 import Link from "next/link";
+import { Card } from "@/components/ui/Card";
+import { Badge, type BadgeVariant } from "@/components/ui/Badge";
+import { SkeletonStatCard, SkeletonRow } from "@/components/ui/Skeleton";
 
 export default function IpdDashboard() {
     const [stats, setStats] = useState({ admitted: 0, available: 0, discharged: 0, transferred: 0, totalBeds: 60 });
@@ -38,12 +41,12 @@ export default function IpdDashboard() {
         { label: "Transferred", value: stats.transferred, icon: ArrowRightLeft, color: "bg-purple-50 text-purple-600", border: "border-purple-100", href: "/ipd/transfer" },
     ];
 
-    const WARD_BADGE: Record<string,string> = {
-        General: "bg-blue-50 text-blue-700 border-blue-100",
-        ICU: "bg-red-50 text-red-700 border-red-100",
-        Pediatrics: "bg-green-50 text-green-700 border-green-100",
-        Maternity: "bg-pink-50 text-pink-700 border-pink-100",
-        Surgery: "bg-purple-50 text-purple-700 border-purple-100",
+    const WARD_VARIANT: Record<string, BadgeVariant> = {
+        General: "blue",
+        ICU: "red",
+        Pediatrics: "green",
+        Maternity: "purple",
+        Surgery: "purple",
     };
 
     return (
@@ -59,19 +62,20 @@ export default function IpdDashboard() {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {cards.map((c, i) => {
-                    const Icon = c.icon;
-                    return (
-                        <motion.div key={c.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-                            className={`bg-white rounded-2xl border ${c.border} shadow-sm p-5`}>
-                            <div className={`h-10 w-10 rounded-xl ${c.color} flex items-center justify-center mb-3`}>
-                                <Icon className="h-5 w-5" />
-                            </div>
-                            <p className="text-2xl font-black text-gray-900">{loading ? "-" : c.value}</p>
-                            <p className="text-xs text-gray-500 mt-0.5 font-medium">{c.label}</p>
-                        </motion.div>
-                    );
-                })}
+                {loading
+                    ? Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)
+                    : cards.map((c, i) => {
+                        const Icon = c.icon;
+                        return (
+                            <Card key={c.label} variant="interactive" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="p-5">
+                                <div className={`h-10 w-10 rounded-xl ${c.color} flex items-center justify-center mb-3`}>
+                                    <Icon className="h-5 w-5" />
+                                </div>
+                                <p className="text-2xl font-black text-gray-900">{c.value}</p>
+                                <p className="text-xs text-gray-500 mt-0.5 font-medium">{c.label}</p>
+                            </Card>
+                        );
+                    })}
             </div>
 
             {/* Occupancy bar */}
@@ -94,7 +98,7 @@ export default function IpdDashboard() {
                     <Link href="/ipd/admissions" className="text-xs font-bold text-blue-600 hover:underline">Manage all</Link>
                 </div>
                 {loading ? (
-                    <div className="flex items-center justify-center py-14"><div className="animate-spin h-6 w-6 border-[3px] border-blue-100 border-t-blue-600 rounded-full"/></div>
+                    <div className="divide-y divide-gray-50">{Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}</div>
                 ) : recent.length === 0 ? (
                     <div className="py-14 text-center">
                         <BedDouble className="h-10 w-10 text-gray-200 mx-auto mb-3"/>
@@ -119,7 +123,7 @@ export default function IpdDashboard() {
                                             <p className="text-xs text-gray-400">{p.patientEmail}</p>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${WARD_BADGE[p.ward] || "bg-gray-50 text-gray-600 border-gray-100"}`}>{p.ward || "-"}</span>
+                                            <Badge variant={WARD_VARIANT[p.ward] ?? "neutral"} size="sm">{p.ward || "-"}</Badge>
                                         </td>
                                         <td className="px-4 py-3 text-sm font-bold text-gray-700">{p.bedNumber || "-"}</td>
                                         <td className="px-4 py-3 text-xs text-gray-500">{p.doctorName || "-"}</td>

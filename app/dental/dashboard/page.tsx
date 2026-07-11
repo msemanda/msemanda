@@ -4,8 +4,16 @@ import { useState, useEffect } from "react";
 import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
-import { motion } from "framer-motion";
 import { CalendarDays, Users, CheckCircle2, Clock } from "lucide-react";
+import { Card } from "@/components/ui/Card";
+import { Badge, type BadgeVariant } from "@/components/ui/Badge";
+import { SkeletonStatCard, SkeletonRow } from "@/components/ui/Skeleton";
+
+const APPT_STATUS_VARIANT: Record<string, BadgeVariant> = {
+    IN_CHAIR: "blue",
+    WAITING: "yellow",
+    COMPLETED: "green",
+};
 
 interface DentalAppointment {
     id: string;
@@ -66,16 +74,18 @@ export default function DentalDashboard() {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((s, i) => {
-                    const Icon = s.icon;
-                    return (
-                        <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="stat-card">
-                            <div className={`inline-flex p-2.5 rounded-xl ${s.bg} mb-3`}><Icon className={`h-5 w-5 ${s.color}`} /></div>
-                            <p className="text-2xl font-black text-gray-900">{loading ? "—" : s.value}</p>
-                            <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
-                        </motion.div>
-                    );
-                })}
+                {loading
+                    ? Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)
+                    : stats.map((s, i) => {
+                        const Icon = s.icon;
+                        return (
+                            <Card key={s.label} variant="interactive" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="p-6">
+                                <div className={`inline-flex p-2.5 rounded-xl ${s.bg} mb-3`}><Icon className={`h-5 w-5 ${s.color}`} /></div>
+                                <p className="text-2xl font-black text-gray-900">{s.value}</p>
+                                <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
+                            </Card>
+                        );
+                    })}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -85,7 +95,7 @@ export default function DentalDashboard() {
                         <h2 className="font-bold text-gray-900">Today&apos;s Appointments</h2>
                     </div>
                     <div className="divide-y divide-gray-50">
-                        {loading && <div className="px-5 py-8 text-center text-sm text-gray-400">Loading appointments…</div>}
+                        {loading && Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}
                         {!loading && todayAppts.length === 0 && (
                             <div className="px-5 py-8 text-center text-sm text-gray-400">No dental appointments today</div>
                         )}
@@ -101,14 +111,7 @@ export default function DentalDashboard() {
                                     <p className="text-sm font-bold text-gray-900 truncate">{a.patientName}</p>
                                     <p className="text-xs text-gray-400">{a.notes || a.consultationType}</p>
                                 </div>
-                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
-                                    a.status === "IN_CHAIR"   ? "badge-blue"   :
-                                    a.status === "WAITING"    ? "badge-yellow" :
-                                    a.status === "COMPLETED"  ? "badge-green"  :
-                                    "bg-gray-50 text-gray-600 border border-gray-100"
-                                }`}>
-                                    {a.status?.replace("_", " ")}
-                                </span>
+                                <Badge variant={APPT_STATUS_VARIANT[a.status] ?? "neutral"}>{a.status?.replace("_", " ")}</Badge>
                             </div>
                         ))}
                     </div>

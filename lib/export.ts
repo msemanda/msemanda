@@ -1,14 +1,37 @@
+import { COMPANY_NAME, LOGO_PATH, PRINT_STYLES, formatGeneratedAt, slugify, triggerDownload } from "@/lib/reportBranding";
+
 export interface ReportColumn {
     key: string;
     label: string;
 }
 
-export interface ReportData {
+export interface ReportMetaItem {
+    label: string;
+    value: string;
+}
+
+export interface ReportKeyValueField {
+    label: string;
+    value: string;
+}
+
+export type ReportSection =
+    | { kind: "table"; heading?: string; columns: ReportColumn[]; rows: Record<string, string | number>[] }
+    | { kind: "keyvalue"; heading?: string; fields: ReportKeyValueField[] }
+    | { kind: "text"; heading?: string; text: string };
+
+/** A report is either simple tabular data (columns/rows) or a richer multi-section document (e.g. a single lab/radiology record). */
+export interface ReportDocument {
     title: string;
     subtitle?: string;
-    columns: ReportColumn[];
-    rows: Record<string, string | number>[];
+    meta?: ReportMetaItem[];
+    columns?: ReportColumn[];
+    rows?: Record<string, string | number>[];
+    sections?: ReportSection[];
 }
+
+/** Alias kept for backward compatibility — existing call sites pass {title, subtitle, columns, rows}, which is a valid ReportDocument. */
+export type ReportData = ReportDocument;
 
 function cell(v: string | number | undefined): string {
     if (v === undefined || v === null) return "";
@@ -20,61 +43,104 @@ function csvEscape(v: string): string {
     return v;
 }
 
-export function downloadCSV({ title, columns, rows }: ReportData): void {
-    const header = columns.map(c => csvEscape(c.label)).join(",");
-    const lines = rows.map(r => columns.map(c => csvEscape(cell(r[c.key]))).join(","));
-    const csv = [header, ...lines].join("\r\n");
-    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${slugify(title)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+function csvRow(values: string[]): string {
+    return values.map(csvEscape).join(",");
 }
 
-export function printReport({ title, subtitle, columns, rows }: ReportData): void {
-    const win = window.open("", "_blank", "width=900,height=1000");
-    if (!win) return;
+function tableToCsvLines(columns: ReportColumn[], rows: Record<string, string | number>[]): string[] {
+    return [csvRow(columns.map(c => c.label)), ...rows.map(r => csvRow(columns.map(c => cell(r[c.key]))))];
+}
 
-    const generatedAt = new Date().toLocaleString();
-    const escapeHtml = (v: string) =>
-        v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+function sectionsToCsvLines(sections: ReportSection[]): string[] {
+    const lines: string[] = [];
+    for (const section of sections) {
+        if (section.heading) lines.push(csvRow([section.heading]));
+        if (section.kind === "table") {
+            lines.push(...tableToCsvLines(section.columns, section.rows));
+        } else if (section.kind === "keyvalue") {
+            for (const f of section.fields) lines.push(csvRow([f.label, f.value]));
+        } else {
+            lines.push(csvRow([section.text]));
+        }
+        lines.push("");
+    }
+    return lines;
+}
 
+export function downloadCSV(doc: ReportDocument): void {
+    const lines: string[] = [];
+    if (doc.columns && doc.rows) {
+        lines.push(...tableToCsvLines(doc.columns, doc.rows));
+    } else if (doc.sections) {
+        lines.push(...sectionsToCsvLines(doc.sections));
+    }
+    const csv = [csvRow([doc.title]), "", ...lines].join("\r\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    triggerDownload(blob, `${slugify(doc.title)}.csv`);
+}
+
+function escapeHtml(v: string): string {
+    return v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function tableToHtml(columns: ReportColumn[], rows: Record<string, string | number>[]): string {
     const theadCells = columns.map(c => `<th>${escapeHtml(c.label)}</th>`).join("");
     const bodyRows = rows
         .map(r => `<tr>${columns.map(c => `<td>${escapeHtml(cell(r[c.key]))}</td>`).join("")}</tr>`)
         .join("");
+    return `<table><thead><tr>${theadCells}</tr></thead><tbody>${bodyRows || `<tr><td colspan="${columns.length}" style="text-align:center;color:#9ca3af;padding:20px;">No data</td></tr>`}</tbody></table>`;
+}
+
+function sectionsToHtml(sections: ReportSection[]): string {
+    return sections
+        .map(section => {
+            const heading = section.heading ? `<p class="section-heading">${escapeHtml(section.heading)}</p>` : "";
+            if (section.kind === "table") return heading + tableToHtml(section.columns, section.rows);
+            if (section.kind === "keyvalue") {
+                const rows = section.fields
+                    .map(f => `<div class="kv-row"><span class="kv-label">${escapeHtml(f.label)}:</span><span class="kv-value">${escapeHtml(f.value)}</span></div>`)
+                    .join("");
+                return `${heading}<div class="kv-grid">${rows}</div>`;
+            }
+            return `${heading}<p class="section-text">${escapeHtml(section.text)}</p>`;
+        })
+        .join("");
+}
+
+/** Single shared print/PDF-via-browser template — replaces the previously divergent print implementations. */
+export function printReportDocument(doc: ReportDocument): void {
+    const win = window.open("", "_blank", "width=900,height=1000");
+    if (!win) return;
+
+    const generatedAt = formatGeneratedAt();
+    const metaLine = doc.meta?.length
+        ? doc.meta.map(m => `${m.label}: ${m.value}`).join(" · ") + " · "
+        : "";
+
+    const body = doc.columns && doc.rows
+        ? tableToHtml(doc.columns, doc.rows)
+        : doc.sections
+            ? sectionsToHtml(doc.sections)
+            : "";
 
     win.document.write(`
 <!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>${escapeHtml(title)}</title>
-<style>
-    * { box-sizing: border-box; }
-    body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; color: #111827; margin: 32px; }
-    h1 { font-size: 20px; font-weight: 800; margin: 0 0 2px; }
-    p.subtitle { font-size: 12px; color: #6b7280; margin: 0 0 4px; }
-    p.meta { font-size: 11px; color: #9ca3af; margin: 0 0 20px; }
-    table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    th { text-align: left; text-transform: uppercase; letter-spacing: 0.04em; font-size: 10px; color: #6b7280; border-bottom: 1px solid #e5e7eb; padding: 8px 10px; }
-    td { padding: 8px 10px; border-bottom: 1px solid #f3f4f6; }
-    tr:nth-child(even) td { background: #fafafa; }
-    @media print { body { margin: 12mm; } }
-</style>
+<title>${escapeHtml(doc.title)}</title>
+<style>${PRINT_STYLES}</style>
 </head>
 <body>
-    <h1>${escapeHtml(title)}</h1>
-    ${subtitle ? `<p class="subtitle">${escapeHtml(subtitle)}</p>` : ""}
-    <p class="meta">Generated ${escapeHtml(generatedAt)}</p>
-    <table>
-        <thead><tr>${theadCells}</tr></thead>
-        <tbody>${bodyRows || `<tr><td colspan="${columns.length}" style="text-align:center;color:#9ca3af;padding:20px;">No data</td></tr>`}</tbody>
-    </table>
+    <div class="report-header">
+        <img src="${LOGO_PATH}" alt="${escapeHtml(COMPANY_NAME)}" />
+        <span class="report-company">${escapeHtml(COMPANY_NAME)}</span>
+    </div>
+    <h1>${escapeHtml(doc.title)}</h1>
+    ${doc.subtitle ? `<p class="subtitle">${escapeHtml(doc.subtitle)}</p>` : ""}
+    <p class="meta">${escapeHtml(metaLine)}Generated ${escapeHtml(generatedAt)}</p>
+    ${body}
+    <p class="report-footer">${escapeHtml(COMPANY_NAME)} · Generated ${escapeHtml(generatedAt)}</p>
 </body>
 </html>
     `);
@@ -85,6 +151,5 @@ export function printReport({ title, subtitle, columns, rows }: ReportData): voi
     setTimeout(() => win.print(), 300);
 }
 
-function slugify(s: string): string {
-    return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "report";
-}
+/** @deprecated use printReportDocument — kept as a thin alias in case of untracked call sites. */
+export const printReport = printReportDocument;

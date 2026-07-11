@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { SkeletonStatCard, SkeletonRow } from "@/components/ui/Skeleton";
 
 interface StatCard {
     label: string;
@@ -98,24 +101,27 @@ export default function ReceptionistDashboard() {
 
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((stat, idx) => {
-                    const Icon = stat.icon;
-                    return (
-                        <motion.div
-                            key={stat.label}
-                            initial={{ opacity: 0, y: 16 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.08 }}
-                            className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
-                        >
-                            <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center mb-3", stat.bg)}>
-                                <Icon className={cn("h-5 w-5", stat.color)} />
-                            </div>
-                            <p className="text-2xl font-black text-gray-900">{stat.value}</p>
-                            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mt-1">{stat.label}</p>
-                        </motion.div>
-                    );
-                })}
+                {loading
+                    ? Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)
+                    : stats.map((stat, idx) => {
+                        const Icon = stat.icon;
+                        return (
+                            <Card
+                                key={stat.label}
+                                variant="interactive"
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.08 }}
+                                className="p-5"
+                            >
+                                <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center mb-3", stat.bg)}>
+                                    <Icon className={cn("h-5 w-5", stat.color)} />
+                                </div>
+                                <p className="text-2xl font-black text-gray-900">{stat.value}</p>
+                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mt-1">{stat.label}</p>
+                            </Card>
+                        );
+                    })}
             </div>
 
             {/* Quick actions */}
@@ -162,9 +168,7 @@ export default function ReceptionistDashboard() {
                 </div>
 
                 {loading ? (
-                    <div className="flex items-center justify-center py-16">
-                        <div className="animate-spin h-8 w-8 border-[3px] border-blue-100 border-t-blue-600 rounded-full" />
-                    </div>
+                    <div className="divide-y divide-gray-50">{Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}</div>
                 ) : recent.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 text-center">
                         <Users className="h-10 w-10 text-gray-200 mb-3" />
@@ -185,23 +189,12 @@ export default function ReceptionistDashboard() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0 ml-4">
-                                    {admission.inviteSent ? (
-                                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-100">
-                                            Invite Sent
-                                        </span>
-                                    ) : (
-                                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
-                                            No Invite
-                                        </span>
-                                    )}
-                                    <span className={cn(
-                                        "text-[10px] font-bold px-2.5 py-1 rounded-full border",
-                                        admission.status === "REGISTERED"
-                                            ? "bg-green-50 text-green-700 border-green-100"
-                                            : "bg-gray-50 text-gray-600 border-gray-100"
-                                    )}>
+                                    <Badge variant={admission.inviteSent ? "teal" : "yellow"}>
+                                        {admission.inviteSent ? "Invite Sent" : "No Invite"}
+                                    </Badge>
+                                    <Badge variant={admission.status === "REGISTERED" ? "green" : "neutral"}>
                                         {admission.status}
-                                    </span>
+                                    </Badge>
                                 </div>
                             </div>
                         ))}

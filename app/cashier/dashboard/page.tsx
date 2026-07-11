@@ -10,6 +10,8 @@ import {
     RefreshCw, ArrowUpRight, ArrowDownRight,
 } from "lucide-react";
 import Link from "next/link";
+import { Card } from "@/components/ui/Card";
+import { SkeletonStatCard, SkeletonRow } from "@/components/ui/Skeleton";
 
 function fmt(n: number) {
     return "UGX " + n.toLocaleString("en-UG");
@@ -82,23 +84,24 @@ export default function CashierDashboard() {
 
             {/* Stat cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                {stats.map((s, i) => {
-                    const Icon = s.icon;
-                    const card = (
-                        <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-                            className={`bg-white rounded-2xl border ${s.border} shadow-sm p-5 ${s.href ? "cursor-pointer hover:shadow-md transition-shadow" : ""}`}>
-                            <div className="flex items-start justify-between mb-3">
-                                <div className={`h-9 w-9 rounded-xl ${s.bg} flex items-center justify-center`}>
-                                    <Icon className={`h-4.5 w-4.5 ${s.color}`} />
+                {loading
+                    ? Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)
+                    : stats.map((s, i) => {
+                        const Icon = s.icon;
+                        const card = (
+                            <Card key={s.label} variant="interactive" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="p-5">
+                                <div className="flex items-start justify-between mb-3">
+                                    <div className={`h-9 w-9 rounded-xl ${s.bg} flex items-center justify-center`}>
+                                        <Icon className={`h-4.5 w-4.5 ${s.color}`} />
+                                    </div>
                                 </div>
-                            </div>
-                            <p className={`text-xl font-black ${s.color}`}>{loading ? "—" : s.value}</p>
-                            <p className="text-xs font-bold text-gray-500 mt-0.5">{s.label}</p>
-                            <p className="text-[11px] text-gray-400 mt-1">{s.sub}</p>
-                        </motion.div>
-                    );
-                    return s.href ? <Link key={s.label} href={s.href}>{card}</Link> : card;
-                })}
+                                <p className={`text-xl font-black ${s.color}`}>{s.value}</p>
+                                <p className="text-xs font-bold text-gray-500 mt-0.5">{s.label}</p>
+                                <p className="text-[11px] text-gray-400 mt-1">{s.sub}</p>
+                            </Card>
+                        );
+                        return s.href ? <Link key={s.label} href={s.href}>{card}</Link> : card;
+                    })}
             </div>
 
             {/* Quick actions */}
@@ -116,7 +119,7 @@ export default function CashierDashboard() {
                     <div className="bg-red-500 hover:bg-red-600 transition-colors rounded-2xl p-5 text-white cursor-pointer">
                         <div className="flex items-center gap-3 mb-2">
                             <TrendingDown className="h-5 w-5" />
-                            <span className="font-black text-sm">Record Expense</span>
+                            <span className="font-black text-sm">Record1 Expense</span>
                         </div>
                         <p className="text-xs text-red-100">Salaries, supplies, utilities, maintenance…</p>
                     </div>
@@ -130,9 +133,7 @@ export default function CashierDashboard() {
                     <Link href="/cashier/transactions" className="text-xs font-bold text-blue-600 hover:underline">View all</Link>
                 </div>
                 {loading ? (
-                    <div className="flex items-center justify-center py-12">
-                        <div className="animate-spin h-7 w-7 border-[3px] border-gray-100 border-t-green-600 rounded-full" />
-                    </div>
+                    <div className="divide-y divide-gray-50">{Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}</div>
                 ) : recent.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                         <ArrowLeftRight className="h-8 w-8 text-gray-200 mb-2" />
