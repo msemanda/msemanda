@@ -7,6 +7,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { notify } from "@/lib/notify";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     FileText, CalendarDays, CreditCard, Clock,
@@ -122,6 +123,22 @@ export default function PatientRecordsPage() {
                     ? { ...f, status: "PATIENT_PAID", paymentMethod: payMethod, paymentReference: payRef.trim() }
                     : f
             ));
+            await Promise.all([
+                notify({
+                    targetRole: "CASHIER",
+                    type:       "payment",
+                    title:      `Payment submitted: ${profile?.name || "Patient"}`,
+                    body:       `UGX ${payingFee.amount.toLocaleString()} for ${payingFee.consultationType} — awaiting approval.`,
+                    link:       "/cashier/fees",
+                }),
+                notify({
+                    targetRole: "RECEPTIONIST",
+                    type:       "payment",
+                    title:      `Payment submitted: ${profile?.name || "Patient"}`,
+                    body:       `UGX ${payingFee.amount.toLocaleString()} for ${payingFee.consultationType} — awaiting Finance approval.`,
+                    link:       "/receptionist/payments",
+                }),
+            ]);
             setPayingFee(null);
             setPayRef("");
             setPayMethod("MOBILE_MONEY");

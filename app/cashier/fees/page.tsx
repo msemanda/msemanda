@@ -21,6 +21,7 @@ interface FeeRecord {
     id: string;
     patientName: string;
     patientEmail: string;
+    patientId?: string;
     amount: number;
     consultationType: string;
     status: "PENDING" | "PATIENT_PAID" | "PAID";
@@ -136,7 +137,7 @@ export default function CashierFeesPage() {
             ));
             for (const apptDoc of apptSnap.docs) {
                 await updateDoc(doc(db, "appointments", apptDoc.id), { status: "CONFIRMED" });
-                const appt = apptDoc.data() as { doctorId?: string; patientName?: string; date?: string; time?: string };
+                const appt = apptDoc.data() as { doctorId?: string; patientName?: string; date?: string; time?: string; bookedBy?: string };
                 if (appt.doctorId) {
                     await notify({
                         targetUid: appt.doctorId,
@@ -146,6 +147,25 @@ export default function CashierFeesPage() {
                         link:      "/doctor/appointments",
                     });
                 }
+                if (appt.bookedBy) {
+                    await notify({
+                        targetUid: appt.bookedBy,
+                        type:      "appointment",
+                        title:     `Appointment confirmed: ${appt.patientName || fee.patientName}`,
+                        body:      `Payment received — ${appt.date} at ${appt.time} is now confirmed.`,
+                        link:      "/receptionist/queue",
+                    });
+                }
+            }
+
+            if (fee.patientId) {
+                await notify({
+                    targetUid: fee.patientId,
+                    type:      "payment",
+                    title:     "Payment confirmed",
+                    body:      `Your ${fee.consultationType} payment (UGX ${fee.amount.toLocaleString()}) is confirmed. Receipt: ${receiptNo}.`,
+                    link:      "/patient/records",
+                });
             }
 
             setFees(prev => prev.filter(f => f.id !== fee.id));
@@ -165,6 +185,15 @@ export default function CashierFeesPage() {
                 rejectedBy: profile?.name,
                 rejectedAt: serverTimestamp(),
             });
+            if (fee.patientId) {
+                await notify({
+                    targetUid: fee.patientId,
+                    type:      "payment",
+                    title:     "Payment not confirmed",
+                    body:      `Your ${fee.consultationType} payment submission could not be confirmed. Please check the details and resubmit.`,
+                    link:      "/patient/records",
+                });
+            }
             setFees(prev => prev.filter(f => f.id !== fee.id));
             setCounts(prev => ({ ...prev, submitted: prev.submitted - 1, pending: prev.pending + 1 }));
         } catch(e) { console.error(e); }

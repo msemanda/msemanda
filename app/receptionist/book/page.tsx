@@ -225,6 +225,14 @@ export default function BookAppointmentPage() {
                     body:      `${form.date} at ${form.time}`,
                     link:      "/doctor/appointments",
                 });
+            } else if (pickedPatient?.uid) {
+                await notify({
+                    targetUid: pickedPatient.uid,
+                    type:      "appointment",
+                    title:     "Appointment reserved — payment pending",
+                    body:      `With ${selectedDoctor.name} on ${form.date} at ${form.time}. Complete the consultation fee payment to confirm it.`,
+                    link:      "/patient/records",
+                });
             }
             setSuccess(true);
         } catch (err: any) {

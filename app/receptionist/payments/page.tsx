@@ -7,6 +7,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { notify } from "@/lib/notify";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     CreditCard, CheckCircle2, Clock, Search,
@@ -140,6 +141,7 @@ export default function ReceptionistPaymentsPage() {
             await setDoc(doc(db, "consultationFees", id), {
                 patientName: form.patientName.trim(),
                 patientEmail: form.patientEmail.toLowerCase().trim(),
+                patientId: pickedPatient?.uid || null,
                 consultationType: form.consultationType,
                 amount: parseFloat(form.amount),
                 status: "PENDING",
@@ -147,6 +149,15 @@ export default function ReceptionistPaymentsPage() {
                 createdBy: profile?.uid,
                 createdByName: profile?.name,
             });
+            if (pickedPatient?.uid) {
+                await notify({
+                    targetUid: pickedPatient.uid,
+                    type:      "payment",
+                    title:     "Consultation fee due",
+                    body:      `UGX ${parseFloat(form.amount).toLocaleString()} for ${form.consultationType}. Pay to confirm your appointment.`,
+                    link:      "/patient/records",
+                });
+            }
             setShowForm(false);
             setPickedPatient(null); setNameQuery("");
             setForm({ patientName: "", patientEmail: "", patientPhone: "", consultationType: CONSULTATION_TYPES[0].label, amount: CONSULTATION_TYPES[0].amount.toString() });
