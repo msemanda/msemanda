@@ -36,16 +36,15 @@ export default function PharmacyDashboard() {
     const fetchPrescriptions = async () => {
         setLoading(true);
         try {
-            // Show prescriptions specifically assigned to this pharmacist plus
-            // anything left unassigned (doctor picked "Any pharmacy") — a doctor
-            // is never required to name a specific pharmacy, so an unfiltered
-            // pharmacyId==uid query would leave every unassigned order invisible.
+            // Pharmacy is one shared queue — every pharmacist sees every
+            // outstanding prescription regardless of which one (if any) the
+            // doctor happened to assign it to, so nothing sits invisible to
+            // everyone waiting on a specific pharmacist to log in.
             const snap = await getDocs(collection(db, "diagnostics"));
-            const mine = snap.docs
+            const all = snap.docs
                 .map(doc => ({ ...doc.data(), id: doc.id }))
-                .filter((d: any) => d.medicines && (!d.pharmacyId || d.pharmacyId === profile?.uid)
-                    && d.status !== "DISPENSED");
-            setDiagnostics(mine);
+                .filter((d: any) => d.medicines && d.status !== "DISPENSED");
+            setDiagnostics(all);
         } catch (error) {
             console.error("Error fetching prescriptions:", error);
         } finally {
@@ -96,7 +95,7 @@ export default function PharmacyDashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-xl font-black text-gray-900">Pharmacy Dashboard</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">Prescriptions assigned to {profile?.name}</p>
+                    <p className="text-sm text-gray-500 mt-0.5">All outstanding prescriptions from doctors</p>
                 </div>
                 <div className="relative max-w-sm w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
