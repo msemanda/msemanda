@@ -12,11 +12,14 @@ import {
     ArrowUpRight, Search,
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
+import { ExportMenu } from "@/components/ui/ExportMenu";
+import { buildReceiptDocument } from "@/lib/receipt";
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
     { value: "CASH", label: "Cash" },
     { value: "MOBILE_MONEY", label: "Mobile Money" },
     { value: "BANK_TRANSFER", label: "Bank Transfer" },
+    { value: "VISA", label: "Visa Card" },
     { value: "INSURANCE", label: "Insurance" },
 ];
 
@@ -246,9 +249,27 @@ export default function IncomePage() {
                                         </p>
                                     </div>
                                 </div>
-                                <div className="text-right shrink-0 ml-3">
-                                    <p className="text-sm font-black text-green-600">+{fmt(t.amount)}</p>
-                                    {t.reference && <p className="text-[10px] text-gray-400">{t.reference}</p>}
+                                <div className="flex items-center gap-2 shrink-0 ml-3">
+                                    <div className="text-right">
+                                        <p className="text-sm font-black text-green-600">+{fmt(t.amount)}</p>
+                                        {t.reference && <p className="text-[10px] text-gray-400">{t.reference}</p>}
+                                    </div>
+                                    <ExportMenu
+                                        variant="icon"
+                                        label="Receipt"
+                                        data={buildReceiptDocument({
+                                            title: "Income Receipt",
+                                            receiptNo: t.reference,
+                                            patientName: t.patientName,
+                                            description: t.description,
+                                            category: t.category,
+                                            amount: t.amount,
+                                            paymentMethod: t.paymentMethod,
+                                            recordedBy: t.recordedBy,
+                                            date: t.date,
+                                            notes: t.notes,
+                                        })}
+                                    />
                                 </div>
                             </motion.div>
                         ))}

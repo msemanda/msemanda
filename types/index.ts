@@ -350,7 +350,7 @@ export interface BloodBankRecord {
 }
 
 export type TransactionType = "INCOME" | "EXPENSE";
-export type PaymentMethod = "CASH" | "MOBILE_MONEY" | "BANK_TRANSFER" | "INSURANCE";
+export type PaymentMethod = "CASH" | "MOBILE_MONEY" | "BANK_TRANSFER" | "VISA" | "INSURANCE";
 
 export const INCOME_CATEGORIES = [
     "Consultation Fee",

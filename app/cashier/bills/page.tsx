@@ -9,6 +9,8 @@ import {
     CreditCard, CheckCircle2, Clock, Search, RefreshCw,
     AlertCircle, XCircle, FlaskConical, Scan, Pill, UtensilsCrossed, Activity, ClipboardList
 } from "lucide-react";
+import { ExportMenu } from "@/components/ui/ExportMenu";
+import { buildReceiptDocument } from "@/lib/receipt";
 
 interface PatientBill {
     id: string;
@@ -236,9 +238,25 @@ export default function CashierBillsPage() {
                                         <div className="flex flex-col items-end gap-2 shrink-0">
                                             <p className="text-lg font-black text-gray-900">UGX {bill.amount.toLocaleString()}</p>
                                             {tab === "paid" && (
-                                                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-100 flex items-center gap-1">
-                                                    <CheckCircle2 className="h-3 w-3" /> Paid · {bill.receiptNo}
-                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-100 flex items-center gap-1">
+                                                        <CheckCircle2 className="h-3 w-3" /> Paid · {bill.receiptNo}
+                                                    </span>
+                                                    <ExportMenu
+                                                        variant="icon"
+                                                        label="Receipt"
+                                                        data={buildReceiptDocument({
+                                                            title: "Service Bill Receipt",
+                                                            receiptNo: bill.receiptNo,
+                                                            patientName: bill.patientName,
+                                                            description: bill.description,
+                                                            category: bill.billType,
+                                                            amount: bill.amount,
+                                                            recordedBy: bill.collectedBy,
+                                                            date: bill.paidAt,
+                                                        })}
+                                                    />
+                                                </div>
                                             )}
                                             {tab === "cancelled" && (
                                                 <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-gray-50 text-gray-500 border border-gray-100 flex items-center gap-1">

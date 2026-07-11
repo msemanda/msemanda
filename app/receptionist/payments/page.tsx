@@ -14,6 +14,8 @@ import {
     AlertCircle, X, UserCheck,
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
+import { ExportMenu } from "@/components/ui/ExportMenu";
+import { buildReceiptDocument } from "@/lib/receipt";
 
 interface KnownPatient { uid: string; name: string; email: string; }
 
@@ -42,7 +44,7 @@ const CONSULTATION_TYPES = [
 
 const METHOD_LABEL: Record<string, string> = {
     MOBILE_MONEY: "Mobile Money", CASH: "Cash",
-    BANK_TRANSFER: "Bank Transfer", INSURANCE: "Insurance",
+    BANK_TRANSFER: "Bank Transfer", VISA: "Visa Card", INSURANCE: "Insurance",
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
@@ -364,6 +366,21 @@ export default function ReceptionistPaymentsPage() {
                                         <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border flex items-center gap-1 whitespace-nowrap ${s.color}`}>
                                             <StatusIcon className="h-3 w-3 shrink-0" /> {s.label}
                                         </span>
+                                        {fee.status === "PAID" && (
+                                            <ExportMenu
+                                                variant="icon"
+                                                label="Receipt"
+                                                data={buildReceiptDocument({
+                                                    title: "Consultation Fee Receipt",
+                                                    receiptNo: fee.receiptNo,
+                                                    patientName: fee.patientName,
+                                                    description: fee.consultationType,
+                                                    amount: fee.amount,
+                                                    paymentMethod: fee.paymentMethod,
+                                                    date: fee.paidAt,
+                                                })}
+                                            />
+                                        )}
                                     </div>
                                 </div>
                             );

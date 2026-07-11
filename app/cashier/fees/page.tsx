@@ -13,6 +13,8 @@ import {
     RefreshCw, AlertCircle, XCircle, Smartphone,
     Banknote, Building2, Shield
 } from "lucide-react";
+import { ExportMenu } from "@/components/ui/ExportMenu";
+import { buildReceiptDocument } from "@/lib/receipt";
 
 interface FeeRecord {
     id: string;
@@ -34,12 +36,14 @@ const METHOD_ICON: Record<string, any> = {
     MOBILE_MONEY: Smartphone,
     CASH: Banknote,
     BANK_TRANSFER: Building2,
+    VISA: CreditCard,
     INSURANCE: Shield,
 };
 const METHOD_LABEL: Record<string, string> = {
     MOBILE_MONEY: "Mobile Money",
     CASH: "Cash",
     BANK_TRANSFER: "Bank Transfer",
+    VISA: "Visa Card",
     INSURANCE: "Insurance",
 };
 
@@ -241,9 +245,25 @@ export default function CashierFeesPage() {
                                         <div className="flex flex-col items-end gap-2 shrink-0">
                                             <p className="text-lg font-black text-gray-900">UGX {fee.amount.toLocaleString()}</p>
                                             {fee.status === "PAID" && (
-                                                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-100 flex items-center gap-1">
-                                                    <CheckCircle2 className="h-3 w-3" /> Confirmed · {fee.receiptNo}
-                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-100 flex items-center gap-1">
+                                                        <CheckCircle2 className="h-3 w-3" /> Confirmed · {fee.receiptNo}
+                                                    </span>
+                                                    <ExportMenu
+                                                        variant="icon"
+                                                        label="Receipt"
+                                                        data={buildReceiptDocument({
+                                                            title: "Consultation Fee Receipt",
+                                                            receiptNo: fee.receiptNo,
+                                                            patientName: fee.patientName,
+                                                            description: fee.consultationType,
+                                                            amount: fee.amount,
+                                                            paymentMethod: fee.paymentMethod,
+                                                            recordedBy: fee.collectedBy,
+                                                            date: fee.paidAt,
+                                                        })}
+                                                    />
+                                                </div>
                                             )}
                                             {fee.status === "PENDING" && (
                                                 <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-gray-50 text-gray-500 border border-gray-100 flex items-center gap-1">
