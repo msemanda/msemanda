@@ -41,8 +41,6 @@ export interface DoctorProfile extends UserProfile {
 }
 
 export interface PatientProfile extends UserProfile {
-    visitDate?: string;
-    assignedDoctorId?: string;
     problem?: string;
     status?: string;
     fatherName?: string;

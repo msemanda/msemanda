@@ -52,7 +52,7 @@ const menuGroups = [
         items: [
             { name: "User Registry", href: "/admin/users", icon: Users },
             { name: "Invite Staff", href: "/admin/invite-doctors", icon: UserCheck },
-            { name: "Patient Flow", href: "/admin/schedule-patients", icon: Calendar },
+            { name: "Schedule Appointment", href: "/admin/schedule-patients", icon: Calendar },
             { name: "Patient Validation", href: "/admin/validate-patient", icon: FileText },
         ],
     },
