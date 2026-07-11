@@ -39,7 +39,7 @@ export default function DoctorDiagnosticsPage() {
         try {
             const q = query(
                 collection(db, "diagnostics"),
-                where("doctorId", "==", profile?.uid)
+                where("orderedByUid", "==", profile?.uid)
             );
             const querySnapshot = await getDocs(q);
             setReports(querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
