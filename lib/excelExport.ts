@@ -78,22 +78,31 @@ export async function generateExcel(doc: ReportDocument): Promise<Blob> {
         return startRow + 1 + rows.length;
     };
 
+    const thinBorder = { style: "thin" as const, color: { argb: "FFE5E7EB" } };
+
     if (doc.columns && doc.rows) {
         writeTable(doc.columns, doc.rows, currentRow);
     } else if (doc.sections) {
         for (const section of doc.sections) {
             if (section.heading) {
-                sheet.getCell(currentRow, 1).value = section.heading;
-                sheet.getCell(currentRow, 1).font = { bold: true, size: 12 };
+                const headingCell = sheet.getCell(currentRow, 1);
+                headingCell.value = section.heading.toUpperCase();
+                headingCell.font = { bold: true, size: 9, color: { argb: GRAY_ARGB } };
+                headingCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF3F4F6" } };
                 currentRow += 1;
             }
             if (section.kind === "table") {
                 currentRow = writeTable(section.columns, section.rows, currentRow) + 1;
             } else if (section.kind === "keyvalue") {
                 for (const f of section.fields) {
-                    sheet.getCell(currentRow, 1).value = f.label;
-                    sheet.getCell(currentRow, 1).font = { bold: true, color: { argb: GRAY_ARGB } };
-                    sheet.getCell(currentRow, 2).value = f.value;
+                    const labelCell = sheet.getCell(currentRow, 1);
+                    const valueCell = sheet.getCell(currentRow, 2);
+                    labelCell.value = f.label;
+                    labelCell.font = { bold: true, color: { argb: GRAY_ARGB } };
+                    valueCell.value = f.value;
+                    valueCell.font = { bold: true };
+                    labelCell.border = { bottom: thinBorder };
+                    valueCell.border = { bottom: thinBorder };
                     currentRow += 1;
                 }
                 currentRow += 1;
@@ -103,6 +112,8 @@ export async function generateExcel(doc: ReportDocument): Promise<Blob> {
                 currentRow += 2;
             }
         }
+        sheet.getCell(currentRow, 1).value = "This is a system-generated document from RHD Medical Services' e-Health platform.";
+        sheet.getCell(currentRow, 1).font = { italic: true, size: 8, color: { argb: MUTED_ARGB } };
     }
 
     const buffer = await workbook.xlsx.writeBuffer();

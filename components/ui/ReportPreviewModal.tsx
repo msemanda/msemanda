@@ -16,6 +16,16 @@ interface ReportPreviewModalProps {
 
 type ExportFormat = "csv" | "excel" | "pdf" | "print";
 
+/** Wraps a section's content in the same bordered "card" the PDF/print output uses, so a document reads as distinct zones (billed-to, line items, payment, notes...) rather than one long list. */
+function SectionBox({ heading, children }: { heading?: string; children: React.ReactNode }) {
+    return (
+        <div className="rounded-xl border border-gray-100 bg-gray-50/60 p-4">
+            {heading && <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5">{heading}</p>}
+            {children}
+        </div>
+    );
+}
+
 export function ReportPreviewModal({ open, onClose, data }: ReportPreviewModalProps) {
     const [busy, setBusy] = useState<ExportFormat | null>(null);
 
@@ -66,69 +76,80 @@ export function ReportPreviewModal({ open, onClose, data }: ReportPreviewModalPr
             }
         >
             <div className="rounded-2xl border border-gray-100 p-6 bg-white">
-                <div className="flex items-center gap-2.5 mb-4">
+                <div className="flex items-center gap-2.5 pb-4 mb-4 border-b-2 border-blue-600">
                     <Logo size={32} />
-                    <span className="text-[11px] font-black text-blue-700 uppercase tracking-wider">RHD Medical Services</span>
+                    <div>
+                        <p className="text-[11px] font-black text-blue-700 uppercase tracking-wider leading-none">RHD Medical Services</p>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-1">Official Document</p>
+                    </div>
                 </div>
                 <h3 className="text-base font-black text-gray-900">{data.title}</h3>
                 {data.subtitle && <p className="text-xs text-gray-500 mt-0.5">{data.subtitle}</p>}
                 <p className="text-[11px] text-gray-400 mt-1 mb-4">{metaLine}</p>
 
-                {data.columns && data.rows && (
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                {data.columns.map(c => <TableHeaderCell key={c.key}>{c.label}</TableHeaderCell>)}
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {data.rows.length === 0
-                                ? <TableEmptyState colSpan={data.columns.length} />
-                                : data.rows.map((r, i) => (
-                                    <TableRow key={i}>
-                                        {data.columns!.map(c => <TableCell key={c.key}>{String(r[c.key] ?? "")}</TableCell>)}
-                                    </TableRow>
-                                ))}
-                        </TableBody>
-                    </Table>
-                )}
-
-                {data.sections?.map((section, si) => (
-                    <div key={si} className="mb-5 last:mb-0">
-                        {section.heading && <p className="text-xs font-black text-gray-900 mb-2">{section.heading}</p>}
-                        {section.kind === "table" && (
+                <div className="space-y-3">
+                    {data.columns && data.rows && (
+                        <SectionBox>
                             <Table>
                                 <TableHead>
                                     <TableRow>
-                                        {section.columns.map(c => <TableHeaderCell key={c.key}>{c.label}</TableHeaderCell>)}
+                                        {data.columns.map(c => <TableHeaderCell key={c.key}>{c.label}</TableHeaderCell>)}
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {section.rows.length === 0
-                                        ? <TableEmptyState colSpan={section.columns.length} />
-                                        : section.rows.map((r, ri) => (
-                                            <TableRow key={ri}>
-                                                {section.columns.map(c => <TableCell key={c.key}>{String(r[c.key] ?? "")}</TableCell>)}
+                                    {data.rows.length === 0
+                                        ? <TableEmptyState colSpan={data.columns.length} />
+                                        : data.rows.map((r, i) => (
+                                            <TableRow key={i}>
+                                                {data.columns!.map(c => <TableCell key={c.key}>{String(r[c.key] ?? "")}</TableCell>)}
                                             </TableRow>
                                         ))}
                                 </TableBody>
                             </Table>
-                        )}
-                        {section.kind === "keyvalue" && (
-                            <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
-                                {section.fields.map((f, fi) => (
-                                    <div key={fi} className="flex gap-1.5 text-xs">
-                                        <span className="font-bold text-gray-500 shrink-0">{f.label}:</span>
-                                        <span className="text-gray-900">{f.value}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                        {section.kind === "text" && (
-                            <p className="text-xs text-gray-700 whitespace-pre-wrap leading-relaxed">{section.text}</p>
-                        )}
-                    </div>
-                ))}
+                        </SectionBox>
+                    )}
+
+                    {data.sections?.map((section, si) => (
+                        <SectionBox key={si} heading={section.heading}>
+                            {section.kind === "table" && (
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            {section.columns.map(c => <TableHeaderCell key={c.key}>{c.label}</TableHeaderCell>)}
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {section.rows.length === 0
+                                            ? <TableEmptyState colSpan={section.columns.length} />
+                                            : section.rows.map((r, ri) => (
+                                                <TableRow key={ri}>
+                                                    {section.columns.map(c => <TableCell key={c.key}>{String(r[c.key] ?? "")}</TableCell>)}
+                                                </TableRow>
+                                            ))}
+                                    </TableBody>
+                                </Table>
+                            )}
+                            {section.kind === "keyvalue" && (
+                                <div className="divide-y divide-dashed divide-gray-200">
+                                    {section.fields.map((f, fi) => (
+                                        <div key={fi} className="flex items-center justify-between gap-3 py-1.5 text-xs">
+                                            <span className="font-semibold text-gray-500 shrink-0">{f.label}</span>
+                                            <span className="font-bold text-gray-900 text-right">{f.value}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {section.kind === "text" && (
+                                <p className="text-xs text-gray-700 whitespace-pre-wrap leading-relaxed">{section.text}</p>
+                            )}
+                        </SectionBox>
+                    ))}
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-gray-100 text-center">
+                    <p className="text-[10px] text-gray-400">RHD Medical Services</p>
+                    <p className="text-[9px] text-gray-300 italic mt-0.5">This is a system-generated document from RHD Medical Services&apos; e-Health platform.</p>
+                </div>
             </div>
         </Modal>
     );

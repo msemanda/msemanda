@@ -95,14 +95,18 @@ function sectionsToHtml(sections: ReportSection[]): string {
     return sections
         .map(section => {
             const heading = section.heading ? `<p class="section-heading">${escapeHtml(section.heading)}</p>` : "";
-            if (section.kind === "table") return heading + tableToHtml(section.columns, section.rows);
-            if (section.kind === "keyvalue") {
+            let body: string;
+            if (section.kind === "table") {
+                body = tableToHtml(section.columns, section.rows);
+            } else if (section.kind === "keyvalue") {
                 const rows = section.fields
-                    .map(f => `<div class="kv-row"><span class="kv-label">${escapeHtml(f.label)}:</span><span class="kv-value">${escapeHtml(f.value)}</span></div>`)
+                    .map(f => `<div class="kv-row"><span class="kv-label">${escapeHtml(f.label)}</span><span class="kv-value">${escapeHtml(f.value)}</span></div>`)
                     .join("");
-                return `${heading}<div class="kv-grid">${rows}</div>`;
+                body = `<div class="kv-grid">${rows}</div>`;
+            } else {
+                body = `<p class="section-text">${escapeHtml(section.text)}</p>`;
             }
-            return `${heading}<p class="section-text">${escapeHtml(section.text)}</p>`;
+            return `<div class="section-box">${heading}${body}</div>`;
         })
         .join("");
 }
@@ -118,7 +122,7 @@ export function printReportDocument(doc: ReportDocument): void {
         : "";
 
     const body = doc.columns && doc.rows
-        ? tableToHtml(doc.columns, doc.rows)
+        ? `<div class="section-box">${tableToHtml(doc.columns, doc.rows)}</div>`
         : doc.sections
             ? sectionsToHtml(doc.sections)
             : "";
@@ -134,13 +138,19 @@ export function printReportDocument(doc: ReportDocument): void {
 <body>
     <div class="report-header">
         <img src="${LOGO_PATH}" alt="${escapeHtml(COMPANY_NAME)}" />
-        <span class="report-company">${escapeHtml(COMPANY_NAME)}</span>
+        <div>
+            <div class="report-company">${escapeHtml(COMPANY_NAME)}</div>
+            <div class="report-company-sub">Official Document</div>
+        </div>
     </div>
     <h1>${escapeHtml(doc.title)}</h1>
     ${doc.subtitle ? `<p class="subtitle">${escapeHtml(doc.subtitle)}</p>` : ""}
     <p class="meta">${escapeHtml(metaLine)}Generated ${escapeHtml(generatedAt)}</p>
     ${body}
-    <p class="report-footer">${escapeHtml(COMPANY_NAME)} · Generated ${escapeHtml(generatedAt)}</p>
+    <div class="report-footer">
+        <div>${escapeHtml(COMPANY_NAME)} · Generated ${escapeHtml(generatedAt)}</div>
+        <div class="report-footer-disclaimer">This is a system-generated document from RHD Medical Services' e-Health platform.</div>
+    </div>
 </body>
 </html>
     `);

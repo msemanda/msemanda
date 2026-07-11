@@ -1,4 +1,4 @@
-import type { ReportDocument, ReportKeyValueField, ReportSection } from "@/lib/export";
+import type { ReportDocument, ReportSection } from "@/lib/export";
 import { fmtDateTime } from "@/lib/ts";
 import { CURRENCY, generateReceiptNo } from "@/helpers/constants";
 
@@ -15,21 +15,64 @@ export interface ReceiptInput {
     notes?: string;
 }
 
-/** Shared receipt shape for cashier/reception/fee modules — renders via the same ReportPreviewModal (logo, PDF/Excel/CSV/Print) as everything else exported in the app. */
+/**
+ * Shared receipt shape for cashier/reception/fee modules — segmented into the
+ * same zones a real receipt has (receipt info, billed-to, itemized line,
+ * payment, notes) rather than one flat list, and rendered through the same
+ * ReportPreviewModal (logo, segmented section cards, PDF/Excel/CSV/Print) as
+ * every other report in the app.
+ */
 export function buildReceiptDocument(input: ReceiptInput): ReportDocument {
-    const fields: ReportKeyValueField[] = [
-        { label: "Receipt No.", value: input.receiptNo || generateReceiptNo() },
-        { label: "Date", value: fmtDateTime(input.date ?? new Date()) },
+    const receiptNo = input.receiptNo || generateReceiptNo();
+    const sections: ReportSection[] = [
+        {
+            kind: "keyvalue",
+            heading: "Receipt Details",
+            fields: [
+                { label: "Receipt No.", value: receiptNo },
+                { label: "Date", value: fmtDateTime(input.date ?? new Date()) },
+            ],
+        },
     ];
-    if (input.patientName) fields.push({ label: "Patient", value: input.patientName });
-    fields.push({ label: "Description", value: input.description });
-    if (input.category) fields.push({ label: "Category", value: input.category });
-    fields.push({ label: "Amount", value: `${CURRENCY} ${input.amount.toLocaleString()}` });
-    if (input.paymentMethod) fields.push({ label: "Payment Method", value: input.paymentMethod.replace(/_/g, " ") });
-    if (input.recordedBy) fields.push({ label: "Issued By", value: input.recordedBy });
 
-    const sections: ReportSection[] = [{ kind: "keyvalue", fields }];
+    if (input.patientName) {
+        sections.push({
+            kind: "keyvalue",
+            heading: "Billed To",
+            fields: [{ label: "Patient", value: input.patientName }],
+        });
+    }
+
+    sections.push({
+        kind: "table",
+        heading: "Item",
+        columns: [
+            { key: "description", label: "Description" },
+            { key: "category", label: "Category" },
+            { key: "amount", label: "Amount" },
+        ],
+        rows: [{
+            description: input.description,
+            category: input.category || "—",
+            amount: `${CURRENCY} ${input.amount.toLocaleString()}`,
+        }],
+    });
+
+    const paymentFields = [{ label: "Total Paid", value: `${CURRENCY} ${input.amount.toLocaleString()}` }];
+    if (input.paymentMethod) paymentFields.push({ label: "Payment Method", value: input.paymentMethod.replace(/_/g, " ") });
+    if (input.recordedBy) paymentFields.push({ label: "Issued By", value: input.recordedBy });
+    sections.push({ kind: "keyvalue", heading: "Payment", fields: paymentFields });
+
     if (input.notes) sections.push({ kind: "text", heading: "Notes", text: input.notes });
 
-    return { title: input.title, sections };
+    sections.push({
+        kind: "text",
+        text: "Thank you for choosing RHD Medical Services. This is a system-generated receipt and does not require a signature or stamp to be valid.",
+    });
+
+    return {
+        title: input.title,
+        meta: [{ label: "Receipt No.", value: receiptNo }],
+        sections,
+    };
 }
