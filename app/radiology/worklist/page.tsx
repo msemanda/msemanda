@@ -1,59 +1,69 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import { Scan, Clock, RefreshCw } from "lucide-react";
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+import { motion, AnimatePresence } from "framer-motion";
+import { Scan, RefreshCw, User } from "lucide-react";
+import { collection, getDocs, doc, updateDoc, query, where, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
+import { notify, resolvePatientUid } from "@/lib/notify";
+import { toDate } from "@/lib/ts";
 
 interface WorklistItem {
     id: string;
-    patient: string;
-    modality: string;
-    bodyPart: string;
-    room: string;
-    tech: string;
-    startedAt: string | null;
-    eta: string;
+    patientName: string;
+    patientEmail?: string;
+    patientId?: string | null;
+    detail: string;
+    priority: string;
+    orderedBy?: string;
+    orderedByUid?: string;
+    createdAt?: any;
     status: string;
 }
 
-// Matches the status vocabulary radiologyOrders is actually written with
-// (see app/radiology/dashboard/page.tsx's handleStart) — PENDING -> IN_PROGRESS -> COMPLETED.
 const STATUS_STYLE: Record<string, string> = {
     IN_PROGRESS: "bg-blue-50 text-blue-700 border-blue-100",
     PENDING:     "bg-amber-50 text-amber-700 border-amber-100",
     COMPLETED:   "bg-green-50 text-green-700 border-green-100",
 };
-const MODALITY_COLOR: Record<string, string> = {
-    "X-RAY":     "bg-blue-100 text-blue-700",
-    CT:          "bg-purple-100 text-purple-700",
-    MRI:         "bg-indigo-100 text-indigo-700",
-    ULTRASOUND:  "bg-teal-100 text-teal-700",
+const PRIORITY_BADGE: Record<string, string> = {
+    STAT:    "bg-red-50 text-red-600",
+    URGENT:  "bg-amber-50 text-amber-700",
+    ROUTINE: "bg-blue-50 text-blue-700",
 };
 
 export default function WorklistPage() {
+    const { profile } = useAuth();
     const [worklist, setWorklist] = useState<WorklistItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [reporting, setReporting] = useState<string | null>(null);
+    const [findings, setFindings] = useState("");
+    const [impression, setImpression] = useState("");
+    const [submitting, setSubmitting] = useState(false);
 
     const load = useCallback(async () => {
         setLoading(true);
         try {
-            const snap = await getDocs(collection(db, "radiologyOrders"));
-            setWorklist(snap.docs.map(d => {
-                const r = d.data();
-                return {
-                    id: d.id,
-                    patient: ((r.patientName ?? r.patient) as string) ?? "—",
-                    modality: (r.modality as string) ?? "X-RAY",
-                    bodyPart: ((r.bodyPart ?? r.region) as string) ?? "—",
-                    room: (r.room as string) ?? "—",
-                    tech: ((r.tech ?? r.technician) as string) ?? "—",
-                    startedAt: (r.startedAt as string | null) ?? null,
-                    eta: (r.eta as string) ?? "—",
-                    status: (r.status as string) ?? "PENDING",
-                };
-            }));
+            const snap = await getDocs(query(collection(db, "cpoeOrders"), where("orderType", "==", "RADIOLOGY")));
+            const rows = snap.docs
+                .map(d => {
+                    const r = d.data();
+                    return {
+                        id: d.id,
+                        patientName: (r.patientName as string) ?? "—",
+                        patientEmail: r.patientEmail as string | undefined,
+                        patientId: r.patientId ?? null,
+                        detail: (r.detail as string) ?? "—",
+                        priority: (r.priority as string) ?? "ROUTINE",
+                        orderedBy: r.orderedBy as string | undefined,
+                        orderedByUid: r.orderedByUid as string | undefined,
+                        createdAt: r.createdAt,
+                        status: (r.status as string) ?? "PENDING",
+                    } as WorklistItem;
+                })
+                .filter(w => w.status !== "PENDING"); // not yet accepted in Imaging Orders
+            setWorklist(rows);
         } catch (e) {
             console.error(e);
         } finally {
@@ -63,16 +73,52 @@ export default function WorklistPage() {
 
     useEffect(() => { load(); }, [load]);
 
-    const handleAdvance = async (item: WorklistItem) => {
-        const next = item.status === "PENDING" ? "IN_PROGRESS" : "COMPLETED";
+    const openReport = (item: WorklistItem) => {
+        setReporting(item.id);
+        setFindings("");
+        setImpression("");
+    };
+
+    const submitReport = async (item: WorklistItem) => {
+        if (!findings.trim()) return;
+        setSubmitting(true);
         try {
-            await updateDoc(doc(db, "radiologyOrders", item.id), { status: next, updatedAt: new Date().toISOString() });
-            setWorklist(prev => prev.map(w => w.id === item.id ? { ...w, status: next } : w));
+            await updateDoc(doc(db, "cpoeOrders", item.id), {
+                findings: findings.trim(),
+                impression: impression.trim(),
+                status: "COMPLETED",
+                reportedBy: profile?.name,
+                reportedAt: serverTimestamp(),
+            });
+
+            if (item.orderedByUid) {
+                await notify({
+                    targetUid: item.orderedByUid,
+                    type: "radiology_result",
+                    title: `Radiology report ready — ${item.patientName}`,
+                    body: `${item.detail} completed`,
+                    link: "/doctor/emr",
+                });
+            }
+            const patientUid = await resolvePatientUid(item.patientId, item.patientEmail);
+            if (patientUid) {
+                await notify({
+                    targetUid: patientUid,
+                    type: "radiology_result",
+                    title: "Your radiology report is ready",
+                    body: `${item.detail} — view it in your records.`,
+                    link: "/patient/records",
+                });
+            }
+
+            setReporting(null);
+            await load();
         } catch (e) { console.error(e); }
+        finally { setSubmitting(false); }
     };
 
     const scanningCount = worklist.filter(w => w.status === "IN_PROGRESS").length;
-    const queuedCount = worklist.filter(w => w.status === "PENDING").length;
+    const completedCount = worklist.filter(w => w.status === "COMPLETED").length;
 
     return (
         <div className="max-w-5xl mx-auto space-y-5">
@@ -82,7 +128,7 @@ export default function WorklistPage() {
                         <Scan className="h-6 w-6 text-violet-600" /> Worklist
                     </h1>
                     <p className="text-sm text-gray-500 mt-0.5">
-                        {loading ? "Loading…" : `${scanningCount} scanning · ${queuedCount} queued`}
+                        {loading ? "Loading…" : `${scanningCount} awaiting report · ${completedCount} completed`}
                     </p>
                 </div>
                 <button onClick={load} className="text-gray-400 hover:text-violet-600 transition-colors">
@@ -95,36 +141,67 @@ export default function WorklistPage() {
                     <div className="animate-spin h-6 w-6 border-[3px] border-violet-100 border-t-violet-500 rounded-full" />
                 </div>
             ) : worklist.length === 0 ? (
-                <p className="text-center text-gray-400 py-16 text-xs font-bold uppercase tracking-widest">No radiology orders found</p>
+                <p className="text-center text-gray-400 py-16 text-xs font-bold uppercase tracking-widest">
+                    No orders yet. Accept an order in Imaging Orders first.
+                </p>
             ) : (
                 <div className="space-y-3">
                     {worklist.map((w, i) => (
                         <motion.div key={w.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                            className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <div className={`h-10 w-10 rounded-xl flex items-center justify-center text-[10px] font-black shrink-0 ${MODALITY_COLOR[w.modality] || "bg-gray-100 text-gray-600"}`}>
-                                    {w.modality}
+                            className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                            <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="h-10 w-10 rounded-xl bg-violet-50 flex items-center justify-center shrink-0">
+                                        <User className="h-4.5 w-4.5 text-violet-600" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-black text-gray-900 truncate">{w.patientName}</p>
+                                        <p className="text-xs text-violet-700 font-semibold truncate">{w.detail}</p>
+                                        <p className="text-[10px] text-gray-400 mt-0.5">
+                                            {w.orderedBy ? `Dr. ${w.orderedBy}` : "—"} · {toDate(w.createdAt)?.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) ?? "—"}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-black text-gray-900">{w.patient}</p>
-                                    <p className="text-xs text-gray-500">{w.bodyPart} · {w.room}</p>
-                                    <p className="text-[10px] text-gray-400 mt-0.5">Tech: {w.tech}</p>
+                                <div className="flex items-center gap-3 shrink-0">
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${PRIORITY_BADGE[w.priority] ?? PRIORITY_BADGE.ROUTINE}`}>{w.priority}</span>
+                                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${STATUS_STYLE[w.status] ?? "bg-gray-50 text-gray-600 border-gray-100"}`}>{w.status.replace("_", " ")}</span>
+                                    {w.status === "IN_PROGRESS" && (
+                                        <button onClick={() => openReport(w)} className="text-xs font-bold text-white bg-violet-600 hover:bg-violet-700 px-3 py-1.5 rounded-lg transition-colors">
+                                            Report
+                                        </button>
+                                    )}
                                 </div>
                             </div>
-                            <div className="flex items-center gap-4 shrink-0">
-                                <div className="text-right">
-                                    <p className="text-[10px] text-gray-400 uppercase tracking-wider">ETA</p>
-                                    <p className="text-sm font-bold text-gray-700 flex items-center gap-1">
-                                        <Clock className="h-3.5 w-3.5 text-gray-400" />{w.eta}
-                                    </p>
-                                </div>
-                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${STATUS_STYLE[w.status] ?? "bg-gray-50 text-gray-600 border-gray-100"}`}>{w.status.replace("_", " ")}</span>
-                                {w.status !== "COMPLETED" && (
-                                    <button onClick={() => handleAdvance(w)} className="text-xs font-bold text-violet-600 hover:bg-violet-50 px-3 py-1.5 rounded-lg transition-colors">
-                                        {w.status === "IN_PROGRESS" ? "Complete" : "Start"}
-                                    </button>
+
+                            <AnimatePresence>
+                                {reporting === w.id && (
+                                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                                        className="mt-4 pt-4 border-t border-gray-50 space-y-3 overflow-hidden">
+                                        <div>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1">Findings</label>
+                                            <textarea rows={3} value={findings} onChange={e => setFindings(e.target.value)}
+                                                placeholder="Describe what was observed on imaging..."
+                                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-violet-500/20 resize-none" />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1">Impression</label>
+                                            <textarea rows={2} value={impression} onChange={e => setImpression(e.target.value)}
+                                                placeholder="Summary conclusion..."
+                                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-violet-500/20 resize-none" />
+                                        </div>
+                                        <div className="flex justify-end gap-2">
+                                            <button onClick={() => setReporting(null)}
+                                                className="px-4 py-2 text-xs font-bold text-gray-500 hover:bg-gray-50 rounded-xl transition-colors">
+                                                Cancel
+                                            </button>
+                                            <button onClick={() => submitReport(w)} disabled={submitting || !findings.trim()}
+                                                className="px-4 py-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-colors">
+                                                {submitting ? "Saving…" : "Submit Report"}
+                                            </button>
+                                        </div>
+                                    </motion.div>
                                 )}
-                            </div>
+                            </AnimatePresence>
                         </motion.div>
                     ))}
                 </div>

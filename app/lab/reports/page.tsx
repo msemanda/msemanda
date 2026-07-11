@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { fmtDateTime, tsMs } from "@/lib/ts";
 import { db } from "@/lib/firebase";
-import { LabOrder } from "@/types";
+import { CPOEOrder } from "@/types";
 import { motion } from "framer-motion";
 import { BarChart3, Search, FileText, RefreshCw, FlaskConical, Activity } from "lucide-react";
 import { ExportMenu } from "@/components/ui/ExportMenu";
@@ -51,7 +51,7 @@ function periodStart(period: Period): number {
 }
 
 export default function LabReportsPage() {
-    const [orders, setOrders] = useState<LabOrder[]>([]);
+    const [orders, setOrders] = useState<CPOEOrder[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [period, setPeriod] = useState<Period>("week");
@@ -60,12 +60,14 @@ export default function LabReportsPage() {
         setLoading(true);
         try {
             const q = query(
-                collection(db, "labOrders"),
+                collection(db, "cpoeOrders"),
+                where("orderType", "==", "LAB"),
                 where("status", "==", "COMPLETED"),
-                orderBy("completedAt", "desc")
             );
             const snap = await getDocs(q);
-            setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() } as LabOrder)));
+            const rows = snap.docs.map(d => ({ id: d.id, ...d.data() } as CPOEOrder));
+            rows.sort((a, b) => tsMs(b.resultsEnteredAt) - tsMs(a.resultsEnteredAt));
+            setOrders(rows);
         } catch (err) {
             console.error(err);
         } finally {
@@ -77,7 +79,7 @@ export default function LabReportsPage() {
 
     const periodOrders = useMemo(() => {
         const cutoff = periodStart(period);
-        return orders.filter(o => tsMs(o.completedAt) >= cutoff);
+        return orders.filter(o => tsMs(o.resultsEnteredAt) >= cutoff);
     }, [orders, period]);
 
     const summary = useMemo(() => {
@@ -85,8 +87,8 @@ export default function LabReportsPage() {
         let totalTests = 0;
         const priorityCounts: Record<string, number> = { ROUTINE: 0, URGENT: 0, STAT: 0 };
         for (const o of periodOrders) {
-            totalTests += o.tests.length;
-            for (const t of o.tests) testCounts[t] = (testCounts[t] ?? 0) + 1;
+            totalTests += 1;
+            testCounts[o.detail] = (testCounts[o.detail] ?? 0) + 1;
             priorityCounts[o.priority] = (priorityCounts[o.priority] ?? 0) + 1;
         }
         const topTests = Object.entries(testCounts)
@@ -101,22 +103,21 @@ export default function LabReportsPage() {
         const q = search.toLowerCase();
         return !q ||
             (o.patientName || "").toLowerCase().includes(q) ||
-            o.tests.some(t => t.toLowerCase().includes(q)) ||
-            o.patientId.toLowerCase().includes(q);
+            o.detail.toLowerCase().includes(q);
     });
 
-    const buildLabRecordDocument = (order: LabOrder): ReportDocument => {
+    const buildLabRecordDocument = (order: CPOEOrder): ReportDocument => {
         const sections: ReportSection[] = [
             {
                 kind: "keyvalue",
                 fields: [
-                    { label: "Patient", value: order.patientName || order.patientId },
+                    { label: "Patient", value: order.patientName || order.patientEmail || "—" },
                     { label: "Priority", value: order.priority },
-                    { label: "Ordered", value: fmtDateTime(order.orderedAt) },
-                    { label: "Completed", value: fmtDateTime(order.completedAt) },
+                    { label: "Ordered", value: fmtDateTime(order.createdAt) },
+                    { label: "Completed", value: fmtDateTime(order.resultsEnteredAt) },
                 ],
             },
-            { kind: "text", heading: "Tests Ordered", text: order.tests.join(", ") },
+            { kind: "text", heading: "Test Ordered", text: order.detail },
         ];
         if (order.results?.length) {
             sections.push({
@@ -139,7 +140,7 @@ export default function LabReportsPage() {
             });
         }
         if (order.notes) sections.push({ kind: "text", heading: "Notes", text: order.notes });
-        return { title: `Lab Report — ${order.patientName || order.patientId}`, sections };
+        return { title: `Lab Report — ${order.patientName || order.patientEmail || "—"}`, sections };
     };
 
     return (
@@ -162,12 +163,12 @@ export default function LabReportsPage() {
                         title: "Lab Reports",
                         subtitle: `${PERIODS.find(p => p.value === period)?.label} · ${periodOrders.length} reports`,
                         columns: [
-                            { key: "patient", label: "Patient" }, { key: "tests", label: "Tests" },
+                            { key: "patient", label: "Patient" }, { key: "test", label: "Test" },
                             { key: "priority", label: "Priority" }, { key: "completedAt", label: "Completed" },
                         ],
                         rows: periodOrders.map(o => ({
-                            patient: o.patientName || o.patientId, tests: o.tests.join("; "),
-                            priority: o.priority, completedAt: fmtDateTime(o.completedAt),
+                            patient: o.patientName || o.patientEmail || "—", test: o.detail,
+                            priority: o.priority, completedAt: fmtDateTime(o.resultsEnteredAt),
                         })),
                     }} />
                 </div>
@@ -251,8 +252,8 @@ export default function LabReportsPage() {
                                         <FileText className="h-4 w-4 text-amber-600" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-black text-gray-900">{order.patientName || order.patientId}</p>
-                                        <p className="text-xs text-gray-400">{fmtDateTime(order.completedAt)}</p>
+                                        <p className="text-sm font-black text-gray-900">{order.patientName || order.patientEmail || "—"}</p>
+                                        <p className="text-xs text-gray-400">{fmtDateTime(order.resultsEnteredAt)}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -264,9 +265,7 @@ export default function LabReportsPage() {
                             </div>
 
                             <div className="flex flex-wrap gap-1.5 mb-3">
-                                {order.tests.map(t => (
-                                    <span key={t} className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-100">{t}</span>
-                                ))}
+                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-100">{order.detail}</span>
                             </div>
 
                             {order.results && order.results.length > 0 ? (

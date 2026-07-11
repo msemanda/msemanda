@@ -252,6 +252,40 @@ export default function EMRPage() {
                                                     </div>
                                                     <p className="text-xs font-bold text-gray-900 truncate">{o.detail}</p>
                                                     {o.notes && <p className="text-xs text-gray-400 mt-0.5">{o.notes}</p>}
+
+                                                    {o.status === "COMPLETED" && o.orderType === "LAB" && Array.isArray(o.results) && o.results.length > 0 && (
+                                                        <div className="mt-2 space-y-1">
+                                                            {o.results.map((r: any, ri: number) => (
+                                                                <div key={ri} className="flex items-center justify-between text-[11px] bg-white rounded-lg px-2 py-1 border border-gray-100">
+                                                                    <span className="text-gray-600 truncate">{r.testName}</span>
+                                                                    <span className={`font-bold shrink-0 ml-2 ${
+                                                                        r.flag === "CRITICAL" ? "text-red-600" :
+                                                                        r.flag === "HIGH" || r.flag === "LOW" ? "text-amber-600" : "text-gray-800"
+                                                                    }`}>
+                                                                        {r.value} {r.unit}
+                                                                        {r.flag && r.flag !== "NORMAL" && <span className="ml-1">({r.flag})</span>}
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+
+                                                    {o.status === "COMPLETED" && o.orderType === "RADIOLOGY" && (o.findings || o.impression) && (
+                                                        <div className="mt-2 space-y-1.5">
+                                                            {o.findings && (
+                                                                <div className="bg-white rounded-lg p-2 border border-gray-100">
+                                                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Findings</p>
+                                                                    <p className="text-[11px] text-gray-700">{o.findings}</p>
+                                                                </div>
+                                                            )}
+                                                            {o.impression && (
+                                                                <div className="bg-purple-50 rounded-lg p-2 border border-purple-100">
+                                                                    <p className="text-[9px] font-black text-purple-400 uppercase tracking-wider mb-0.5">Impression</p>
+                                                                    <p className="text-[11px] text-purple-900 font-semibold">{o.impression}</p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="text-right shrink-0 ml-3">
                                                     {o.amount > 0 && (

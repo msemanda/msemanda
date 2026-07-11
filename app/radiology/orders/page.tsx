@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, updateDoc, doc, query, where, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { motion } from "framer-motion";
-import { ClipboardList, Search, Clock, Loader2, RefreshCw, Scan } from "lucide-react";
+import Link from "next/link";
+import { ClipboardList, Search, Clock, Loader2, RefreshCw, Scan, ArrowRight, AlertCircle } from "lucide-react";
 
 interface ImagingOrder {
     id: string;
@@ -17,6 +18,7 @@ interface ImagingOrder {
     orderedBy?: string;
     status: string;
     amount?: number;
+    paymentStatus?: string;
     createdAt?: any;
 }
 
@@ -78,6 +80,11 @@ export default function RadiologyOrdersPage() {
         return acc;
     }, {});
 
+    // ROUTINE orders wait for Finance to confirm payment; STAT/URGENT proceed
+    // immediately for patient safety, billed/collected after the fact.
+    const isGated = (o: ImagingOrder) => o.paymentStatus === "UNPAID" && o.priority === "ROUTINE";
+    const gatedCount = orders.filter(o => o.status === "PENDING" && isGated(o)).length;
+
     const formatTime = (ts: any) => {
         if (!ts) return "—";
         try {
@@ -102,6 +109,15 @@ export default function RadiologyOrdersPage() {
                     <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                 </button>
             </div>
+
+            {gatedCount > 0 && (
+                <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                    <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
+                    <p className="text-sm font-semibold text-amber-700">
+                        {gatedCount} order{gatedCount !== 1 ? "s" : ""} awaiting payment confirmation before work can begin — STAT/URGENT orders are never held up.
+                    </p>
+                </div>
+            )}
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-5 py-3.5 border-b border-gray-50 flex items-center gap-3 flex-wrap">
@@ -169,17 +185,21 @@ export default function RadiologyOrdersPage() {
                                         <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap ${STATUS_BADGE[o.status] || STATUS_BADGE.PAID}`}>
                                             {o.status.replace(/_/g, " ")}
                                         </span>
-                                        {o.status === "PENDING" && (
+                                        {o.status === "PENDING" && isGated(o) ? (
+                                            <span className="text-xs text-amber-600 font-bold flex items-center gap-1 whitespace-nowrap">
+                                                <Clock className="h-3.5 w-3.5" /> Awaiting payment
+                                            </span>
+                                        ) : o.status === "PENDING" && (
                                             <button onClick={() => advance(o.id, "IN_PROGRESS")} disabled={updating === o.id}
                                                 className="text-xs font-bold px-3 py-1.5 rounded-lg bg-violet-600 text-white hover:bg-violet-700 transition-colors disabled:opacity-50">
                                                 {updating === o.id ? <Loader2 className="h-3 w-3 animate-spin inline" /> : "Accept"}
                                             </button>
                                         )}
                                         {o.status === "IN_PROGRESS" && (
-                                            <button onClick={() => advance(o.id, "COMPLETED")} disabled={updating === o.id}
-                                                className="text-xs font-bold px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50">
-                                                {updating === o.id ? <Loader2 className="h-3 w-3 animate-spin inline" /> : "Complete"}
-                                            </button>
+                                            <Link href="/radiology/worklist"
+                                                className="text-xs font-bold px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-1">
+                                                Report <ArrowRight className="h-3 w-3" />
+                                            </Link>
                                         )}
                                     </div>
                                 </div>

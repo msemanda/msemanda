@@ -5,11 +5,13 @@ import { collection, getDocs, addDoc, query, where, serverTimestamp } from "fire
 import { tsMs } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { notify, resolvePatientUid } from "@/lib/notify";
+import { generateReceiptNo } from "@/helpers/constants";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ClipboardList, Plus, FlaskConical, Scan, Pill, UtensilsCrossed,
     Activity, CheckCircle2, Clock, CreditCard, AlertCircle,
-    Search, X, User,
+    Search, X, User, ListPlus, Trash2,
 } from "lucide-react";
 
 type OrderType = "MEDICATION" | "LAB" | "RADIOLOGY" | "NURSING" | "DIET" | "PROCEDURE";
@@ -86,6 +88,15 @@ const STATUS_COLOR: Record<string, string> = {
     CANCELLED:   "bg-red-50 text-red-600 border-red-100",
 };
 
+interface CartItem {
+    key: string;
+    orderType: OrderType;
+    detail: string;
+    amount: number;
+    priority: "ROUTINE" | "URGENT" | "STAT";
+    notes: string;
+}
+
 export default function CPOEPage() {
     const { profile } = useAuth();
     const [activeType, setActiveType] = useState<OrderType>("MEDICATION");
@@ -102,6 +113,10 @@ export default function CPOEPage() {
     const [submitted, setSubmitted] = useState(false);
     const [orders, setOrders] = useState<any[]>([]);
     const [loadingOrders, setLoadingOrders] = useState(true);
+
+    // Orders staged for this visit — submitted together as one consolidated
+    // bill (shared visitRef) instead of one bill per order.
+    const [cart, setCart] = useState<CartItem[]>([]);
 
     useEffect(() => { fetchPatients(); fetchMyOrders(); }, [profile?.uid]);
 
@@ -159,45 +174,110 @@ export default function CPOEPage() {
         setAmount(s.amount.toString());
     };
 
+    const resetItemForm = () => {
+        setDetail("");
+        setAmount("0");
+        setNotes("");
+        setPriority("ROUTINE");
+    };
+
+    const addToCart = () => {
+        if (!detail.trim()) return;
+        setCart(prev => [...prev, {
+            key: `${Date.now()}-${prev.length}`,
+            orderType: activeType,
+            detail: detail.trim(),
+            amount: parseFloat(amount) || 0,
+            priority,
+            notes: notes.trim(),
+        }]);
+        resetItemForm();
+    };
+
+    const removeFromCart = (key: string) => setCart(prev => prev.filter(c => c.key !== key));
+
     const handleSubmit = async () => {
-        if (!detail.trim() || !selectedPatient) return;
+        // A doctor who fills the form but forgets to click "Add to Order" for a
+        // single-item visit shouldn't lose that item — fold it into the cart.
+        const items = detail.trim()
+            ? [...cart, { key: "pending", orderType: activeType, detail: detail.trim(), amount: parseFloat(amount) || 0, priority, notes: notes.trim() }]
+            : cart;
+        if (items.length === 0 || !selectedPatient) return;
         setSubmitting(true);
         try {
-            const orderRef = await addDoc(collection(db, "cpoeOrders"), {
-                patientName: selectedPatient.patientName,
-                patientEmail: selectedPatient.patientEmail,
-                ward: selectedPatient.ward,
-                orderType: activeType,
-                detail: detail.trim(),
-                amount: parseFloat(amount) || 0,
-                priority,
-                notes: notes.trim(),
-                orderedBy: profile?.name,
-                orderedByUid: profile?.uid,
-                status: "PENDING",
-                createdAt: serverTimestamp(),
-            });
+            // Multiple orders placed together share one bill reference, so
+            // Finance sees and approves them as a single consolidated bill
+            // instead of N disconnected ones.
+            const visitRef = items.length > 1 ? generateReceiptNo() : "";
+            const patientId = selectedPatient.patientId ?? selectedPatient.uid ?? null;
 
-            // Medication is billed at the pharmacy at dispense time, from real stock
-            // pricing — the amount here is only an indicative reference for the
-            // pharmacist, so no bill is pre-created for MEDICATION orders.
-            if (activeType !== "MEDICATION" && parseFloat(amount) > 0) {
-                await addDoc(collection(db, "patientBills"), {
+            for (const item of items) {
+                const orderRef = await addDoc(collection(db, "cpoeOrders"), {
                     patientName: selectedPatient.patientName,
                     patientEmail: selectedPatient.patientEmail,
-                    description: detail.trim(),
-                    billType: activeType,
-                    amount: parseFloat(amount),
-                    orderId: orderRef.id,
-                    orderedBy: profile?.name,
-                    status: "PENDING_PAYMENT",
+                    patientId,
                     ward: selectedPatient.ward,
+                    bedNumber: selectedPatient.bedNumber ?? null,
+                    orderType: item.orderType,
+                    detail: item.detail,
+                    amount: item.amount,
+                    // Medication is billed at the pharmacy at dispense time, from
+                    // real stock pricing; zero-amount orders have nothing to
+                    // collect. Everything else is unpaid until Finance confirms —
+                    // STAT/URGENT orders bypass this gate in the department queue.
+                    paymentStatus: (item.orderType === "MEDICATION" || item.amount <= 0) ? "PAID" : "UNPAID",
+                    visitRef,
+                    priority: item.priority,
+                    notes: item.notes,
+                    orderedBy: profile?.name,
+                    orderedByUid: profile?.uid,
+                    status: "PENDING",
                     createdAt: serverTimestamp(),
+                });
+
+                if (item.orderType !== "MEDICATION" && item.amount > 0) {
+                    await addDoc(collection(db, "patientBills"), {
+                        patientName: selectedPatient.patientName,
+                        patientEmail: selectedPatient.patientEmail,
+                        description: item.detail,
+                        billType: item.orderType,
+                        amount: item.amount,
+                        orderId: orderRef.id,
+                        visitRef,
+                        orderedBy: profile?.name,
+                        status: "PENDING_PAYMENT",
+                        ward: selectedPatient.ward,
+                        createdAt: serverTimestamp(),
+                    });
+                }
+            }
+
+            const billable = items.filter(i => i.orderType !== "MEDICATION" && i.amount > 0);
+            if (billable.length > 0) {
+                const total = billable.reduce((s, i) => s + i.amount, 0);
+                const summary = billable.map(i => i.detail).join(", ");
+                const patientUid = await resolvePatientUid(patientId, selectedPatient.patientEmail);
+                if (patientUid) {
+                    await notify({
+                        targetUid: patientUid,
+                        type: "billing",
+                        title: billable.length > 1 ? `New bill — ${billable.length} items` : "New bill",
+                        body: `${summary} — UGX ${total.toLocaleString()} awaiting payment confirmation.`,
+                        link: "/patient/records",
+                    });
+                }
+                await notify({
+                    targetRole: "CASHIER",
+                    type: "billing",
+                    title: `New bill — ${selectedPatient.patientName}`,
+                    body: `${summary} — UGX ${total.toLocaleString()}`,
+                    link: "/cashier/bills",
                 });
             }
 
             setSubmitted(true);
-            setDetail(""); setAmount("0"); setNotes("");
+            setCart([]);
+            resetItemForm();
             setTimeout(() => setSubmitted(false), 3000);
             fetchMyOrders();
         } catch(e) { console.error(e); }
@@ -205,6 +285,7 @@ export default function CPOEPage() {
     };
 
     const activeTypeCfg = ORDER_TYPES.find(t => t.type === activeType)!;
+    const cartTotal = cart.reduce((s, c) => s + c.amount, 0);
 
     return (
         <div className="max-w-7xl mx-auto space-y-5">
@@ -212,13 +293,13 @@ export default function CPOEPage() {
                 <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
                     <ClipboardList className="h-6 w-6 text-blue-600" /> CPOE — Physician Order Entry
                 </h1>
-                <p className="text-sm text-gray-500 mt-0.5">Orders go directly to the department — Finance tracks payment separately</p>
+                <p className="text-sm text-gray-500 mt-0.5">Add every order for this visit, then submit once as a single bill</p>
             </div>
 
             <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
                 <AlertCircle className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
                 <p className="text-sm font-semibold text-blue-700">
-                    Orders go directly to the relevant department. A bill is generated simultaneously for Finance to track and collect payment.
+                    Orders reach the relevant department once Finance confirms payment — STAT/URGENT orders proceed immediately regardless of payment status.
                 </p>
             </div>
 
@@ -237,7 +318,7 @@ export default function CPOEPage() {
                                             {selectedPatient._source === "IPD" ? `${selectedPatient.ward} Ward` : "OPD"}
                                         </span>
                                     </span>
-                                    <button onClick={() => { setSelectedPatient(null); setPatientSearch(""); }}
+                                    <button onClick={() => { setSelectedPatient(null); setPatientSearch(""); setCart([]); }}
                                         className="h-5 w-5 rounded-full bg-blue-200 hover:bg-blue-300 flex items-center justify-center text-blue-700 transition-colors shrink-0">
                                         <X className="h-3 w-3" />
                                     </button>
@@ -362,18 +443,55 @@ export default function CPOEPage() {
                                 className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm text-gray-900 focus:border-blue-500 outline-none bg-gray-50" />
                         </div>
 
+                        <button onClick={addToCart} disabled={!detail.trim()}
+                            className="w-full h-9 rounded-xl bg-white border border-blue-200 text-blue-700 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                            <ListPlus className="h-3.5 w-3.5" /> Add to Visit
+                        </button>
+
+                        {/* Staged orders for this visit */}
+                        {cart.length > 0 && (
+                            <div className="rounded-xl border border-gray-100 overflow-hidden">
+                                <div className="divide-y divide-gray-50">
+                                    {cart.map(item => {
+                                        const cfg = ORDER_TYPES.find(t => t.type === item.orderType)!;
+                                        return (
+                                            <div key={item.key} className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+                                                <div className="min-w-0 flex items-center gap-2">
+                                                    <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.color} shrink-0`}>{cfg.label}</span>
+                                                    <p className="text-xs font-bold text-gray-900 truncate">{item.detail}</p>
+                                                </div>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    {item.amount > 0 && <span className="text-xs font-black text-blue-600">UGX {item.amount.toLocaleString()}</span>}
+                                                    <button type="button" onClick={() => removeFromCart(item.key)}
+                                                        className="h-6 w-6 rounded-lg flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <div className="flex items-center justify-between px-3.5 py-2.5 bg-blue-50 border-t border-blue-100">
+                                    <span className="text-xs font-black text-blue-800">Visit Total ({cart.length} order{cart.length !== 1 ? "s" : ""})</span>
+                                    <span className="text-sm font-black text-blue-700">UGX {cartTotal.toLocaleString()}</span>
+                                </div>
+                            </div>
+                        )}
+
                         <AnimatePresence>
                             {submitted && (
                                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                                     className="flex items-center gap-2 p-3 rounded-xl bg-green-50 border border-green-100 text-green-700 text-sm font-semibold">
-                                    <CheckCircle2 className="h-4 w-4" /> Order sent to department — Finance notified to collect payment
+                                    <CheckCircle2 className="h-4 w-4" /> Orders submitted — one consolidated bill sent to Finance
                                 </motion.div>
                             )}
                         </AnimatePresence>
 
-                        <button onClick={handleSubmit} disabled={!detail.trim() || submitting || !selectedPatient}
+                        <button onClick={handleSubmit} disabled={(cart.length === 0 && !detail.trim()) || submitting || !selectedPatient}
                             className="w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors">
-                            {submitting ? <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full"/> : <><Plus className="h-4 w-4" /> Submit Order & Generate Bill</>}
+                            {submitting
+                                ? <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full"/>
+                                : <><Plus className="h-4 w-4" /> Submit Visit{cart.length > 0 ? ` (${cart.length + (detail.trim() ? 1 : 0)} orders)` : ""}</>}
                         </button>
                     </div>
                 </div>
@@ -414,7 +532,16 @@ export default function CPOEPage() {
                                             <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${STATUS_COLOR[o.status] || STATUS_COLOR["PENDING"]}`}>
                                                 {o.status.replace(/_/g, " ")}
                                             </span>
-                                            {o.amount > 0 && <span className="text-xs font-black text-gray-700">UGX {o.amount.toLocaleString()}</span>}
+                                            {o.amount > 0 && (
+                                                <span className="flex items-center gap-1.5">
+                                                    {o.paymentStatus === "UNPAID" && (
+                                                        <span className="text-[9px] font-black text-amber-600 flex items-center gap-0.5">
+                                                            <Clock className="h-2.5 w-2.5" /> Unpaid
+                                                        </span>
+                                                    )}
+                                                    <span className="text-xs font-black text-gray-700">UGX {o.amount.toLocaleString()}</span>
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 );

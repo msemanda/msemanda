@@ -1,23 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
-import { fmtDateTime } from "@/lib/ts";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { fmtDateTime, tsMs } from "@/lib/ts";
 import { db } from "@/lib/firebase";
-import { RadiologyOrder } from "@/types";
+import { CPOEOrder } from "@/types";
 import { motion } from "framer-motion";
 import { FileImage, Search, RefreshCw, Scan } from "lucide-react";
 import { ExportMenu } from "@/components/ui/ExportMenu";
 import type { ReportDocument, ReportSection } from "@/lib/export";
-
-const MODALITY_COLOR: Record<string, string> = {
-    "X-RAY": "bg-blue-50 text-blue-700",
-    CT: "bg-purple-50 text-purple-700",
-    MRI: "bg-indigo-50 text-indigo-700",
-    ULTRASOUND: "bg-teal-50 text-teal-700",
-    PET: "bg-pink-50 text-pink-700",
-    MAMMOGRAPHY: "bg-rose-50 text-rose-700",
-};
 
 const PRIORITY_COLOR: Record<string, string> = {
     ROUTINE: "bg-gray-50 text-gray-600",
@@ -26,7 +17,7 @@ const PRIORITY_COLOR: Record<string, string> = {
 };
 
 export default function RadiologyReportsPage() {
-    const [orders, setOrders] = useState<RadiologyOrder[]>([]);
+    const [orders, setOrders] = useState<CPOEOrder[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
 
@@ -34,12 +25,14 @@ export default function RadiologyReportsPage() {
         setLoading(true);
         try {
             const q = query(
-                collection(db, "radiologyOrders"),
+                collection(db, "cpoeOrders"),
+                where("orderType", "==", "RADIOLOGY"),
                 where("status", "==", "COMPLETED"),
-                orderBy("reportedAt", "desc")
             );
             const snap = await getDocs(q);
-            setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() } as RadiologyOrder)));
+            const rows = snap.docs.map(d => ({ id: d.id, ...d.data() } as CPOEOrder));
+            rows.sort((a, b) => tsMs(b.reportedAt) - tsMs(a.reportedAt));
+            setOrders(rows);
         } catch (err) {
             console.error(err);
         } finally {
@@ -53,19 +46,16 @@ export default function RadiologyReportsPage() {
         const q = search.toLowerCase();
         return !q ||
             (o.patientName || "").toLowerCase().includes(q) ||
-            o.bodyPart.toLowerCase().includes(q) ||
-            o.modality.toLowerCase().includes(q) ||
-            o.patientId.toLowerCase().includes(q);
+            o.detail.toLowerCase().includes(q);
     });
 
-    const buildRadiologyRecordDocument = (order: RadiologyOrder): ReportDocument => {
+    const buildRadiologyRecordDocument = (order: CPOEOrder): ReportDocument => {
         const sections: ReportSection[] = [
             {
                 kind: "keyvalue",
                 fields: [
-                    { label: "Patient", value: order.patientName || order.patientId },
-                    { label: "Modality", value: order.modality },
-                    { label: "Body Part", value: order.bodyPart },
+                    { label: "Patient", value: order.patientName || order.patientEmail || "—" },
+                    { label: "Study", value: order.detail },
                     { label: "Priority", value: order.priority },
                     { label: "Reported", value: fmtDateTime(order.reportedAt) },
                 ],
@@ -73,7 +63,7 @@ export default function RadiologyReportsPage() {
         ];
         if (order.findings) sections.push({ kind: "text", heading: "Findings", text: order.findings });
         if (order.impression) sections.push({ kind: "text", heading: "Impression", text: order.impression });
-        return { title: `Radiology Report — ${order.patientName || order.patientId}`, sections };
+        return { title: `Radiology Report — ${order.patientName || order.patientEmail || "—"}`, sections };
     };
 
     return (
@@ -96,11 +86,11 @@ export default function RadiologyReportsPage() {
                         title: "Radiology Reports",
                         subtitle: `${orders.length} completed reports`,
                         columns: [
-                            { key: "patient", label: "Patient" }, { key: "modality", label: "Modality" },
-                            { key: "bodyPart", label: "Body Part" }, { key: "priority", label: "Priority" }, { key: "reportedAt", label: "Reported" },
+                            { key: "patient", label: "Patient" }, { key: "study", label: "Study" },
+                            { key: "priority", label: "Priority" }, { key: "reportedAt", label: "Reported" },
                         ],
                         rows: orders.map(o => ({
-                            patient: o.patientName || o.patientId, modality: o.modality, bodyPart: o.bodyPart,
+                            patient: o.patientName || o.patientEmail || "—", study: o.detail,
                             priority: o.priority, reportedAt: fmtDateTime(o.reportedAt),
                         })),
                     }} />
@@ -111,7 +101,7 @@ export default function RadiologyReportsPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input value={search} onChange={e => setSearch(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-violet-500/20"
-                    placeholder="Search patient, modality or body part..." />
+                    placeholder="Search patient or study..." />
             </div>
 
             {loading ? (
@@ -122,7 +112,7 @@ export default function RadiologyReportsPage() {
                 <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-gray-200 text-center">
                     <Scan className="h-10 w-10 text-gray-200 mb-3" />
                     <p className="text-sm font-black text-gray-900">No completed reports</p>
-                    <p className="text-xs text-gray-400 mt-1">Reports appear here when imaging orders are marked Completed.</p>
+                    <p className="text-xs text-gray-400 mt-1">Reports appear here when imaging orders are reported in the Worklist.</p>
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -131,12 +121,12 @@ export default function RadiologyReportsPage() {
                             className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center gap-3">
-                                    <span className={`text-[10px] font-black px-2.5 py-1.5 rounded-xl shrink-0 ${MODALITY_COLOR[order.modality] || "bg-gray-50 text-gray-700"}`}>
-                                        {order.modality}
+                                    <span className="text-[10px] font-black px-2.5 py-1.5 rounded-xl shrink-0 bg-violet-50 text-violet-700">
+                                        <Scan className="h-3.5 w-3.5" />
                                     </span>
                                     <div>
                                         <p className="text-sm font-black text-gray-900">
-                                            {order.patientName || order.patientId} — {order.bodyPart}
+                                            {order.patientName || order.patientEmail || "—"} — {order.detail}
                                         </p>
                                         <p className="text-xs text-gray-400">{fmtDateTime(order.reportedAt)}</p>
                                     </div>

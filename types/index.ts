@@ -153,42 +153,12 @@ export interface Vitals {
     recordedBy?: string;
 }
 
-export interface LabOrder {
-    id: string;
-    patientId: string;
-    patientName?: string;
-    doctorId: string;
-    tests: string[];
-    priority: "ROUTINE" | "URGENT" | "STAT";
-    status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
-    orderedAt: any;
-    completedAt?: any;
-    results?: LabResult[];
-    notes?: string;
-}
-
 export interface LabResult {
     testName: string;
     value: string;
     unit: string;
     referenceRange: string;
-    flag?: "NORMAL" | "HIGH" | "LOW" | "CRITICAL";
-}
-
-export interface RadiologyOrder {
-    id: string;
-    patientId: string;
-    patientName?: string;
-    doctorId: string;
-    modality: "X-RAY" | "CT" | "MRI" | "ULTRASOUND" | "PET" | "MAMMOGRAPHY";
-    bodyPart: string;
-    priority: "ROUTINE" | "URGENT" | "STAT";
-    status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
-    orderedAt: any;
-    reportedAt?: any;
-    findings?: string;
-    impression?: string;
-    radiologistId?: string;
+    flag?: "NORMAL" | "HIGH" | "LOW" | "CRITICAL" | "";
 }
 
 export interface PhysiotherapySession {
@@ -327,14 +297,32 @@ export interface OTSchedule {
 
 export interface CPOEOrder {
     id: string;
-    patientId: string;
-    doctorId: string;
-    orderType: "MEDICATION" | "LAB" | "RADIOLOGY" | "NURSING" | "DIET" | "PHYSIOTHERAPY";
-    details: string;
+    patientId?: string | null;
+    patientName?: string;
+    patientEmail?: string;
+    ward?: string;
+    bedNumber?: string;
+    doctorId?: string;
+    orderedBy?: string;
+    orderedByUid?: string;
+    orderType: "MEDICATION" | "LAB" | "RADIOLOGY" | "NURSING" | "DIET" | "PROCEDURE";
+    detail: string;
+    amount?: number;
+    paymentStatus?: "UNPAID" | "PAID";
+    visitRef?: string;
     priority: "ROUTINE" | "URGENT" | "STAT";
-    status: "PENDING" | "ACKNOWLEDGED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
-    orderedAt: any;
+    status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "DISPENSED";
+    createdAt: any;
     notes?: string;
+    // LAB
+    results?: LabResult[];
+    resultsEnteredBy?: string;
+    resultsEnteredAt?: any;
+    // RADIOLOGY
+    findings?: string;
+    impression?: string;
+    reportedBy?: string;
+    reportedAt?: any;
 }
 
 export interface BloodBankRecord {

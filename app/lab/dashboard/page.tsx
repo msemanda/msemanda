@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { toDate, tsMs } from "@/lib/ts";
 import { FlaskConical, Clock, CheckCircle2, AlertCircle, Droplets, TrendingUp, Search } from "lucide-react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
@@ -15,10 +16,10 @@ import { SkeletonStatCard, SkeletonRow } from "@/components/ui/Skeleton";
 interface LabOrder {
     id: string;
     patientName: string;
-    tests: string;
+    detail: string;
     priority: string;
     status: string;
-    orderedAt: string;
+    createdAt: any;
     orderedBy: string;
 }
 
@@ -46,10 +47,12 @@ export default function LabDashboard() {
         async function load() {
             try {
                 const [orderSnap, bloodSnap] = await Promise.all([
-                    getDocs(query(collection(db, "labOrders"), orderBy("orderedAt", "desc"))),
+                    getDocs(query(collection(db, "cpoeOrders"), where("orderType", "==", "LAB"))),
                     getDocs(collection(db, "bloodBank")),
                 ]);
-                setOrders(orderSnap.docs.map(d => ({ id: d.id, ...d.data() } as LabOrder)));
+                const rows = orderSnap.docs.map(d => ({ id: d.id, ...d.data() } as LabOrder));
+                rows.sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+                setOrders(rows);
                 setBlood(bloodSnap.docs.map(d => ({ id: d.id, ...d.data() } as BloodUnit)));
             } catch (e) {
                 console.error(e);
@@ -60,13 +63,13 @@ export default function LabDashboard() {
         load();
     }, []);
 
-    const pending   = orders.filter(o => o.status === "PENDING");
+    const pending   = orders.filter(o => o.status === "PENDING" || o.status === "IN_PROGRESS");
     const completed = orders.filter(o => o.status === "COMPLETED");
-    const critical  = orders.filter(o => o.priority === "STAT");
+    const critical  = orders.filter(o => o.priority === "STAT" && o.status !== "COMPLETED");
     const totalBlood = blood.reduce((sum, b) => sum + (b.units ?? 0), 0);
 
     const filtered = pending.filter(o =>
-        !search || o.patientName?.toLowerCase().includes(search.toLowerCase()) || o.tests?.toLowerCase().includes(search.toLowerCase())
+        !search || o.patientName?.toLowerCase().includes(search.toLowerCase()) || o.detail?.toLowerCase().includes(search.toLowerCase())
     );
 
     const stats = [
@@ -149,11 +152,11 @@ export default function LabDashboard() {
                                     </div>
                                     <span className="text-xs text-gray-400 flex items-center gap-1">
                                         <Clock className="h-3 w-3" />
-                                        {o.orderedAt ? new Date(o.orderedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "—"}
+                                        {toDate(o.createdAt)?.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) ?? "—"}
                                     </span>
                                 </div>
                                 <p className="text-sm font-bold text-gray-900">{o.patientName}</p>
-                                <p className="text-xs text-gray-500 mt-0.5">{o.tests} &bull; <span className="text-gray-400">{o.orderedBy}</span></p>
+                                <p className="text-xs text-gray-500 mt-0.5">{o.detail} &bull; <span className="text-gray-400">{o.orderedBy}</span></p>
                             </button>
                         ))}
                     </div>
@@ -225,8 +228,8 @@ export default function LabDashboard() {
                         <Badge variant={PRIORITY_VARIANT[selectedOrder.priority] ?? "blue"}>{selectedOrder.priority}</Badge>
                         <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
                             <div>
-                                <p className="text-gray-400">Tests</p>
-                                <p className="font-bold text-gray-900">{selectedOrder.tests}</p>
+                                <p className="text-gray-400">Test</p>
+                                <p className="font-bold text-gray-900">{selectedOrder.detail}</p>
                             </div>
                             <div>
                                 <p className="text-gray-400">Ordered by</p>
@@ -235,7 +238,7 @@ export default function LabDashboard() {
                             <div>
                                 <p className="text-gray-400">Ordered at</p>
                                 <p className="font-bold text-gray-900">
-                                    {selectedOrder.orderedAt ? new Date(selectedOrder.orderedAt).toLocaleString("en-GB") : "—"}
+                                    {toDate(selectedOrder.createdAt)?.toLocaleString("en-GB") ?? "—"}
                                 </p>
                             </div>
                             <div>

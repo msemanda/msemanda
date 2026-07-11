@@ -3,31 +3,28 @@
 import { motion } from "framer-motion";
 import { BarChart3, RefreshCw } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toDate } from "@/lib/ts";
-import { RadiologyOrder } from "@/types";
+import { CPOEOrder } from "@/types";
 
-const MODALITY_CONFIG: Record<string, { label: string; color: string }> = {
-    "X-RAY":       { label: "X-Ray",       color: "bg-blue-500"   },
-    "ULTRASOUND":  { label: "Ultrasound",   color: "bg-teal-500"   },
-    "CT":          { label: "CT Scan",      color: "bg-purple-500" },
-    "MRI":         { label: "MRI",          color: "bg-indigo-500" },
-    "PET":         { label: "PET",          color: "bg-pink-500"   },
-    "MAMMOGRAPHY": { label: "Mammography",  color: "bg-rose-500"   },
+const PRIORITY_CONFIG: Record<string, { label: string; color: string }> = {
+    ROUTINE: { label: "Routine", color: "bg-gray-400" },
+    URGENT:  { label: "Urgent",  color: "bg-amber-500" },
+    STAT:    { label: "STAT",    color: "bg-red-500" },
 };
 
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export default function RadiologyStatsPage() {
-    const [orders, setOrders] = useState<RadiologyOrder[]>([]);
+    const [orders, setOrders] = useState<CPOEOrder[]>([]);
     const [loading, setLoading] = useState(true);
 
     const load = useCallback(async () => {
         setLoading(true);
         try {
-            const snap = await getDocs(collection(db, "radiologyOrders"));
-            setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() } as RadiologyOrder)));
+            const snap = await getDocs(query(collection(db, "cpoeOrders"), where("orderType", "==", "RADIOLOGY")));
+            setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() } as CPOEOrder)));
         } catch (e) {
             console.error(e);
         } finally {
@@ -42,16 +39,16 @@ export default function RadiologyStatsPage() {
     const thisYear  = now.getFullYear();
 
     const mtdOrders = orders.filter(o => {
-        const d = toDate(o.orderedAt);
+        const d = toDate(o.createdAt);
         return d && d.getFullYear() === thisYear && d.getMonth() === thisMonth;
     });
     const pending = orders.filter(o => o.status === "PENDING" || o.status === "IN_PROGRESS").length;
 
-    const completedWithTAT = orders.filter(o => o.status === "COMPLETED" && o.orderedAt && o.reportedAt);
+    const completedWithTAT = orders.filter(o => o.status === "COMPLETED" && o.createdAt && o.reportedAt);
     const avgTATMin = completedWithTAT.length > 0
         ? Math.round(
             completedWithTAT.reduce((sum, o) => {
-                const start = toDate(o.orderedAt)?.getTime() ?? 0;
+                const start = toDate(o.createdAt)?.getTime() ?? 0;
                 const end   = toDate(o.reportedAt)?.getTime() ?? 0;
                 return sum + (end - start) / 60000;
             }, 0) / completedWithTAT.length
@@ -59,28 +56,28 @@ export default function RadiologyStatsPage() {
         : 0;
 
     const reportsDue = orders.filter(o => {
-        if (o.status !== "COMPLETED") return false;
-        const d = toDate(o.orderedAt);
-        return d && d.toISOString().slice(0, 10) === now.toISOString().slice(0, 10) && !o.reportedAt;
+        if (o.status !== "IN_PROGRESS") return false;
+        const d = toDate(o.createdAt);
+        return d && d.toISOString().slice(0, 10) === now.toISOString().slice(0, 10);
     }).length;
 
-    const modalityCount: Record<string, number> = {};
+    const priorityCount: Record<string, number> = {};
     for (const o of orders) {
-        modalityCount[o.modality] = (modalityCount[o.modality] ?? 0) + 1;
+        priorityCount[o.priority] = (priorityCount[o.priority] ?? 0) + 1;
     }
-    const total = Object.values(modalityCount).reduce((s, n) => s + n, 0) || 1;
-    const modalityStats = Object.entries(modalityCount)
+    const total = Object.values(priorityCount).reduce((s, n) => s + n, 0) || 1;
+    const priorityStats = Object.entries(priorityCount)
         .sort((a, b) => b[1] - a[1])
-        .map(([mod, count]) => ({
-            label: MODALITY_CONFIG[mod]?.label ?? mod,
+        .map(([p, count]) => ({
+            label: PRIORITY_CONFIG[p]?.label ?? p,
             count,
-            color: MODALITY_CONFIG[mod]?.color ?? "bg-gray-400",
+            color: PRIORITY_CONFIG[p]?.color ?? "bg-gray-400",
             pct:   Math.round((count / total) * 100),
         }));
 
     const monthlyBuckets: Record<number, number> = {};
     for (const o of orders) {
-        const d = toDate(o.orderedAt);
+        const d = toDate(o.createdAt);
         if (d && d.getFullYear() === thisYear) {
             const m = d.getMonth();
             monthlyBuckets[m] = (monthlyBuckets[m] ?? 0) + 1;
@@ -91,19 +88,6 @@ export default function RadiologyStatsPage() {
         count: monthlyBuckets[i] ?? 0,
     }));
     const maxMonthly = Math.max(...presentMonths.map(m => m.count), 1);
-
-    const tatByModality: Record<string, number[]> = {};
-    for (const o of completedWithTAT) {
-        const start = toDate(o.orderedAt)?.getTime() ?? 0;
-        const end   = toDate(o.reportedAt)?.getTime() ?? 0;
-        const mins  = (end - start) / 60000;
-        if (!tatByModality[o.modality]) tatByModality[o.modality] = [];
-        tatByModality[o.modality].push(mins);
-    }
-    const turnaround = Object.entries(tatByModality).map(([mod, times]) => ({
-        modality: MODALITY_CONFIG[mod]?.label ?? mod,
-        avg: `${Math.round(times.reduce((s, t) => s + t, 0) / times.length)} min`,
-    }));
 
     const statCards = [
         { label: "This Month", value: loading ? "…" : String(mtdOrders.length), sub: "studies"    },
@@ -144,16 +128,16 @@ export default function RadiologyStatsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
                     className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                    <h2 className="text-sm font-black text-gray-900 mb-4">Studies by Modality (MTD)</h2>
+                    <h2 className="text-sm font-black text-gray-900 mb-4">Studies by Priority (MTD)</h2>
                     {loading ? (
                         <div className="flex items-center justify-center py-8">
                             <div className="animate-spin h-5 w-5 border-[3px] border-violet-100 border-t-violet-500 rounded-full" />
                         </div>
-                    ) : modalityStats.length === 0 ? (
+                    ) : priorityStats.length === 0 ? (
                         <p className="text-center text-gray-400 py-8 text-xs">No data yet</p>
                     ) : (
                         <div className="space-y-3">
-                            {modalityStats.map(s => (
+                            {priorityStats.map(s => (
                                 <div key={s.label}>
                                     <div className="flex justify-between text-xs font-semibold text-gray-700 mb-1">
                                         <span>{s.label}</span><span>{s.count}</span>
@@ -196,21 +180,6 @@ export default function RadiologyStatsPage() {
                         </div>
                     )}
                 </motion.div>
-
-                {turnaround.length > 0 && (
-                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                        className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 lg:col-span-2">
-                        <h2 className="text-sm font-black text-gray-900 mb-4">Average Turnaround Time</h2>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            {turnaround.map(t => (
-                                <div key={t.modality} className="bg-gray-50 rounded-xl p-4 text-center">
-                                    <p className="text-xl font-black text-violet-600">{t.avg}</p>
-                                    <p className="text-xs text-gray-500 mt-1">{t.modality}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </motion.div>
-                )}
             </div>
         </div>
     );

@@ -2,43 +2,54 @@
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
-import { fmtDate } from "@/lib/ts";
+import { fmtDate, tsMs } from "@/lib/ts";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { AnimatePresence, motion } from "framer-motion";
 import { ClipboardList, Plus, Search, RefreshCw, X, CheckCircle2, Clock } from "lucide-react";
 import { Input } from "@/components/ui/Input";
+import { CPOEOrder } from "@/types";
 
-interface IpdOrder {
-    id: string;
-    patientName: string;
-    ward: string;
-    orderType: string;
-    description: string;
-    orderedBy: string;
-    status: "pending" | "completed";
-    createdAt?: any;
-}
-
-const ORDER_TYPES = ["Medication", "Lab Test", "Radiology", "Nursing Care", "Dietary", "Physiotherapy", "Consultation", "Procedure"];
+const ORDER_TYPES: { label: string; code: CPOEOrder["orderType"] }[] = [
+    { label: "Medication",     code: "MEDICATION" },
+    { label: "Lab Test",       code: "LAB" },
+    { label: "Radiology",      code: "RADIOLOGY" },
+    { label: "Nursing Care",   code: "NURSING" },
+    { label: "Dietary",        code: "DIET" },
+    { label: "Physiotherapy",  code: "PROCEDURE" },
+    { label: "Consultation",   code: "PROCEDURE" },
+    { label: "Procedure",      code: "PROCEDURE" },
+];
+const ORDER_TYPE_LABELS: Record<string, string> = Object.fromEntries(ORDER_TYPES.map(t => [t.code, t.label]));
 const WARDS = ["General", "ICU", "Pediatrics", "Maternity", "Surgery", "Orthopedics", "Neurology"];
+
+const STATUS_STYLE: Record<string, string> = {
+    PENDING:     "bg-gray-50 text-gray-500 border-gray-100",
+    IN_PROGRESS: "bg-blue-50 text-blue-700 border-blue-100",
+    COMPLETED:   "bg-green-50 text-green-700 border-green-100",
+    CANCELLED:   "bg-red-50 text-red-500 border-red-100",
+};
 
 export default function IpdOrdersPage() {
     const { profile } = useAuth();
-    const [orders, setOrders] = useState<IpdOrder[]>([]);
+    const [orders, setOrders] = useState<CPOEOrder[]>([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [creating, setCreating] = useState(false);
     const [search, setSearch] = useState("");
-    const [form, setForm] = useState({ patientName: "", ward: WARDS[0], orderType: ORDER_TYPES[0], description: "" });
+    const [form, setForm] = useState({ patientName: "", ward: WARDS[0], orderType: ORDER_TYPES[0].code, description: "" });
 
     useEffect(() => { fetchOrders(); }, []);
 
     const fetchOrders = async () => {
         setLoading(true);
         try {
-            const snap = await getDocs(collection(db, "ipdOrders"));
-            setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() } as IpdOrder)));
+            const snap = await getDocs(collection(db, "cpoeOrders"));
+            const rows = snap.docs
+                .map(d => ({ id: d.id, ...d.data() } as CPOEOrder))
+                .filter(o => !!o.ward); // clinical orders tied to an admitted/ward patient
+            rows.sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+            setOrders(rows);
         } catch(e) { console.error(e); }
         finally { setLoading(false); }
     };
@@ -47,25 +58,29 @@ export default function IpdOrdersPage() {
         e.preventDefault();
         setCreating(true);
         try {
-            await addDoc(collection(db, "ipdOrders"), {
+            await addDoc(collection(db, "cpoeOrders"), {
                 patientName: form.patientName.trim(),
                 ward: form.ward,
                 orderType: form.orderType,
-                description: form.description.trim(),
+                detail: form.description.trim(),
+                amount: 0,
+                paymentStatus: "PAID",
+                priority: "ROUTINE",
                 orderedBy: profile?.name,
-                status: "pending",
+                orderedByUid: profile?.uid,
+                status: "PENDING",
                 createdAt: serverTimestamp(),
             });
             setShowForm(false);
-            setForm({ patientName: "", ward: WARDS[0], orderType: ORDER_TYPES[0], description: "" });
+            setForm({ patientName: "", ward: WARDS[0], orderType: ORDER_TYPES[0].code, description: "" });
             fetchOrders();
         } catch(e) { console.error(e); }
         finally { setCreating(false); }
     };
 
     const filtered = orders.filter(o =>
-        !search || o.patientName.toLowerCase().includes(search.toLowerCase()) ||
-        o.orderType.toLowerCase().includes(search.toLowerCase())
+        !search || (o.patientName ?? "").toLowerCase().includes(search.toLowerCase()) ||
+        (ORDER_TYPE_LABELS[o.orderType] ?? o.orderType).toLowerCase().includes(search.toLowerCase())
     );
 
     return (
@@ -112,8 +127,8 @@ export default function IpdOrdersPage() {
                             <div className="space-y-1.5">
                                 <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Order Type</label>
                                 <select className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 focus:bg-white focus:border-blue-500 outline-none"
-                                    value={form.orderType} onChange={e => setForm(p => ({ ...p, orderType: e.target.value }))}>
-                                    {ORDER_TYPES.map(t => <option key={t}>{t}</option>)}
+                                    value={form.orderType} onChange={e => setForm(p => ({ ...p, orderType: e.target.value as CPOEOrder["orderType"] }))}>
+                                    {ORDER_TYPES.map(t => <option key={t.label} value={t.code}>{t.label}</option>)}
                                 </select>
                             </div>
                             <div className="space-y-1.5">
@@ -157,16 +172,14 @@ export default function IpdOrdersPage() {
                                     </div>
                                     <div className="min-w-0">
                                         <p className="text-sm font-black text-gray-900">{o.patientName}</p>
-                                        <p className="text-xs text-gray-500">{o.ward} · {o.orderType}</p>
-                                        <p className="text-xs text-gray-400 mt-0.5 truncate">{o.description}</p>
+                                        <p className="text-xs text-gray-500">{o.ward} · {ORDER_TYPE_LABELS[o.orderType] ?? o.orderType}</p>
+                                        <p className="text-xs text-gray-400 mt-0.5 truncate">{o.detail}</p>
                                         <p className="text-[10px] text-gray-300 mt-0.5">By {o.orderedBy} · {fmtDate(o.createdAt)}</p>
                                     </div>
                                 </div>
-                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border flex items-center gap-1 shrink-0 ${
-                                    o.status === "completed" ? "bg-green-50 text-green-700 border-green-100" : "bg-gray-50 text-gray-500 border-gray-100"
-                                }`}>
-                                    {o.status === "completed" ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
-                                    {o.status === "completed" ? "Completed" : "Pending"}
+                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border flex items-center gap-1 shrink-0 ${STATUS_STYLE[o.status] ?? STATUS_STYLE.PENDING}`}>
+                                    {o.status === "COMPLETED" ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                                    {o.status.replace("_", " ")}
                                 </span>
                             </div>
                         ))}

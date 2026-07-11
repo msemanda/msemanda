@@ -8,11 +8,14 @@ import {
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { notify } from "@/lib/notify";
+import { tsMs } from "@/lib/ts";
+import { CPOEOrder } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     FileText, CalendarDays, CreditCard, Clock,
     CheckCircle2, AlertCircle, ChevronDown, X,
-    Smartphone, Building2, Banknote, Shield
+    Smartphone, Building2, Banknote, Shield,
+    FlaskConical, Scan
 } from "lucide-react";
 
 interface AppointmentRecord {
@@ -60,13 +63,14 @@ const FEE_STATUS: Record<string, { color: string; label: string; icon: any }> = 
     PAID:         { color: "bg-green-50 text-green-700 border-green-100", label: "Confirmed",        icon: CheckCircle2 },
 };
 
-type Tab = "appointments" | "payments";
+type Tab = "appointments" | "payments" | "results";
 
 export default function PatientRecordsPage() {
     const { profile } = useAuth();
     const [tab, setTab] = useState<Tab>("appointments");
     const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
     const [fees, setFees] = useState<FeeRecord[]>([]);
+    const [results, setResults] = useState<CPOEOrder[]>([]);
     const [loading, setLoading] = useState(true);
 
     const [payingFee, setPayingFee] = useState<FeeRecord | null>(null);
@@ -83,7 +87,7 @@ export default function PatientRecordsPage() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [apptSnap, feeSnap] = await Promise.all([
+            const [apptSnap, feeSnap, orderSnap] = await Promise.all([
                 getDocs(query(
                     collection(db, "appointments"),
                     where("patientEmail", "==", profile!.email)
@@ -92,9 +96,18 @@ export default function PatientRecordsPage() {
                     collection(db, "consultationFees"),
                     where("patientEmail", "==", profile!.email)
                 )),
+                getDocs(query(
+                    collection(db, "cpoeOrders"),
+                    where("patientEmail", "==", profile!.email)
+                )),
             ]);
             setAppointments(apptSnap.docs.map(d => ({ id: d.id, ...d.data() } as AppointmentRecord)));
             setFees(feeSnap.docs.map(d => ({ id: d.id, ...d.data() } as FeeRecord)));
+            const testResults = orderSnap.docs
+                .map(d => ({ id: d.id, ...d.data() } as CPOEOrder))
+                .filter(o => (o.orderType === "LAB" || o.orderType === "RADIOLOGY") && o.status === "COMPLETED");
+            testResults.sort((a, b) => tsMs(b.resultsEnteredAt || b.reportedAt) - tsMs(a.resultsEnteredAt || a.reportedAt));
+            setResults(testResults);
         } catch (err) {
             console.error(err);
         } finally {
@@ -171,16 +184,21 @@ export default function PatientRecordsPage() {
 
             {/* Tabs */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-1.5 flex gap-1 w-fit">
-                {(["appointments", "payments"] as Tab[]).map(t => (
+                {(["appointments", "payments", "results"] as Tab[]).map(t => (
                     <button key={t} onClick={() => setTab(t)}
                         className={`px-5 py-2 rounded-xl text-xs font-bold capitalize transition-all flex items-center gap-1.5 ${
                             tab === t ? "bg-blue-600 text-white shadow-sm" : "text-gray-600 hover:bg-gray-50"
                         }`}>
-                        {t === "appointments" ? <CalendarDays className="h-3.5 w-3.5" /> : <CreditCard className="h-3.5 w-3.5" />}
-                        {t === "appointments" ? "Appointments" : "Payments"}
+                        {t === "appointments" ? <CalendarDays className="h-3.5 w-3.5" /> : t === "payments" ? <CreditCard className="h-3.5 w-3.5" /> : <FlaskConical className="h-3.5 w-3.5" />}
+                        {t === "appointments" ? "Appointments" : t === "payments" ? "Payments" : "Test Results"}
                         {t === "payments" && pendingCount > 0 && (
                             <span className={`ml-1 h-4 w-4 rounded-full text-[10px] font-black flex items-center justify-center ${tab === t ? "bg-white/30 text-white" : "bg-amber-100 text-amber-700"}`}>
                                 {pendingCount}
+                            </span>
+                        )}
+                        {t === "results" && results.length > 0 && (
+                            <span className={`ml-1 h-4 w-4 rounded-full text-[10px] font-black flex items-center justify-center ${tab === t ? "bg-white/30 text-white" : "bg-gray-100 text-gray-600"}`}>
+                                {results.length}
                             </span>
                         )}
                     </button>
@@ -231,7 +249,7 @@ export default function PatientRecordsPage() {
                         </div>
                     )}
                 </motion.div>
-            ) : (
+            ) : tab === "payments" ? (
                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                     {fees.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-gray-200 text-center">
@@ -289,6 +307,76 @@ export default function PatientRecordsPage() {
                                     </motion.div>
                                 );
                             })}
+                        </div>
+                    )}
+                </motion.div>
+            ) : (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                    {results.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-gray-200 text-center">
+                            <FlaskConical className="h-12 w-12 text-gray-200 mb-4" />
+                            <p className="text-sm font-black text-gray-900 mb-1">No test results yet</p>
+                            <p className="text-xs text-gray-400">Lab and radiology results will appear here once completed.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {results.map((order, i) => (
+                                <motion.div key={order.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                                    className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                                    <div className="flex items-start justify-between gap-4 mb-3">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${order.orderType === "LAB" ? "bg-amber-50" : "bg-purple-50"}`}>
+                                                {order.orderType === "LAB"
+                                                    ? <FlaskConical className="h-4.5 w-4.5 text-amber-600" />
+                                                    : <Scan className="h-4.5 w-4.5 text-purple-600" />}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-black text-gray-900 truncate">{order.detail}</p>
+                                                <p className="text-xs text-gray-400">
+                                                    {order.orderType === "LAB" ? "Lab" : "Radiology"} · {order.orderedBy ? `Dr. ${order.orderedBy}` : "—"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-100 shrink-0">
+                                            Completed
+                                        </span>
+                                    </div>
+
+                                    {order.orderType === "LAB" && Array.isArray(order.results) && order.results.length > 0 && (
+                                        <div className="space-y-1.5">
+                                            {order.results.map((r, ri) => (
+                                                <div key={ri} className="flex items-center justify-between text-xs bg-gray-50 rounded-lg px-3 py-2">
+                                                    <span className="text-gray-600">{r.testName}</span>
+                                                    <span className={`font-bold ${
+                                                        r.flag === "CRITICAL" ? "text-red-600" :
+                                                        r.flag === "HIGH" || r.flag === "LOW" ? "text-amber-600" : "text-gray-800"
+                                                    }`}>
+                                                        {r.value} {r.unit}
+                                                        {r.flag && r.flag !== "NORMAL" && <span className="ml-1">({r.flag})</span>}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {order.orderType === "RADIOLOGY" && (
+                                        <div className="space-y-2">
+                                            {order.findings && (
+                                                <div className="bg-gray-50 rounded-xl p-3">
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Findings</p>
+                                                    <p className="text-xs text-gray-700">{order.findings}</p>
+                                                </div>
+                                            )}
+                                            {order.impression && (
+                                                <div className="bg-purple-50 rounded-xl p-3">
+                                                    <p className="text-[10px] font-black text-purple-400 uppercase tracking-wider mb-1">Impression</p>
+                                                    <p className="text-xs text-purple-900 font-semibold">{order.impression}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </motion.div>
+                            ))}
                         </div>
                     )}
                 </motion.div>
