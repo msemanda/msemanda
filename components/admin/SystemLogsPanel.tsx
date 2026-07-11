@@ -4,6 +4,8 @@ import { Fragment, useCallback, useEffect, useState } from "react";
 import { ChevronDown, ChevronUp, RefreshCw, ScrollText, Search } from "lucide-react";
 import { Badge, type BadgeVariant } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
+import { ExportMenu } from "@/components/ui/ExportMenu";
+import type { ReportDocument } from "@/lib/export";
 
 interface RequestLog {
     id: string;
@@ -23,6 +25,10 @@ interface RequestLog {
 
 const METHODS = ["ALL", "GET", "POST", "PATCH", "PUT", "DELETE"];
 
+// Requests within a date range are exported, not just eyeballed 150-at-a-time — fetch more.
+const DEFAULT_LIMIT = 150;
+const RANGED_LIMIT = 2000;
+
 function statusVariant(status: number): BadgeVariant {
     if (status >= 500) return "red";
     if (status >= 400) return "yellow";
@@ -41,8 +47,12 @@ export default function SystemLogsPanel() {
     const [loading, setLoading] = useState(true);
     const [method, setMethod] = useState("ALL");
     const [pathSearch, setPathSearch] = useState("");
+    const [dateFrom, setDateFrom] = useState("");
+    const [dateTo, setDateTo] = useState("");
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    const hasDateRange = Boolean(dateFrom || dateTo);
 
     const fetchLogs = useCallback(async () => {
         setLoading(true);
@@ -51,6 +61,9 @@ export default function SystemLogsPanel() {
             const params = new URLSearchParams();
             if (method !== "ALL") params.set("method", method);
             if (pathSearch.trim()) params.set("path", pathSearch.trim());
+            if (dateFrom) params.set("dateFrom", dateFrom);
+            if (dateTo) params.set("dateTo", dateTo);
+            params.set("limit", String(hasDateRange ? RANGED_LIMIT : DEFAULT_LIMIT));
             const res = await fetch(`/api/admin/request-logs?${params}`);
             const data = await res.json();
             if (!res.ok) throw new Error(data.error ?? "Failed to load logs");
@@ -60,21 +73,50 @@ export default function SystemLogsPanel() {
         } finally {
             setLoading(false);
         }
-    }, [method, pathSearch]);
+    }, [method, pathSearch, dateFrom, dateTo, hasDateRange]);
 
     useEffect(() => { fetchLogs(); }, [fetchLogs]);
 
+    const reportData: ReportDocument = {
+        title: "System Logs",
+        subtitle: hasDateRange
+            ? `${dateFrom || "earliest"} to ${dateTo || "latest"}${method !== "ALL" ? ` · ${method}` : ""}`
+            : `Most recent ${logs.length} requests${method !== "ALL" ? ` · ${method}` : ""}`,
+        meta: pathSearch.trim() ? [{ label: "Path filter", value: pathSearch.trim() }] : undefined,
+        columns: [
+            { key: "status", label: "Status" },
+            { key: "method", label: "Method" },
+            { key: "path", label: "Path" },
+            { key: "user", label: "User" },
+            { key: "duration", label: "Duration" },
+            { key: "time", label: "Time" },
+        ],
+        rows: logs.map(l => ({
+            status: l.status,
+            method: l.method,
+            path: l.path,
+            user: l.user_email ?? "—",
+            duration: `${l.duration_ms}ms`,
+            time: new Date(l.created_at).toLocaleString(),
+        })),
+    };
+
     return (
         <Card className="p-6">
-            <div className="flex items-center gap-2 mb-1">
-                <div className="h-7 w-7 rounded-lg bg-blue-50 flex items-center justify-center">
-                    <ScrollText className="h-3.5 w-3.5 text-blue-600" />
+            <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-lg bg-blue-50 flex items-center justify-center">
+                        <ScrollText className="h-3.5 w-3.5 text-blue-600" />
+                    </div>
+                    <h2 className="text-sm font-black text-gray-900">System Logs</h2>
                 </div>
-                <h2 className="text-sm font-black text-gray-900">System Logs</h2>
+                <ExportMenu data={reportData} label="Export" />
             </div>
-            <p className="text-xs text-gray-400 mb-4">Recent API requests handled by the server — for diagnosing issues, not a full audit trail.</p>
+            <p className="text-xs text-gray-400 mb-4">
+                Recent API requests handled by the server, including login attempts — covers both request debugging and access auditing.
+            </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 mb-4">
+            <div className="flex flex-wrap items-center gap-3 mb-4">
                 <select
                     value={method}
                     onChange={e => setMethod(e.target.value)}
@@ -82,7 +124,7 @@ export default function SystemLogsPanel() {
                 >
                     {METHODS.map(m => <option key={m} value={m}>{m === "ALL" ? "All requests" : m}</option>)}
                 </select>
-                <div className="relative flex-1 max-w-xs">
+                <div className="relative max-w-xs">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
                     <input
                         value={pathSearch}
@@ -91,13 +133,38 @@ export default function SystemLogsPanel() {
                         className="h-9 w-full pl-8 pr-3 rounded-xl border border-gray-200 bg-white text-xs font-medium focus:border-blue-500 outline-none"
                     />
                 </div>
+                <div className="flex items-center gap-1.5">
+                    <input
+                        type="date"
+                        value={dateFrom}
+                        onChange={e => setDateFrom(e.target.value)}
+                        className="h-9 px-2.5 rounded-xl border border-gray-200 bg-white text-xs font-medium text-gray-700 focus:border-blue-500 outline-none"
+                    />
+                    <span className="text-xs text-gray-400">to</span>
+                    <input
+                        type="date"
+                        value={dateTo}
+                        onChange={e => setDateTo(e.target.value)}
+                        className="h-9 px-2.5 rounded-xl border border-gray-200 bg-white text-xs font-medium text-gray-700 focus:border-blue-500 outline-none"
+                    />
+                    {hasDateRange && (
+                        <button
+                            onClick={() => { setDateFrom(""); setDateTo(""); }}
+                            className="text-[11px] font-bold text-gray-400 hover:text-gray-600"
+                        >
+                            Clear
+                        </button>
+                    )}
+                </div>
                 <button
                     onClick={fetchLogs}
                     className="h-9 px-3 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-600 hover:bg-gray-50 flex items-center gap-1.5 transition-colors"
                 >
                     <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
                 </button>
-                <span className="text-[11px] text-gray-400 self-center sm:ml-auto">{logs.length} most recent</span>
+                <span className="text-[11px] text-gray-400 ml-auto">
+                    {logs.length} {hasDateRange ? "in range" : "most recent"}
+                </span>
             </div>
 
             {error && (

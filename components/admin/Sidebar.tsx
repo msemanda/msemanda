@@ -12,7 +12,6 @@ import {
     Calendar,
     FileText,
     LogOut,
-    Shield,
     CreditCard,
     Users,
     FlaskConical,
@@ -126,7 +125,6 @@ const menuGroups = [
     {
         label: "Security & Config",
         items: [
-            { name: "Access Logs", href: "/admin/sessions", icon: Shield },
             { name: "System Config", href: "/admin/config", icon: Settings },
         ],
     },

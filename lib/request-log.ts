@@ -100,6 +100,10 @@ export function getClientIp(req: Request): string | null {
 export interface ListLogsOptions {
     pathQuery?: string;
     method?: string;
+    /** Inclusive, ISO date (YYYY-MM-DD) or full timestamp. */
+    dateFrom?: string;
+    /** Inclusive, ISO date (YYYY-MM-DD) or full timestamp — end-of-day is applied for a bare date. */
+    dateTo?: string;
     limit?: number;
 }
 
@@ -116,8 +120,19 @@ export async function listRequestLogs(opts: ListLogsOptions = {}): Promise<Recor
         values.push(opts.method);
         conditions.push(`method = $${values.length}`);
     }
+    if (opts.dateFrom) {
+        values.push(opts.dateFrom);
+        conditions.push(`created_at >= $${values.length}`);
+    }
+    if (opts.dateTo) {
+        // A bare "YYYY-MM-DD" should include the whole day.
+        const isBareDate = /^\d{4}-\d{2}-\d{2}$/.test(opts.dateTo);
+        values.push(isBareDate ? `${opts.dateTo}T23:59:59.999Z` : opts.dateTo);
+        conditions.push(`created_at <= $${values.length}`);
+    }
 
-    const limit = Math.min(opts.limit ?? 150, 500);
+    // Exports need more than the default page size; the route caps this independently.
+    const limit = Math.min(opts.limit ?? 150, 5000);
     values.push(limit);
 
     const sql = `
