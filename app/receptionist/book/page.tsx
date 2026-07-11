@@ -11,6 +11,7 @@ import {
     CheckCircle2, ShieldCheck, ArrowRight, Search, UserCheck, X, AlertCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
+import { PhoneDuplicateGuard } from "@/components/patients/PhoneDuplicateGuard";
 
 const TIME_SLOTS = [
     "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
@@ -42,6 +43,7 @@ export default function BookAppointmentPage() {
     const [form, setForm] = useState({
         patientName: "",
         patientEmail: "",
+        patientPhone: "",
         date: "",
         time: TIME_SLOTS[0],
         notes: "",
@@ -58,8 +60,11 @@ export default function BookAppointmentPage() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
 
-    // Consultation fee gate — appointment can only be confirmed once paid
+    // Consultation fee status — the appointment is always created (reserving the
+    // slot), but is born PENDING_PAYMENT unless the fee is already PAID, and
+    // flips to CONFIRMED automatically once Finance/Cashier confirms payment.
     const [hasPaidFee, setHasPaidFee] = useState(false);
+    const [latestFeeId, setLatestFeeId] = useState<string | null>(null);
     const [checkingFee, setCheckingFee] = useState(false);
     const [feeChecked, setFeeChecked] = useState(false);
 
@@ -67,6 +72,7 @@ export default function BookAppointmentPage() {
         const email = form.patientEmail.toLowerCase().trim();
         if (!email || !email.includes("@")) {
             setHasPaidFee(false);
+            setLatestFeeId(null);
             setFeeChecked(false);
             return;
         }
@@ -83,11 +89,13 @@ export default function BookAppointmentPage() {
                 );
                 const snap = await getDocs(q);
                 if (cancelled) return;
-                const latest = snap.docs[0]?.data() as { status?: string } | undefined;
+                const latestDoc = snap.docs[0];
+                const latest = latestDoc?.data() as { status?: string } | undefined;
                 setHasPaidFee(latest?.status === "PAID");
+                setLatestFeeId(latestDoc?.id || null);
             } catch (err) {
                 console.error(err);
-                if (!cancelled) setHasPaidFee(false);
+                if (!cancelled) { setHasPaidFee(false); setLatestFeeId(null); }
             } finally {
                 if (!cancelled) { setCheckingFee(false); setFeeChecked(true); }
             }
@@ -173,20 +181,19 @@ export default function BookAppointmentPage() {
     const pickPatient = (p: KnownPatient) => {
         setPickedPatient(p);
         setNameQuery(p.name);
-        setForm(prev => ({ ...prev, patientName: p.name, patientEmail: p.email }));
+        setForm(prev => ({ ...prev, patientName: p.name, patientEmail: p.email, patientPhone: p.phone || "" }));
         setDropdownOpen(false);
     };
 
     const clearPick = () => {
         setPickedPatient(null);
         setNameQuery("");
-        setForm(prev => ({ ...prev, patientName: "", patientEmail: "" }));
+        setForm(prev => ({ ...prev, patientName: "", patientEmail: "", patientPhone: "" }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedDoctor) { setError("Please select a doctor."); return; }
-        if (!hasPaidFee) { setError("This patient hasn't paid the consultation fee yet. Create/confirm their payment before booking."); return; }
         setSubmitting(true);
         setError("");
         try {
@@ -201,18 +208,24 @@ export default function BookAppointmentPage() {
                 date: form.date,
                 time: form.time,
                 notes: form.notes.trim(),
-                status: "SCHEDULED",
+                // Slot is reserved immediately; it only becomes visible to the
+                // doctor as CONFIRMED once the linked consultation fee is paid
+                // (see cashier/fees confirm action, which flips this).
+                status: hasPaidFee ? "CONFIRMED" : "PENDING_PAYMENT",
+                feeId: latestFeeId,
                 bookedBy: profile?.uid,
                 bookedByName: profile?.name,
                 bookedAt: serverTimestamp(),
             });
-            await notify({
-                targetUid: selectedDoctor.uid,
-                type:      "appointment",
-                title:     `New appointment: ${form.patientName.trim()}`,
-                body:      `${form.date} at ${form.time}`,
-                link:      "/doctor/appointments",
-            });
+            if (hasPaidFee) {
+                await notify({
+                    targetUid: selectedDoctor.uid,
+                    type:      "appointment",
+                    title:     `New appointment: ${form.patientName.trim()}`,
+                    body:      `${form.date} at ${form.time}`,
+                    link:      "/doctor/appointments",
+                });
+            }
             setSuccess(true);
         } catch (err: any) {
             setError(err.message || "Failed to book appointment.");
@@ -226,7 +239,7 @@ export default function BookAppointmentPage() {
         setSelectedDoctor(null);
         setPickedPatient(null);
         setNameQuery("");
-        setForm({ patientName: "", patientEmail: "", date: "", time: TIME_SLOTS[0], notes: "" });
+        setForm({ patientName: "", patientEmail: "", patientPhone: "", date: "", time: TIME_SLOTS[0], notes: "" });
     };
 
     if (success) {
@@ -237,10 +250,13 @@ export default function BookAppointmentPage() {
                     <div className="h-16 w-16 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
                         <CheckCircle2 className="h-8 w-8 text-green-600" />
                     </div>
-                    <h2 className="text-2xl font-black text-gray-900 mb-2">Appointment Booked</h2>
+                    <h2 className="text-2xl font-black text-gray-900 mb-2">
+                        {hasPaidFee ? "Appointment Confirmed" : "Slot Reserved — Awaiting Payment"}
+                    </h2>
                     <p className="text-sm text-gray-500">
                         <span className="font-bold">{form.patientName}</span> booked with{" "}
                         <span className="font-bold">{selectedDoctor?.name}</span> on {form.date} at {form.time}.
+                        {!hasPaidFee && " The doctor will see it once the consultation fee is confirmed as paid."}
                     </p>
                     <button onClick={reset}
                         className="mt-6 w-full h-11 rounded-xl border border-gray-200 text-gray-700 text-sm font-bold hover:bg-gray-50 transition-colors">
@@ -411,6 +427,21 @@ export default function BookAppointmentPage() {
                         onChange={e => setForm(p => ({ ...p, patientEmail: e.target.value }))} />
                 </div>
 
+                {!pickedPatient && nameQuery.length > 0 && (
+                    <div className="space-y-2">
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Patient Phone (optional — checks for existing records)</label>
+                            <Input type="tel" placeholder="+256 700 000 000" value={form.patientPhone}
+                                onChange={e => setForm(p => ({ ...p, patientPhone: e.target.value }))} />
+                        </div>
+                        <PhoneDuplicateGuard
+                            phone={form.patientPhone}
+                            patients={patients}
+                            onUseExisting={pickPatient}
+                        />
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                         <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Date</label>
@@ -447,7 +478,7 @@ export default function BookAppointmentPage() {
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                             className="p-3.5 rounded-xl bg-amber-50 border border-amber-100 text-amber-700 text-xs font-semibold flex gap-2">
                             <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                            <span>Patient hasn&apos;t paid the consultation fee yet. Booking is disabled until payment is confirmed on the Consultation Fees page.</span>
+                            <span>Patient hasn&apos;t paid the consultation fee yet. The slot will still be reserved as <span className="font-black">Pending Payment</span> and only appear in the doctor&apos;s queue once payment is confirmed on the Consultation Fees page.</span>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -461,11 +492,13 @@ export default function BookAppointmentPage() {
                     )}
                 </AnimatePresence>
 
-                <button type="submit" disabled={submitting || !selectedDoctor || checkingFee || !hasPaidFee}
+                <button type="submit" disabled={submitting || !selectedDoctor || checkingFee}
                     className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-bold flex items-center justify-center gap-2 transition-colors shadow-sm shadow-blue-600/20">
                     {submitting
                         ? <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full" />
-                        : <><ArrowRight className="h-4 w-4" /> Confirm Appointment</>}
+                        : hasPaidFee
+                            ? <><ArrowRight className="h-4 w-4" /> Confirm Appointment</>
+                            : <><Clock className="h-4 w-4" /> Reserve Slot (Pending Payment)</>}
                 </button>
             </form>
         </div>

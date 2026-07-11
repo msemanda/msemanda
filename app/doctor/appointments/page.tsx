@@ -18,13 +18,15 @@ interface Appointment {
 
 const STATUS_BADGE: Record<string, string> = {
     SCHEDULED:       "bg-blue-50 text-blue-700",
+    CONFIRMED:       "bg-blue-50 text-blue-700",
+    PENDING_PAYMENT: "bg-amber-50 text-amber-700",
     CALLED:          "bg-purple-50 text-purple-700",
     IN_CONSULTATION: "bg-teal-50 text-teal-700",
     COMPLETED:       "bg-green-50 text-green-700",
     CANCELLED:       "bg-red-50 text-red-500",
 };
 
-const FILTERS = ["ALL", "SCHEDULED", "CALLED", "COMPLETED", "CANCELLED"];
+const FILTERS = ["ALL", "PENDING_PAYMENT", "SCHEDULED", "CALLED", "COMPLETED", "CANCELLED"];
 
 export default function AppointmentsPage() {
     const { profile } = useAuth();
@@ -130,7 +132,7 @@ export default function AppointmentsPage() {
                         <CalendarDays className="h-6 w-6 text-blue-600" /> My Appointments
                     </h1>
                     <p className="text-sm text-gray-500 mt-0.5">
-                        {loading ? "Loading…" : `${appointments.filter(a => a.status === "SCHEDULED").length} upcoming · ${appointments.length} total`}
+                        {loading ? "Loading…" : `${appointments.filter(a => a.status === "SCHEDULED" || a.status === "CONFIRMED").length} upcoming · ${appointments.length} total`}
                     </p>
                 </div>
                 <button onClick={load} disabled={loading}
@@ -201,7 +203,10 @@ export default function AppointmentsPage() {
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-1">
-                                                {(a.status === "SCHEDULED" || a.status === "CALLED") && (
+                                                {a.status === "PENDING_PAYMENT" && (
+                                                    <span className="text-[10px] text-amber-600 font-bold">Awaiting payment confirmation</span>
+                                                )}
+                                                {(a.status === "SCHEDULED" || a.status === "CONFIRMED" || a.status === "CALLED") && (
                                                     <>
                                                         <button
                                                             onClick={() => openReschedule(a)}

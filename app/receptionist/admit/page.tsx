@@ -10,6 +10,7 @@ import {
     CheckCircle2, ShieldCheck, ArrowRight, AlertCircle, Search, UserCheck, X,
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
+import { PhoneDuplicateGuard } from "@/components/patients/PhoneDuplicateGuard";
 
 type Step = "form" | "done";
 
@@ -297,6 +298,14 @@ export default function AdmitPatientPage() {
                             </div>
                         </div>
                     </div>
+
+                    {!pickedPatient && (
+                        <PhoneDuplicateGuard
+                            phone={form.phone}
+                            patients={patients}
+                            onUseExisting={pickPatient}
+                        />
+                    )}
 
                     {/* Email */}
                     <div className="space-y-1.5">

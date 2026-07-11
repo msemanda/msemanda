@@ -19,10 +19,12 @@ interface PatientSummary {
 }
 
 const STATUS_BADGE: Record<string, string> = {
-    SCHEDULED:  "bg-gray-50 text-gray-500",
-    CALLED:     "bg-purple-50 text-purple-700",
-    COMPLETED:  "bg-green-50 text-green-700",
-    CANCELLED:  "bg-red-50 text-red-500",
+    SCHEDULED:        "bg-gray-50 text-gray-500",
+    CONFIRMED:        "bg-gray-50 text-gray-500",
+    PENDING_PAYMENT:  "bg-amber-50 text-amber-700",
+    CALLED:           "bg-purple-50 text-purple-700",
+    COMPLETED:        "bg-green-50 text-green-700",
+    CANCELLED:        "bg-red-50 text-red-500",
 };
 
 const ORDER_TYPE_COLOR: Record<string, string> = {

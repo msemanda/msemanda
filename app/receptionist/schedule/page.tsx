@@ -17,6 +17,8 @@ interface Appointment {
 
 const STATUS_STYLE: Record<string, string> = {
     SCHEDULED:       "bg-gray-50 text-gray-600",
+    CONFIRMED:       "bg-gray-50 text-gray-600",
+    PENDING_PAYMENT: "bg-amber-50 text-amber-700",
     CALLED:          "bg-purple-50 text-purple-700",
     IN_CONSULTATION: "bg-blue-50 text-blue-700",
     WAITING:         "bg-amber-50 text-amber-700",

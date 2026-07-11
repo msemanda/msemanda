@@ -163,19 +163,28 @@ export default function SetupPage() {
                 return;
             }
 
+            // If this email already had an auth record (e.g. a second invite was
+            // sent to re-activate a lost/expired one), the server keeps the
+            // ORIGINAL uid rather than the fresh one generated above — use
+            // data.uid, not the local `uid`, so the profile below lands on the
+            // same record the login flow resolves to, instead of an orphaned one.
+            const canonicalUid = data.uid as string;
+
             // Mark invite as used in Firestore (if not superadmin)
             if (!invite.isSuperadmin) {
                 await updateDoc(doc(db, "invites", email.toLowerCase().trim()), {
                     used:   true,
                     usedAt: serverTimestamp(),
-                    uid,
+                    uid:    canonicalUid,
                 });
             }
 
-            // Create the staff profile so this person shows up in User Management —
-            // /api/auth/register only creates login credentials, not this profile.
-            await setDoc(doc(db, "users", uid), {
-                uid,
+            // Create/update the staff profile so this person shows up in User
+            // Management — /api/auth/register only creates login credentials,
+            // not this profile. Merge so re-activating an existing account
+            // doesn't wipe out unrelated fields already on the profile.
+            await setDoc(doc(db, "users", canonicalUid), {
+                uid:            canonicalUid,
                 name:           name.trim(),
                 email:          email.toLowerCase().trim(),
                 role:           invite.role,
@@ -184,7 +193,7 @@ export default function SetupPage() {
                 specialization: invite.specialization || "",
                 permissions:    [],
                 createdAt:      serverTimestamp(),
-            });
+            }, { merge: true });
 
             if (!invite.isSuperadmin) {
                 await notify({

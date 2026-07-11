@@ -25,10 +25,12 @@ interface QueueEntry {
 }
 
 const STATUS_VARIANT: Record<string, BadgeVariant> = {
-    SCHEDULED: "neutral",
-    CALLED:    "yellow",
-    COMPLETED: "green",
-    CANCELLED: "red",
+    SCHEDULED:        "neutral",
+    CONFIRMED:        "neutral",
+    PENDING_PAYMENT:  "yellow",
+    CALLED:           "yellow",
+    COMPLETED:        "green",
+    CANCELLED:        "red",
 };
 
 export default function DoctorDashboard() {
@@ -78,7 +80,11 @@ export default function DoctorDashboard() {
         finally { setCompleting(null); }
     };
 
-    const active = queue.filter(q => q.status !== "COMPLETED" && q.status !== "CANCELLED");
+    // "Ready to see" excludes PENDING_PAYMENT — those reserve a slot but the
+    // doctor can't start the consultation until reception/cashier confirms the
+    // consultation fee, at which point they flip to CONFIRMED automatically.
+    const active = queue.filter(q => q.status !== "COMPLETED" && q.status !== "CANCELLED" && q.status !== "PENDING_PAYMENT");
+    const pendingPayment = queue.filter(q => q.status === "PENDING_PAYMENT").length;
     const done   = queue.filter(q => q.status === "COMPLETED").length;
 
     return (
@@ -90,6 +96,9 @@ export default function DoctorDashboard() {
                     </h1>
                     <p className="text-sm text-gray-500 mt-0.5">
                         You have <span className="text-cyan-600 font-black">{active.length}</span> patient{active.length !== 1 ? "s" : ""} scheduled today.
+                        {pendingPayment > 0 && (
+                            <span className="text-amber-600 font-bold"> · {pendingPayment} awaiting payment</span>
+                        )}
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -161,7 +170,12 @@ export default function DoctorDashboard() {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
-                                            {entry.status !== "COMPLETED" && entry.status !== "CANCELLED" && (
+                                            {entry.status === "PENDING_PAYMENT" && (
+                                                <span className="text-xs text-amber-600 font-bold flex items-center gap-1">
+                                                    <Clock className="h-3.5 w-3.5" /> Awaiting payment
+                                                </span>
+                                            )}
+                                            {entry.status !== "COMPLETED" && entry.status !== "CANCELLED" && entry.status !== "PENDING_PAYMENT" && (
                                                 <>
                                                     <Link href={`/doctor/diagnose/${entry.patientId || entry.id}`}
                                                         className="h-9 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors">

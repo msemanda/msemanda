@@ -132,7 +132,7 @@ export default function CPOEPage() {
             })) as any[];
 
             const outpatients = apptSnap.docs
-                .filter(d => !["COMPLETED", "CANCELLED"].includes(d.data().status))
+                .filter(d => !["COMPLETED", "CANCELLED", "PENDING_PAYMENT"].includes(d.data().status))
                 .map(d => ({
                     id: d.id, ...d.data(),
                     ward: "OPD", bedNumber: null, _source: "OPD",

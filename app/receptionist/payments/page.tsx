@@ -16,8 +16,9 @@ import {
 import { Input } from "@/components/ui/Input";
 import { ExportMenu } from "@/components/ui/ExportMenu";
 import { buildReceiptDocument } from "@/lib/receipt";
+import { PhoneDuplicateGuard } from "@/components/patients/PhoneDuplicateGuard";
 
-interface KnownPatient { uid: string; name: string; email: string; }
+interface KnownPatient { uid: string; name: string; email: string; phone?: string; }
 
 interface FeeRecord {
     id: string;
@@ -63,7 +64,7 @@ export default function ReceptionistPaymentsPage() {
     const [search, setSearch] = useState("");
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({
-        patientName: "", patientEmail: "",
+        patientName: "", patientEmail: "", patientPhone: "",
         consultationType: CONSULTATION_TYPES[0].label,
         amount: CONSULTATION_TYPES[0].amount.toString(),
     });
@@ -89,7 +90,7 @@ export default function ReceptionistPaymentsPage() {
             setFees(feesSnap.docs.map(d => ({ id: d.id, ...d.data() } as FeeRecord)));
             setPatients(
                 patientsSnap.docs
-                    .map(d => { const data = d.data() as any; return { uid: d.id, name: data.name || "", email: data.email || "" }; })
+                    .map(d => { const data = d.data() as any; return { uid: d.id, name: data.name || "", email: data.email || "", phone: data.phone || "" }; })
                     .filter(p => p.name)
             );
         } catch(e) { console.error(e); }
@@ -121,14 +122,14 @@ export default function ReceptionistPaymentsPage() {
     const pickPatient = (p: KnownPatient) => {
         setPickedPatient(p);
         setNameQuery(p.name);
-        setForm(prev => ({ ...prev, patientName: p.name, patientEmail: p.email }));
+        setForm(prev => ({ ...prev, patientName: p.name, patientEmail: p.email, patientPhone: p.phone || "" }));
         setDropdownOpen(false);
     };
 
     const clearPick = () => {
         setPickedPatient(null);
         setNameQuery("");
-        setForm(prev => ({ ...prev, patientName: "", patientEmail: "" }));
+        setForm(prev => ({ ...prev, patientName: "", patientEmail: "", patientPhone: "" }));
     };
 
     const handleCreateFee = async (e: React.FormEvent) => {
@@ -148,7 +149,7 @@ export default function ReceptionistPaymentsPage() {
             });
             setShowForm(false);
             setPickedPatient(null); setNameQuery("");
-            setForm({ patientName: "", patientEmail: "", consultationType: CONSULTATION_TYPES[0].label, amount: CONSULTATION_TYPES[0].amount.toString() });
+            setForm({ patientName: "", patientEmail: "", patientPhone: "", consultationType: CONSULTATION_TYPES[0].label, amount: CONSULTATION_TYPES[0].amount.toString() });
             fetchFees();
         } catch(err: any) {
             setCreateError(err.message || "Failed to create fee.");
@@ -265,6 +266,22 @@ export default function ReceptionistPaymentsPage() {
                                     </AnimatePresence>
                                 </div>
                             </div>
+
+                            {!pickedPatient && nameQuery.length > 0 && (
+                                <div className="space-y-2">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Patient Phone (optional — checks for existing records)</label>
+                                        <Input type="tel" placeholder="+256 700 000 000" value={form.patientPhone}
+                                            onChange={e => setForm(p => ({ ...p, patientPhone: e.target.value }))} />
+                                    </div>
+                                    <PhoneDuplicateGuard
+                                        phone={form.patientPhone}
+                                        patients={patients}
+                                        onUseExisting={pickPatient}
+                                    />
+                                </div>
+                            )}
+
                             <div className="space-y-1.5">
                                 <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Consultation Type</label>
                                 <select className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"

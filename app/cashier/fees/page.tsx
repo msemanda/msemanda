@@ -7,6 +7,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { notify } from "@/lib/notify";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     CreditCard, CheckCircle2, Clock, Search,
@@ -124,6 +125,29 @@ export default function CashierFeesPage() {
                 patientId: fee.patientEmail,
                 receiptNo,
             });
+
+            // Activate any appointment(s) reception reserved against this fee —
+            // they were created as PENDING_PAYMENT so the slot wasn't lost, and
+            // only now become visible to the doctor.
+            const apptSnap = await getDocs(query(
+                collection(db, "appointments"),
+                where("feeId", "==", fee.id),
+                where("status", "==", "PENDING_PAYMENT")
+            ));
+            for (const apptDoc of apptSnap.docs) {
+                await updateDoc(doc(db, "appointments", apptDoc.id), { status: "CONFIRMED" });
+                const appt = apptDoc.data() as { doctorId?: string; patientName?: string; date?: string; time?: string };
+                if (appt.doctorId) {
+                    await notify({
+                        targetUid: appt.doctorId,
+                        type:      "appointment",
+                        title:     `Appointment confirmed: ${appt.patientName || fee.patientName}`,
+                        body:      `${appt.date} at ${appt.time} — consultation fee paid`,
+                        link:      "/doctor/appointments",
+                    });
+                }
+            }
+
             setFees(prev => prev.filter(f => f.id !== fee.id));
             setCounts(prev => ({ ...prev, submitted: prev.submitted - 1, paid: prev.paid + 1 }));
         } catch(e) { console.error(e); }

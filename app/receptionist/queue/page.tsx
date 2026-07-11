@@ -18,6 +18,8 @@ interface QueueEntry {
 
 const STATUS_STYLE: Record<string, string> = {
     SCHEDULED:       "bg-amber-50 text-amber-700",
+    CONFIRMED:       "bg-amber-50 text-amber-700",
+    PENDING_PAYMENT: "bg-red-50 text-red-600",
     CALLED:          "bg-purple-50 text-purple-700",
     IN_CONSULTATION: "bg-blue-50 text-blue-700",
     COMPLETED:       "bg-green-50 text-green-700",
@@ -26,6 +28,8 @@ const STATUS_STYLE: Record<string, string> = {
 
 const STATUS_LABEL: Record<string, string> = {
     SCHEDULED:       "WAITING",
+    CONFIRMED:       "WAITING",
+    PENDING_PAYMENT: "AWAITING PAYMENT",
     CALLED:          "CALLED",
     IN_CONSULTATION: "IN CONSULTATION",
     COMPLETED:       "DONE",
@@ -93,7 +97,7 @@ export default function TodaysQueue() {
 
     const active = queue.filter(q => q.status !== "COMPLETED" && q.status !== "CANCELLED");
     const completed = queue.filter(q => q.status === "COMPLETED" || q.status === "CANCELLED");
-    const nextWaiting = queue.find(q => q.status === "SCHEDULED");
+    const nextWaiting = queue.find(q => q.status === "SCHEDULED" || q.status === "CONFIRMED");
 
     return (
         <div className="max-w-4xl mx-auto space-y-5">
@@ -103,7 +107,7 @@ export default function TodaysQueue() {
                         <ClipboardList className="h-6 w-6 text-indigo-600" /> Today's Queue
                     </h1>
                     <p className="text-sm text-gray-500 mt-0.5">
-                        {queue.filter(q => q.status === "SCHEDULED").length} waiting ·{" "}
+                        {queue.filter(q => q.status === "SCHEDULED" || q.status === "CONFIRMED").length} waiting ·{" "}
                         {queue.filter(q => q.status === "IN_CONSULTATION").length} in consultation
                     </p>
                 </div>
@@ -146,7 +150,7 @@ export default function TodaysQueue() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3 shrink-0">
-                                    {q.status === "SCHEDULED" && (
+                                    {(q.status === "SCHEDULED" || q.status === "CONFIRMED") && (
                                         <p className="text-xs text-amber-600 font-bold flex items-center gap-1">
                                             <Clock className="h-3.5 w-3.5" />{waitMins(q.time)} min wait
                                         </p>
@@ -154,7 +158,7 @@ export default function TodaysQueue() {
                                     <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap ${STATUS_STYLE[q.status] ?? "bg-gray-50 text-gray-500"}`}>
                                         {STATUS_LABEL[q.status] ?? q.status}
                                     </span>
-                                    {q.status === "SCHEDULED" && (
+                                    {(q.status === "SCHEDULED" || q.status === "CONFIRMED") && (
                                         <button onClick={() => updateStatus(q.id, "CALLED")}
                                             disabled={updating === q.id}
                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors">

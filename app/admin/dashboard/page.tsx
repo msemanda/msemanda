@@ -38,9 +38,11 @@ interface Transaction {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-    SCHEDULED: "#5d93ac",
-    COMPLETED: "#22c55e",
-    CANCELLED: "#e92027",
+    SCHEDULED:       "#5d93ac",
+    CONFIRMED:       "#5d93ac",
+    PENDING_PAYMENT: "#f59e0b",
+    COMPLETED:       "#22c55e",
+    CANCELLED:       "#e92027",
 };
 
 function last14Days(): { key: string; label: string }[] {
@@ -110,7 +112,7 @@ export default function AdminDashboard() {
                 });
 
                 // Appointment status breakdown
-                const statusCounts: Record<string, number> = { SCHEDULED: 0, COMPLETED: 0, CANCELLED: 0 };
+                const statusCounts: Record<string, number> = { SCHEDULED: 0, CONFIRMED: 0, PENDING_PAYMENT: 0, COMPLETED: 0, CANCELLED: 0 };
                 for (const a of appointments) {
                     if (a.status && a.status in statusCounts) statusCounts[a.status]++;
                 }

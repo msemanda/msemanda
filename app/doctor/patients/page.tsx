@@ -19,7 +19,9 @@ interface PatientSummary {
 }
 
 const APPT_STATUS_MAP: Record<string, { label: string; badge: string }> = {
-    SCHEDULED:       { label: "SCHEDULED",      badge: "bg-gray-50 text-gray-500 border-gray-100" },
+    SCHEDULED:       { label: "SCHEDULED",       badge: "bg-gray-50 text-gray-500 border-gray-100" },
+    CONFIRMED:       { label: "CONFIRMED",       badge: "bg-gray-50 text-gray-500 border-gray-100" },
+    PENDING_PAYMENT: { label: "AWAITING PAYMENT", badge: "bg-amber-50 text-amber-700 border-amber-100" },
     CALLED:          { label: "CALLED",          badge: "bg-purple-50 text-purple-700 border-purple-100" },
     COMPLETED:       { label: "COMPLETED",       badge: "bg-green-50 text-green-700 border-green-100" },
     IN_CONSULTATION: { label: "IN CONSULTATION", badge: "bg-blue-50 text-blue-700 border-blue-100" },
