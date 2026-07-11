@@ -36,13 +36,16 @@ export default function PharmacyDashboard() {
     const fetchPrescriptions = async () => {
         setLoading(true);
         try {
-            // In legacy pharmhome.jsp, it filters diagnostics by phname (pharmacy_id)
-            const q = query(
-                collection(db, "diagnostics"),
-                where("pharmacyId", "==", profile?.uid)
-            );
-            const querySnapshot = await getDocs(q);
-            setDiagnostics(querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+            // Show prescriptions specifically assigned to this pharmacist plus
+            // anything left unassigned (doctor picked "Any pharmacy") — a doctor
+            // is never required to name a specific pharmacy, so an unfiltered
+            // pharmacyId==uid query would leave every unassigned order invisible.
+            const snap = await getDocs(collection(db, "diagnostics"));
+            const mine = snap.docs
+                .map(doc => ({ ...doc.data(), id: doc.id }))
+                .filter((d: any) => d.medicines && (!d.pharmacyId || d.pharmacyId === profile?.uid)
+                    && d.status !== "DISPENSED");
+            setDiagnostics(mine);
         } catch (error) {
             console.error("Error fetching prescriptions:", error);
         } finally {

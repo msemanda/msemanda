@@ -252,11 +252,10 @@ export default function DiagnosisEntryPage() {
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Pharmacy</label>
                                     <select
                                         className="w-full h-16 rounded-2xl border border-gray-100 bg-white px-6 text-sm font-bold transition-all focus:border-cyan-200 focus:ring-8 focus:ring-cyan-500/5 outline-none shadow-sm"
-                                        required
                                         value={formData.pharmacyId}
                                         onChange={(e) => setFormData({ ...formData, pharmacyId: e.target.value })}
                                     >
-                                        <option value="">Select Pharmacy</option>
+                                        <option value="">Any pharmacy (central queue)</option>
                                         {pharmacies.map(ph => (
                                             <option key={ph.uid} value={ph.uid}>{ph.name}</option>
                                         ))}
