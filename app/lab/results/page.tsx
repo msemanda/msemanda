@@ -119,9 +119,13 @@ export default function ResultsEntryPage() {
     };
 
     const handleSubmitResults = async (order: LabOrder) => {
+        const results = rows[order.id] ?? [];
+        // A lab order can never be marked COMPLETED without at least one
+        // fully-entered result — this is the same rule the Submit button's
+        // disabled state enforces, checked again here so it can't be bypassed.
+        if (results.length === 0 || !results.every(r => r.testName.trim() && r.value.trim())) return;
         setSubmitting(order.id);
         try {
-            const results = rows[order.id] ?? [];
             await updateDoc(doc(db, "cpoeOrders", order.id), {
                 results,
                 status: "COMPLETED",

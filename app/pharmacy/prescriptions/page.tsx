@@ -15,17 +15,16 @@ import {
 
 interface RxOrder {
     id: string;
-    orderText: string;
     detail?: string;
     amount: number;
+    paymentStatus?: string;
+    priority?: string;
     patientName: string;
     patientEmail?: string;
     ward?: string;
     orderedBy?: string;
-    orderedAt?: any;
+    createdAt?: any;
     status: string;
-    billId?: string;
-    type: string;
 }
 
 type Tab = "queued" | "dispensed" | "cancelled";
@@ -91,11 +90,14 @@ export default function PrescriptionQueuePage() {
         finally { setProcessing(null); }
     };
 
+    const isGated = (o: RxOrder) => o.paymentStatus === "UNPAID" && (o.priority ?? "ROUTINE") === "ROUTINE";
+
     const filtered = orders.filter(o =>
         !search ||
         o.patientName?.toLowerCase().includes(search.toLowerCase()) ||
-        o.orderText?.toLowerCase().includes(search.toLowerCase())
+        o.detail?.toLowerCase().includes(search.toLowerCase())
     );
+    const gatedCount = orders.filter(o => tab === "queued" && isGated(o)).length;
 
     const tabs: { key: Tab; label: string; count: number; color: string; active: string }[] = [
         { key: "queued",    label: "Awaiting Dispensing", count: counts.queued,    color: "bg-amber-500",  active: "bg-amber-500 text-white" },
@@ -124,7 +126,8 @@ export default function PrescriptionQueuePage() {
                 <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
                     <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
                     <p className="text-sm font-semibold text-amber-700">
-                        {counts.queued} prescription{counts.queued !== 1 ? "s" : ""} waiting — ordered by doctor, ready to dispense.
+                        {counts.queued} prescription{counts.queued !== 1 ? "s" : ""} waiting — ordered by doctor.
+                        {gatedCount > 0 && ` ${gatedCount} awaiting payment confirmation before dispensing.`}
                     </p>
                 </div>
             )}
@@ -200,7 +203,7 @@ export default function PrescriptionQueuePage() {
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-sm text-gray-700 mt-1 font-medium">{order.detail || order.orderText}</p>
+                                            <p className="text-sm text-gray-700 mt-1 font-medium">{order.detail}</p>
                                             <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                                                 {order.orderedBy && (
                                                     <span className="text-[10px] text-gray-400 flex items-center gap-1">
@@ -219,6 +222,11 @@ export default function PrescriptionQueuePage() {
                                         <p className="text-base font-black text-gray-900">
                                             UGX {order.amount?.toLocaleString()}
                                         </p>
+                                        {tab === "queued" && isGated(order) && (
+                                            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100 flex items-center gap-1">
+                                                <Clock className="h-3 w-3" /> Unpaid
+                                            </span>
+                                        )}
                                         {tab === "dispensed" && (
                                             <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-100 flex items-center gap-1">
                                                 <CheckCircle2 className="h-3 w-3" /> Dispensed
@@ -236,7 +244,10 @@ export default function PrescriptionQueuePage() {
                                 {tab === "queued" && (
                                     <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
                                         <p className="text-xs text-amber-600 font-semibold flex items-center gap-1.5">
-                                            <Clock className="h-3.5 w-3.5" /> Ordered by doctor — go to Record Dispensing to issue stock and bill the patient
+                                            <Clock className="h-3.5 w-3.5" />
+                                            {isGated(order)
+                                                ? "Billed — waiting on Finance to confirm payment before this can be dispensed"
+                                                : "Ordered by doctor — go to Record Dispensing to hand it over"}
                                         </p>
                                         <div className="flex gap-2">
                                             <button onClick={() => handleCancel(order)} disabled={!!processing}

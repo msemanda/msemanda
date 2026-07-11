@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { notify, resolvePatientUid } from "@/lib/notify";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -22,10 +23,23 @@ import {
     Calendar,
     FileText,
     User,
-    ArrowRight
+    ArrowRight,
+    Search,
+    X,
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+
+interface DrugStock {
+    id: string;
+    drugName: string;
+    genericName?: string;
+    category: string;
+    quantity: number;
+    unit: string;
+    unitPrice: number;
+    reorderLevel: number;
+}
 
 export default function DiagnosisEntryPage() {
     const { id } = useParams();
@@ -33,11 +47,14 @@ export default function DiagnosisEntryPage() {
     const { profile } = useAuth();
     const [patient, setPatient] = useState<any>(null);
     const [pharmacies, setPharmacies] = useState<any[]>([]);
+    const [drugs, setDrugs] = useState<DrugStock[]>([]);
+    const [selectedDrug, setSelectedDrug] = useState<DrugStock | null>(null);
+    const [drugSearch, setDrugSearch] = useState("");
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
         predictions: "",
-        medicines: "",
         dosage: "",
+        quantity: "1",
         fromDate: "",
         toDate: "",
         usageDirections: "",
@@ -57,10 +74,14 @@ export default function DiagnosisEntryPage() {
                 setPatient(patientDoc.data());
             }
 
-            const pharmaciesSnapshot = await getDocs(collection(db, "users"));
-            setPharmacies(pharmaciesSnapshot.docs
+            const [usersSnapshot, stockSnapshot] = await Promise.all([
+                getDocs(collection(db, "users")),
+                getDocs(collection(db, "pharmacyStock")),
+            ]);
+            setPharmacies(usersSnapshot.docs
                 .map(doc => ({ ...doc.data(), uid: doc.id }))
                 .filter((u: any) => u.role === "PHARMACY"));
+            setDrugs(stockSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as DrugStock)));
         } catch (error) {
             console.error("Error fetching data:", error);
         } finally {
@@ -68,15 +89,32 @@ export default function DiagnosisEntryPage() {
         }
     };
 
+    const filteredDrugs = drugs.filter(d =>
+        d.drugName.toLowerCase().includes(drugSearch.toLowerCase()) ||
+        (d.genericName || "").toLowerCase().includes(drugSearch.toLowerCase())
+    );
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!selectedDrug) return;
         setProcessing(true);
         try {
             const diagId = `DIAG-${Date.now()}`;
+            const quantity = parseInt(formData.quantity) || 1;
+            const unitPrice = selectedDrug.unitPrice ?? 0;
+            const amount = unitPrice * quantity;
+            const detail = `${selectedDrug.drugName}${formData.dosage ? ` — ${formData.dosage}` : ""}`;
 
             // Save clinical notes to diagnostics collection (EMR record)
             await setDoc(doc(db, "diagnostics", diagId), {
-                ...formData,
+                predictions: formData.predictions,
+                medicines: selectedDrug.drugName,
+                dosage: formData.dosage,
+                quantity,
+                fromDate: formData.fromDate,
+                toDate: formData.toDate,
+                usageDirections: formData.usageDirections,
+                pharmacyId: formData.pharmacyId,
                 patientId: id,
                 patientName: patient?.name,
                 patientEmail: patient?.email || "",
@@ -85,28 +123,64 @@ export default function DiagnosisEntryPage() {
                 createdAt: serverTimestamp(),
             });
 
-            // Send medication order directly to pharmacy queue. No bill is
-            // created here — the pharmacist bills the patient at dispense
-            // time using the real stock price, once the actual quantity
-            // dispensed is known.
-            if (formData.medicines) {
-                await addDoc(collection(db, "cpoeOrders"), {
-                    orderType: "MEDICATION",
-                    detail: `${formData.medicines}${formData.dosage ? ` — ${formData.dosage}` : ""}`,
-                    patientId: id,
+            // The drug (and its real stock price) is picked here at
+            // prescribing time, so the order carries a real amount and goes
+            // through the same payment gate as every other department —
+            // the pharmacist can no longer dispense before Finance clears it.
+            const orderRef = await addDoc(collection(db, "cpoeOrders"), {
+                orderType: "MEDICATION",
+                detail,
+                drugId: selectedDrug.id,
+                quantity,
+                unit: selectedDrug.unit,
+                unitPrice,
+                amount,
+                paymentStatus: amount > 0 ? "UNPAID" : "PAID",
+                patientId: id,
+                patientName: patient?.name,
+                patientEmail: patient?.email || "",
+                notes: formData.usageDirections,
+                fromDate: formData.fromDate,
+                toDate: formData.toDate,
+                diagnosticRef: diagId,
+                orderedBy: profile?.name,
+                orderedByUid: profile?.uid,
+                priority: "ROUTINE",
+                status: "PENDING",
+                ward: "OPD",
+                createdAt: serverTimestamp(),
+            });
+
+            if (amount > 0) {
+                await addDoc(collection(db, "patientBills"), {
                     patientName: patient?.name,
                     patientEmail: patient?.email || "",
-                    notes: formData.usageDirections,
-                    fromDate: formData.fromDate,
-                    toDate: formData.toDate,
-                    diagnosticRef: diagId,
+                    description: detail,
+                    billType: "MEDICATION",
+                    amount,
+                    orderId: orderRef.id,
                     orderedBy: profile?.name,
-                    orderedByUid: profile?.uid,
-                    priority: "ROUTINE",
-                    status: "PENDING",
-                    amount: 0,
+                    status: "PENDING_PAYMENT",
                     ward: "OPD",
                     createdAt: serverTimestamp(),
+                });
+
+                const patientUid = await resolvePatientUid(id as string, patient?.email);
+                if (patientUid) {
+                    await notify({
+                        targetUid: patientUid,
+                        type: "billing",
+                        title: "New pharmacy bill",
+                        body: `${detail} — UGX ${amount.toLocaleString()} awaiting payment confirmation.`,
+                        link: "/patient/records",
+                    });
+                }
+                await notify({
+                    targetRole: "CASHIER",
+                    type: "billing",
+                    title: `New bill — ${patient?.name}`,
+                    body: `${detail} — UGX ${amount.toLocaleString()}`,
+                    link: "/cashier/bills",
                 });
             }
 
@@ -202,17 +276,56 @@ export default function DiagnosisEntryPage() {
                             </div>
 
                             <div className="space-y-8">
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Medicine</label>
+                                    {selectedDrug ? (
+                                        <div className="flex items-center justify-between h-16 px-6 rounded-2xl border border-cyan-100 bg-cyan-50">
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-black text-gray-900 truncate">{selectedDrug.drugName}</p>
+                                                <p className="text-[11px] text-cyan-600 font-semibold">
+                                                    {selectedDrug.quantity} {selectedDrug.unit} in stock · UGX {selectedDrug.unitPrice?.toLocaleString()} each
+                                                </p>
+                                            </div>
+                                            <button type="button" onClick={() => { setSelectedDrug(null); setDrugSearch(""); }}
+                                                className="h-8 w-8 rounded-xl bg-white border border-cyan-200 flex items-center justify-center text-cyan-700 hover:bg-cyan-100 transition-colors shrink-0">
+                                                <X className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="relative">
+                                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                value={drugSearch}
+                                                onChange={(e) => setDrugSearch(e.target.value)}
+                                                placeholder="Search pharmacy stock by drug name..."
+                                                className="w-full h-16 pl-12 pr-6 rounded-2xl border border-gray-100 bg-white text-sm font-bold transition-all focus:border-cyan-200 focus:ring-8 focus:ring-cyan-500/5 outline-none shadow-sm"
+                                            />
+                                            {drugSearch && (
+                                                <div className="absolute z-20 top-full mt-1 left-0 right-0 max-h-56 overflow-y-auto bg-white border border-gray-100 rounded-2xl shadow-lg p-1">
+                                                    {filteredDrugs.length === 0 ? (
+                                                        <p className="text-xs text-gray-400 text-center py-4">No matching drugs in stock</p>
+                                                    ) : filteredDrugs.map(d => (
+                                                        <button key={d.id} type="button" onClick={() => { setSelectedDrug(d); setDrugSearch(""); }}
+                                                            className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl hover:bg-cyan-50 text-left transition-colors">
+                                                            <div className="min-w-0">
+                                                                <p className="text-xs font-bold text-gray-900 truncate">{d.drugName}</p>
+                                                                <p className="text-[10px] text-gray-400 truncate">{d.genericName || d.category}</p>
+                                                            </div>
+                                                            <span className={`text-[10px] font-bold shrink-0 ml-3 ${d.quantity === 0 ? "text-red-500" : d.quantity <= d.reorderLevel ? "text-amber-500" : "text-green-600"}`}>
+                                                                {d.quantity} {d.unit} · UGX {d.unitPrice?.toLocaleString()}
+                                                            </span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                    {!loading && drugs.length === 0 && (
+                                        <p className="text-[11px] text-amber-600 font-semibold ml-2">No drugs found in pharmacy stock — ask Pharmacy to add inventory first.</p>
+                                    )}
+                                </div>
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Medicines</label>
-                                        <Input
-                                            className="h-16 rounded-2xl border-gray-100 bg-white px-6 font-bold"
-                                            required
-                                            placeholder="e.g. Amoxicillin"
-                                            value={formData.medicines}
-                                            onChange={(e) => setFormData({ ...formData, medicines: e.target.value })}
-                                        />
-                                    </div>
                                     <div className="space-y-3">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Dosage</label>
                                         <Input
@@ -221,6 +334,20 @@ export default function DiagnosisEntryPage() {
                                             placeholder="e.g. 500mg BID"
                                             value={formData.dosage}
                                             onChange={(e) => setFormData({ ...formData, dosage: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">
+                                            Quantity {selectedDrug && <span className="text-cyan-500 normal-case font-semibold">(UGX {(( parseInt(formData.quantity) || 0) * (selectedDrug.unitPrice ?? 0)).toLocaleString()} total)</span>}
+                                        </label>
+                                        <Input
+                                            className="h-16 rounded-2xl border-gray-100 bg-white px-6 font-bold"
+                                            type="number"
+                                            min="1"
+                                            max={selectedDrug?.quantity}
+                                            required
+                                            value={formData.quantity}
+                                            onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                                         />
                                     </div>
                                 </div>
@@ -270,7 +397,7 @@ export default function DiagnosisEntryPage() {
                             <Calendar className="h-5 w-5 text-gray-400" />
                             <p className="text-xs font-black text-gray-500 uppercase tracking-widest">Date: <span className="text-cyan-600 ml-1">{new Date().toLocaleDateString()}</span></p>
                         </div>
-                        <Button type="submit" className="h-20 px-16 text-xl font-black rounded-[28px] shadow-heavy group/btn w-full md:w-auto" disabled={processing}>
+                        <Button type="submit" className="h-20 px-16 text-xl font-black rounded-[28px] shadow-heavy group/btn w-full md:w-auto" disabled={processing || !selectedDrug}>
                             {processing ? "Saving…" : "Save Diagnosis"}
                             <ArrowRight className="ml-4 h-6 w-6 group-hover/btn:translate-x-2 transition-transform" />
                         </Button>

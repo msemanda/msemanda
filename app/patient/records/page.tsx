@@ -40,6 +40,18 @@ interface FeeRecord {
     receiptNo?: string;
 }
 
+interface ServiceBill {
+    id: string;
+    description: string;
+    billType: string;
+    amount: number;
+    status: "PENDING_PAYMENT" | "PAID" | "CANCELLED";
+    visitRef?: string;
+    createdAt?: any;
+    paidAt?: any;
+    receiptNo?: string;
+}
+
 const PAYMENT_METHODS = [
     { value: "MOBILE_MONEY", label: "Mobile Money (MTN/Airtel)", icon: Smartphone },
     { value: "CASH", label: "Cash (at reception)", icon: Banknote },
@@ -63,6 +75,32 @@ const FEE_STATUS: Record<string, { color: string; label: string; icon: any }> = 
     PAID:         { color: "bg-green-50 text-green-700 border-green-100", label: "Confirmed",        icon: CheckCircle2 },
 };
 
+const BILL_STATUS: Record<string, { color: string; label: string; icon: any }> = {
+    PENDING_PAYMENT: { color: "bg-amber-50 text-amber-700 border-amber-100", label: "Payment Due", icon: Clock },
+    PAID:            { color: "bg-green-50 text-green-700 border-green-100", label: "Paid",        icon: CheckCircle2 },
+    CANCELLED:       { color: "bg-gray-50 text-gray-500 border-gray-100",    label: "Cancelled",   icon: X },
+};
+
+interface BillGroup {
+    key: string;
+    visitRef?: string;
+    bills: ServiceBill[];
+    totalAmount: number;
+    status: string;
+}
+
+function groupServiceBills(list: ServiceBill[]): BillGroup[] {
+    const map = new Map<string, BillGroup>();
+    for (const b of list) {
+        const key = b.visitRef || b.id;
+        if (!map.has(key)) map.set(key, { key, visitRef: b.visitRef, bills: [], totalAmount: 0, status: b.status });
+        const g = map.get(key)!;
+        g.bills.push(b);
+        g.totalAmount += b.amount;
+    }
+    return Array.from(map.values());
+}
+
 type Tab = "appointments" | "payments" | "results";
 
 export default function PatientRecordsPage() {
@@ -70,6 +108,7 @@ export default function PatientRecordsPage() {
     const [tab, setTab] = useState<Tab>("appointments");
     const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
     const [fees, setFees] = useState<FeeRecord[]>([]);
+    const [serviceBills, setServiceBills] = useState<ServiceBill[]>([]);
     const [results, setResults] = useState<CPOEOrder[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -87,7 +126,7 @@ export default function PatientRecordsPage() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [apptSnap, feeSnap, orderSnap] = await Promise.all([
+            const [apptSnap, feeSnap, orderSnap, billSnap] = await Promise.all([
                 getDocs(query(
                     collection(db, "appointments"),
                     where("patientEmail", "==", profile!.email)
@@ -100,9 +139,16 @@ export default function PatientRecordsPage() {
                     collection(db, "cpoeOrders"),
                     where("patientEmail", "==", profile!.email)
                 )),
+                getDocs(query(
+                    collection(db, "patientBills"),
+                    where("patientEmail", "==", profile!.email)
+                )),
             ]);
             setAppointments(apptSnap.docs.map(d => ({ id: d.id, ...d.data() } as AppointmentRecord)));
             setFees(feeSnap.docs.map(d => ({ id: d.id, ...d.data() } as FeeRecord)));
+            const bills = billSnap.docs.map(d => ({ id: d.id, ...d.data() } as ServiceBill));
+            bills.sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+            setServiceBills(bills);
             const testResults = orderSnap.docs
                 .map(d => ({ id: d.id, ...d.data() } as CPOEOrder))
                 .filter(o => (o.orderType === "LAB" || o.orderType === "RADIOLOGY") && o.status === "COMPLETED");
@@ -162,7 +208,9 @@ export default function PatientRecordsPage() {
         }
     };
 
-    const pendingCount = fees.filter(f => f.status === "PENDING").length;
+    const billGroups = groupServiceBills(serviceBills);
+    const pendingBillGroups = billGroups.filter(g => g.status === "PENDING_PAYMENT");
+    const pendingCount = fees.filter(f => f.status === "PENDING").length + pendingBillGroups.length;
 
     return (
         <div className="max-w-4xl mx-auto px-6 py-8 pb-16 space-y-6">
@@ -250,15 +298,18 @@ export default function PatientRecordsPage() {
                     )}
                 </motion.div>
             ) : tab === "payments" ? (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                    {fees.length === 0 ? (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                    {fees.length === 0 && billGroups.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-gray-200 text-center">
                             <CreditCard className="h-12 w-12 text-gray-200 mb-4" />
                             <p className="text-sm font-black text-gray-900 mb-1">No payments</p>
-                            <p className="text-xs text-gray-400">Your consultation fees will appear here.</p>
+                            <p className="text-xs text-gray-400">Your consultation fees and service bills will appear here.</p>
                         </div>
                     ) : (
+                    <>
+                    {fees.length > 0 && (
                         <div className="space-y-3">
+                            <h2 className="text-xs font-black text-gray-400 uppercase tracking-wider">Consultation Fees</h2>
                             {fees.map((fee, i) => {
                                 const s = FEE_STATUS[fee.status] || { color: "bg-gray-50 text-gray-600 border-gray-100", label: fee.status, icon: Clock };
                                 const StatusIcon = s.icon;
@@ -308,6 +359,56 @@ export default function PatientRecordsPage() {
                                 );
                             })}
                         </div>
+                    )}
+
+                    {billGroups.length > 0 && (
+                        <div className="space-y-3">
+                            <h2 className="text-xs font-black text-gray-400 uppercase tracking-wider">Service Bills</h2>
+                            {billGroups.map((group, i) => {
+                                const s = BILL_STATUS[group.status] || { color: "bg-gray-50 text-gray-600 border-gray-100", label: group.status, icon: Clock };
+                                const StatusIcon = s.icon;
+                                const multi = group.bills.length > 1;
+                                return (
+                                    <motion.div key={group.key}
+                                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                                        className={`bg-white rounded-2xl border shadow-sm p-5 ${group.status === "PENDING_PAYMENT" ? "border-amber-100" : "border-gray-100"}`}>
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${
+                                                    group.status === "PENDING_PAYMENT" ? "bg-amber-50" : group.status === "PAID" ? "bg-green-50" : "bg-gray-50"
+                                                }`}>
+                                                    <CreditCard className={`h-4.5 w-4.5 ${
+                                                        group.status === "PENDING_PAYMENT" ? "text-amber-600" : group.status === "PAID" ? "text-green-600" : "text-gray-400"
+                                                    }`} />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-black text-gray-900">
+                                                        {multi ? `${group.bills.length} items — ${group.bills.map(b => b.billType).join(", ")}` : group.bills[0].billType}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500 mt-0.5 truncate max-w-xs">
+                                                        {group.bills.map(b => b.description).join(", ")}
+                                                    </p>
+                                                    <p className="text-base font-black text-gray-800 mt-0.5">UGX {group.totalAmount.toLocaleString()}</p>
+                                                    {group.bills[0].receiptNo && (
+                                                        <p className="text-[10px] font-mono text-gray-300 mt-0.5">{group.bills[0].receiptNo}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col items-end gap-2 shrink-0">
+                                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border flex items-center gap-1 ${s.color}`}>
+                                                    <StatusIcon className="h-3 w-3" /> {s.label}
+                                                </span>
+                                                {group.status === "PENDING_PAYMENT" && (
+                                                    <p className="text-[10px] text-gray-400 font-medium text-right max-w-[140px]">Pay at reception or cashier to release this order</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+                    )}
+                    </>
                     )}
                 </motion.div>
             ) : (
