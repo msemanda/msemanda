@@ -1,12 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import { Input } from "@/components/ui/Input";
 import type { UserRole } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, ShieldCheck, ArrowRight, Sparkles } from "lucide-react";
+import { Mail, Lock, ShieldCheck, ArrowRight, Sparkles, Clock3 } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
+
+function SessionExpiredNotice() {
+    const params = useSearchParams();
+    if (params.get("reason") !== "session-expired") return null;
+    return (
+        <div className="mb-5 p-3.5 rounded-xl bg-amber-50 border border-amber-100 text-amber-700 text-xs font-semibold flex gap-2.5">
+            <Clock3 className="h-4 w-4 shrink-0 mt-0.5" />
+            <span>You were signed out — your session expired from inactivity, or you signed in on another device.</span>
+        </div>
+    );
+}
 
 function getRoleDashboard(role: UserRole): string {
     switch (role) {
@@ -88,6 +100,9 @@ export default function LoginPage() {
                 </div>
 
                 <div className="bg-white rounded-3xl shadow-premium border border-gray-100 p-8">
+                    <Suspense fallback={null}>
+                        <SessionExpiredNotice />
+                    </Suspense>
                     <form onSubmit={handleLogin} className="space-y-4">
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Email Address</label>

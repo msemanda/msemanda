@@ -1,6 +1,8 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies, headers } from "next/headers";
 import type { UserRole } from "@/types";
+import { touchSession } from "@/lib/session-store";
+import { getSessionSettings } from "@/lib/system-config";
 
 export interface AuthPayload {
     uid: string;
@@ -8,6 +10,7 @@ export interface AuthPayload {
     name: string;
     role: UserRole;
     permissions?: string[];
+    sessionId?: string;
 }
 
 const secret = () =>
@@ -63,9 +66,22 @@ export async function clearAuthCookie(): Promise<void> {
     jar.delete(COOKIE);
 }
 
-export async function getAuthPayload(): Promise<AuthPayload | null> {
+/** Reads and verifies the JWT cookie only — no session-store check. Used by logout, which needs the uid even if the session already expired. */
+export async function getRawAuthPayload(): Promise<AuthPayload | null> {
     const jar = await cookies();
     const token = jar.get(COOKIE)?.value;
     if (!token) return null;
     return verifyToken(token);
+}
+
+export async function getAuthPayload(): Promise<AuthPayload | null> {
+    const payload = await getRawAuthPayload();
+    if (!payload) return null;
+    // Tokens issued before session enforcement shipped have no sessionId — let them through untouched.
+    if (!payload.sessionId) return payload;
+
+    const { sessionTimeoutMinutes, singleSessionPerUser } = await getSessionSettings();
+    const valid = await touchSession(payload.uid, payload.sessionId, sessionTimeoutMinutes, singleSessionPerUser);
+    if (!valid) return null;
+    return payload;
 }

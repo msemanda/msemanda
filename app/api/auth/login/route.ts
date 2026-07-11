@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAuthUser } from "@/lib/auth-db";
 import { signToken, setAuthCookie } from "@/lib/auth";
+import { createSession } from "@/lib/session-store";
 import { logRequest, getClientIp } from "@/lib/request-log";
 
 export async function POST(req: NextRequest) {
@@ -29,12 +30,14 @@ export async function POST(req: NextRequest) {
             return await respond({ error: "Invalid email or password." }, 401, email);
         }
 
+        const sessionId = await createSession(user.uid);
         const token = await signToken({
             uid: user.uid,
             email: user.email,
             name: user.name,
             role: user.role,
             permissions: user.permissions,
+            sessionId,
         });
         await setAuthCookie(token);
 

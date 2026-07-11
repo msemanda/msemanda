@@ -6,7 +6,7 @@ import { db } from "@/lib/firebase";
 import { motion } from "framer-motion";
 import {
     Building2, Phone, Mail, MapPin, Globe, Save, CheckCircle2,
-    Settings2, ShieldCheck, Bell, ClipboardList, Database, Loader2, AlertCircle,
+    Settings2, ShieldCheck, Bell, ClipboardList, Database, Loader2, AlertCircle, Clock3,
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,8 @@ interface SystemConfig {
     emailNotifications: boolean;
     smsNotifications: boolean;
     maintenanceMode: boolean;
+    sessionTimeoutMinutes: number;
+    singleSessionPerUser: boolean;
 }
 
 const DEFAULT_CONFIG: SystemConfig = {
@@ -46,6 +48,8 @@ const DEFAULT_CONFIG: SystemConfig = {
     emailNotifications: true,
     smsNotifications: false,
     maintenanceMode: false,
+    sessionTimeoutMinutes: 5,
+    singleSessionPerUser: true,
 };
 
 const FACILITY_TYPES = [
@@ -286,6 +290,34 @@ export default function SystemConfigPage() {
                         onChange={v => set("requireInviteForStaff", v)}
                         label="Require Invitation for Staff"
                         description="Staff must be invited by admin before they can register"
+                    />
+                </motion.div>
+
+                {/* Session Management */}
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.12 }}
+                    className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6"
+                >
+                    <SectionHeader icon={Clock3} title="Session Management" />
+                    <div className="space-y-1.5 mb-4">
+                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Idle Session Timeout (minutes)</label>
+                        <input
+                            type="number"
+                            min={1}
+                            max={480}
+                            value={config.sessionTimeoutMinutes}
+                            onChange={e => set("sessionTimeoutMinutes", parseInt(e.target.value) || 5)}
+                            className="w-full h-11 px-3 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                        />
+                        <p className="text-[11px] text-gray-400">Users are signed out after this many minutes without any activity.</p>
+                    </div>
+                    <Toggle
+                        checked={config.singleSessionPerUser}
+                        onChange={v => set("singleSessionPerUser", v)}
+                        label="One Device at a Time"
+                        description="Signing in on a new device immediately signs the user out everywhere else"
                     />
                 </motion.div>
 
