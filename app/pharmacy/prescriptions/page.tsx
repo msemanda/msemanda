@@ -256,8 +256,8 @@ export default function PrescriptionQueuePage() {
                                                     ? <div className="animate-spin h-3.5 w-3.5 border-2 border-red-200 border-t-red-500 rounded-full" />
                                                     : "Cancel"}
                                             </button>
-                                            <button onClick={goToDispense}
-                                                className="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm">
+                                            <button onClick={goToDispense} disabled={isGated(order)}
+                                                className="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-blue-600 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm">
                                                 Record Dispensing <ArrowRight className="h-3.5 w-3.5" />
                                             </button>
                                         </div>
