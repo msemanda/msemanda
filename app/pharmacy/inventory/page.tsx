@@ -11,6 +11,7 @@ import {
     Package, Plus, Search, RefreshCw, AlertTriangle, CheckCircle2,
     X, Edit2, ChevronDown,
 } from "lucide-react";
+import { DRUG_CATEGORIES } from "@/helpers/constants";
 
 interface DrugStock {
     id: string;
@@ -28,12 +29,6 @@ interface DrugStock {
     lastRestockedBy?: string;
 }
 
-const CATEGORIES = [
-    "Analgesics", "Antibiotics", "Antifungals", "Antivirals", "Antiparasitics",
-    "Cardiovascular", "Diabetes & Endocrine", "Gastrointestinal", "Respiratory",
-    "Vitamins & Supplements", "IV Fluids", "Surgical Supplies", "Other",
-];
-
 const UNITS = ["tablets", "capsules", "ml", "mg", "vials", "ampoules", "sachets", "bottles", "units"];
 
 const STOCK_STATUS = (qty: number, reorder: number) => {
@@ -43,7 +38,7 @@ const STOCK_STATUS = (qty: number, reorder: number) => {
 };
 
 const EMPTY: Omit<DrugStock, "id"> = {
-    drugName: "", genericName: "", category: "Antibiotics",
+    drugName: "", genericName: "", category: DRUG_CATEGORIES[0],
     quantity: 0, unit: "tablets", reorderLevel: 10, unitPrice: 0,
     supplier: "", batchNo: "", expiryDate: "",
 };
@@ -138,6 +133,10 @@ export default function PharmacyInventoryPage() {
     const lowCount = stock.filter(s => s.quantity > 0 && s.quantity <= s.reorderLevel).length;
     const outCount = stock.filter(s => s.quantity === 0).length;
 
+    // Suggested categories plus any already in use (e.g. typed in freehand
+    // via the datalist below) so the filter and form always reflect reality.
+    const categoryOptions = Array.from(new Set([...DRUG_CATEGORIES, ...stock.map(s => s.category)])).filter(Boolean).sort();
+
     return (
         <div className="space-y-5 pb-10">
             {/* Header */}
@@ -186,7 +185,7 @@ export default function PharmacyInventoryPage() {
                     <select value={filterCat} onChange={e => setFilterCat(e.target.value)}
                         className="h-9 pl-3 pr-8 rounded-xl border border-gray-200 bg-white text-xs font-medium appearance-none focus:border-blue-500 outline-none">
                         <option value="All">All Categories</option>
-                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                        {categoryOptions.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                     <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
                 </div>
@@ -303,10 +302,13 @@ export default function PharmacyInventoryPage() {
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Category</label>
-                                        <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-                                            className="h-9 w-full px-3 rounded-xl border border-gray-200 text-sm font-medium focus:border-blue-500 outline-none bg-white">
-                                            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                                        </select>
+                                        <input value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                                            list="drug-category-options" placeholder="e.g. Antibiotics (PO)"
+                                            className="h-9 w-full px-3 rounded-xl border border-gray-200 text-sm font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none bg-white" />
+                                        <datalist id="drug-category-options">
+                                            {categoryOptions.map(c => <option key={c} value={c} />)}
+                                        </datalist>
+                                        <p className="text-[10px] text-gray-400 mt-1">Pick a suggestion or type a new category.</p>
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Unit</label>

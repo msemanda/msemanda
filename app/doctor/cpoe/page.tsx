@@ -178,7 +178,10 @@ export default function CPOEPage() {
                 createdAt: serverTimestamp(),
             });
 
-            if (parseFloat(amount) > 0) {
+            // Medication is billed at the pharmacy at dispense time, from real stock
+            // pricing — the amount here is only an indicative reference for the
+            // pharmacist, so no bill is pre-created for MEDICATION orders.
+            if (activeType !== "MEDICATION" && parseFloat(amount) > 0) {
                 await addDoc(collection(db, "patientBills"), {
                     patientName: selectedPatient.patientName,
                     patientEmail: selectedPatient.patientEmail,
@@ -324,12 +327,17 @@ export default function CPOEPage() {
 
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Amount (UGX)</label>
+                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">
+                                    Amount (UGX){activeType === "MEDICATION" && " · Reference only"}
+                                </label>
                                 <div className="relative">
                                     <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                     <input type="number" min="0" value={amount} onChange={e => setAmount(e.target.value)}
                                         className="w-full h-10 pl-9 pr-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-900 focus:border-blue-500 outline-none bg-gray-50" />
                                 </div>
+                                {activeType === "MEDICATION" && (
+                                    <p className="text-[10px] text-gray-400 mt-1">Actual billing happens at the pharmacy, based on real stock pricing at dispense time.</p>
+                                )}
                             </div>
                             <div>
                                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Priority</label>

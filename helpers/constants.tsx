@@ -110,19 +110,28 @@ export const ORDER_TYPE_LABELS: Record<OrderType, string> = {
 };
 
 // ── Pharmacy ───────────────────────────────────────────────────────────────────
+// This is only a list of *suggestions* shown in the category field's datalist —
+// the field itself is free text, so a new category can be added on the fly by
+// typing it in (see app/pharmacy/inventory/page.tsx). Add to this list to make
+// a category show up as a suggestion for future entries.
 export const DRUG_CATEGORIES = [
-    "Analgesics",
-    "Antibiotics",
-    "Antifungals",
-    "Antivirals",
-    "Antiparasitics",
-    "Cardiovascular",
+    "Antibiotics (PO)",
+    "Antibiotics (IV)",
+    "Antifungal",
+    "Antiviral",
+    "Antimalarial",
+    "Hypertension & Cardiovascular",
     "Diabetes & Endocrine",
+    "Hormonal Supplements",
+    "Analgesics & Antipyretics",
+    "Topical Creams",
+    "Contraceptives",
     "Gastrointestinal",
+    "Anesthesia",
+    "Surgical Consumables",
     "Respiratory",
     "Vitamins & Supplements",
     "IV Fluids",
-    "Surgical Supplies",
     "Other",
 ] as const;
 

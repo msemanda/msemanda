@@ -2,14 +2,15 @@
 
 import { useEffect, useState } from "react";
 import {
-    collection, getDocs, updateDoc, doc, serverTimestamp, query, where, orderBy,
+    collection, getDocs, updateDoc, doc, serverTimestamp, query, where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ClipboardList, CheckCircle2, Clock, RefreshCw,
-    Search, User, Pill, AlertCircle, Package,
+    Search, User, Pill, AlertCircle, ArrowRight,
 } from "lucide-react";
 
 interface RxOrder {
@@ -37,6 +38,7 @@ const TAB_STATUS: Record<Tab, string> = {
 
 export default function PrescriptionQueuePage() {
     const { profile } = useAuth();
+    const router = useRouter();
     const [tab, setTab] = useState<Tab>("queued");
     const [orders, setOrders] = useState<RxOrder[]>([]);
     const [loading, setLoading] = useState(true);
@@ -73,25 +75,7 @@ export default function PrescriptionQueuePage() {
         finally { setLoading(false); }
     };
 
-    const handleDispense = async (order: RxOrder) => {
-        setProcessing(order.id);
-        try {
-            await updateDoc(doc(db, "cpoeOrders", order.id), {
-                status: "DISPENSED",
-                dispensedBy: profile?.name,
-                dispensedAt: serverTimestamp(),
-            });
-            if (order.billId) {
-                await updateDoc(doc(db, "patientBills", order.billId), {
-                    status: "DISPENSED",
-                    dispensedAt: serverTimestamp(),
-                });
-            }
-            setOrders(prev => prev.filter(o => o.id !== order.id));
-            setCounts(prev => ({ ...prev, queued: prev.queued - 1, dispensed: prev.dispensed + 1 }));
-        } catch (e) { console.error(e); }
-        finally { setProcessing(null); }
-    };
+    const goToDispense = () => router.push("/pharmacy/dispense");
 
     const handleCancel = async (order: RxOrder) => {
         setProcessing(`cancel-${order.id}`);
@@ -252,7 +236,7 @@ export default function PrescriptionQueuePage() {
                                 {tab === "queued" && (
                                     <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
                                         <p className="text-xs text-amber-600 font-semibold flex items-center gap-1.5">
-                                            <Clock className="h-3.5 w-3.5" /> Ordered by doctor — dispense now, Finance bills separately
+                                            <Clock className="h-3.5 w-3.5" /> Ordered by doctor — go to Record Dispensing to issue stock and bill the patient
                                         </p>
                                         <div className="flex gap-2">
                                             <button onClick={() => handleCancel(order)} disabled={!!processing}
@@ -261,11 +245,9 @@ export default function PrescriptionQueuePage() {
                                                     ? <div className="animate-spin h-3.5 w-3.5 border-2 border-red-200 border-t-red-500 rounded-full" />
                                                     : "Cancel"}
                                             </button>
-                                            <button onClick={() => handleDispense(order)} disabled={!!processing}
-                                                className="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50 shadow-sm">
-                                                {processing === order.id
-                                                    ? <div className="animate-spin h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full" />
-                                                    : <><Package className="h-3.5 w-3.5" /> Mark Dispensed</>}
+                                            <button onClick={goToDispense}
+                                                className="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm">
+                                                Record Dispensing <ArrowRight className="h-3.5 w-3.5" />
                                             </button>
                                         </div>
                                     </div>

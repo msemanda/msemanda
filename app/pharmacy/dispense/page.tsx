@@ -207,7 +207,7 @@ export default function PharmacyDispensePage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-xl font-black text-gray-900">Record Dispensing</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">Select a paid prescription then confirm the stock item and quantity</p>
+                    <p className="text-sm text-gray-500 mt-0.5">Select a prescription then confirm the stock item and quantity — the patient's bill is generated here, based on actual stock price</p>
                 </div>
                 <button onClick={fetchData}
                     className="h-9 w-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-blue-600 transition-colors">
@@ -220,7 +220,7 @@ export default function PharmacyDispensePage() {
                     <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                         className="flex items-center gap-3 p-4 bg-green-50 rounded-2xl border border-green-100">
                         <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
-                        <p className="text-sm font-bold text-green-700">Dispensed — stock updated and order marked complete.</p>
+                        <p className="text-sm font-bold text-green-700">Dispensed — stock updated, order marked complete, and the patient's bill has been sent to the cashier.</p>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -230,7 +230,7 @@ export default function PharmacyDispensePage() {
                 {/* ── LEFT: Prescription queue ─────────────────────────────── */}
                 <div className="lg:col-span-2 space-y-3">
                     <h2 className="text-xs font-black text-gray-500 uppercase tracking-widest">
-                        Paid Prescriptions ({orders.length})
+                        Pending Prescriptions ({orders.length})
                     </h2>
 
                     {loading ? (
@@ -240,8 +240,8 @@ export default function PharmacyDispensePage() {
                     ) : orders.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 bg-white rounded-2xl border border-dashed border-gray-200 text-center">
                             <ClipboardList className="h-8 w-8 text-gray-200 mb-2" />
-                            <p className="text-xs font-black text-gray-700">No paid prescriptions</p>
-                            <p className="text-[10px] text-gray-400 mt-0.5">Orders appear here after cashier confirms payment.</p>
+                            <p className="text-xs font-black text-gray-700">No pending prescriptions</p>
+                            <p className="text-[10px] text-gray-400 mt-0.5">Orders appear here once a doctor prescribes medication. Billing is generated here at dispense time.</p>
                         </div>
                     ) : (
                         <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
@@ -291,7 +291,7 @@ export default function PharmacyDispensePage() {
                         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-gray-200 text-center">
                             <Pill className="h-10 w-10 text-gray-200 mb-3" />
                             <p className="text-sm font-black text-gray-700">Select a prescription</p>
-                            <p className="text-xs text-gray-400 mt-1">Pick a paid prescription on the left to begin dispensing.</p>
+                            <p className="text-xs text-gray-400 mt-1">Pick a prescription on the left to begin dispensing.</p>
                         </div>
                     ) : (
                         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-5">

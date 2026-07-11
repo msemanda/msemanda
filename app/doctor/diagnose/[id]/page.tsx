@@ -85,9 +85,12 @@ export default function DiagnosisEntryPage() {
                 createdAt: serverTimestamp(),
             });
 
-            // Send medication order directly to pharmacy queue
+            // Send medication order directly to pharmacy queue. No bill is
+            // created here — the pharmacist bills the patient at dispense
+            // time using the real stock price, once the actual quantity
+            // dispensed is known.
             if (formData.medicines) {
-                const cpoeRef = await addDoc(collection(db, "cpoeOrders"), {
+                await addDoc(collection(db, "cpoeOrders"), {
                     orderType: "MEDICATION",
                     detail: `${formData.medicines}${formData.dosage ? ` — ${formData.dosage}` : ""}`,
                     patientId: id,
@@ -102,21 +105,6 @@ export default function DiagnosisEntryPage() {
                     priority: "ROUTINE",
                     status: "PENDING",
                     amount: 0,
-                    ward: "OPD",
-                    createdAt: serverTimestamp(),
-                });
-
-                // Create bill for cashier to collect payment
-                await addDoc(collection(db, "patientBills"), {
-                    patientName: patient?.name,
-                    patientEmail: patient?.email || "",
-                    description: `${formData.medicines}${formData.dosage ? ` — ${formData.dosage}` : ""}`,
-                    billType: "MEDICATION",
-                    amount: 0,
-                    orderId: cpoeRef.id,
-                    diagnosticRef: diagId,
-                    orderedBy: profile?.name,
-                    status: "PENDING_PAYMENT",
                     ward: "OPD",
                     createdAt: serverTimestamp(),
                 });
