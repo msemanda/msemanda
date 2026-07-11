@@ -249,9 +249,7 @@ export default function CashierBillsPage() {
                                                             title: "Service Bill Receipt",
                                                             receiptNo: bill.receiptNo,
                                                             patientName: bill.patientName,
-                                                            description: bill.description,
-                                                            category: bill.billType,
-                                                            amount: bill.amount,
+                                                            items: [{ description: bill.description, category: bill.billType, amount: bill.amount }],
                                                             recordedBy: bill.collectedBy,
                                                             date: bill.paidAt,
                                                         })}

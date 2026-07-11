@@ -374,8 +374,7 @@ export default function ReceptionistPaymentsPage() {
                                                     title: "Consultation Fee Receipt",
                                                     receiptNo: fee.receiptNo,
                                                     patientName: fee.patientName,
-                                                    description: fee.consultationType,
-                                                    amount: fee.amount,
+                                                    items: [{ description: fee.consultationType, amount: fee.amount }],
                                                     paymentMethod: fee.paymentMethod,
                                                     date: fee.paidAt,
                                                 })}

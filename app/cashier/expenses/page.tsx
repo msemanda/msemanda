@@ -231,9 +231,7 @@ export default function ExpensesPage() {
                                         data={buildReceiptDocument({
                                             title: "Expense Voucher",
                                             receiptNo: t.reference,
-                                            description: t.description,
-                                            category: t.category,
-                                            amount: t.amount,
+                                            items: [{ description: t.description, category: t.category, amount: t.amount }],
                                             paymentMethod: t.paymentMethod,
                                             recordedBy: t.recordedBy,
                                             date: t.date,
