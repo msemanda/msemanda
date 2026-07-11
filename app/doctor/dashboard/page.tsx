@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, updateDoc, doc, orderBy } from "firebase/firestore";
+import { collection, query, where, getDocs, updateDoc, doc, getDoc, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -22,6 +22,8 @@ interface QueueEntry {
     time: string;
     notes: string;
     status: string;
+    feeId?: string;
+    feeStatus?: string;
 }
 
 const STATUS_VARIANT: Record<string, BadgeVariant> = {
@@ -53,7 +55,7 @@ export default function DoctorDashboard() {
                     orderBy("time"),
                 )
             );
-            setQueue(snap.docs.map(d => {
+            const rows = snap.docs.map(d => {
                 const data = d.data() as Record<string, string>;
                 return {
                     id: d.id,
@@ -63,8 +65,21 @@ export default function DoctorDashboard() {
                     time: data.time || "",
                     notes: data.notes || "",
                     status: data.status || "SCHEDULED",
+                    feeId: data.feeId || "",
                 };
+            });
+
+            // appointment.status is only synced one-way when a fee gets
+            // approved and is never re-validated — cross-check the real fee
+            // status directly so the doctor can't act before Finance clears it.
+            const withFees = await Promise.all(rows.map(async r => {
+                if (!r.feeId) return { ...r, feeStatus: undefined };
+                try {
+                    const feeSnap = await getDoc(doc(db, "consultationFees", r.feeId));
+                    return { ...r, feeStatus: feeSnap.exists() ? (feeSnap.data().status as string) : undefined };
+                } catch { return { ...r, feeStatus: undefined }; }
             }));
+            setQueue(withFees);
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
     };
@@ -80,11 +95,12 @@ export default function DoctorDashboard() {
         finally { setCompleting(null); }
     };
 
-    // "Ready to see" excludes PENDING_PAYMENT — those reserve a slot but the
-    // doctor can't start the consultation until reception/cashier confirms the
-    // consultation fee, at which point they flip to CONFIRMED automatically.
-    const active = queue.filter(q => q.status !== "COMPLETED" && q.status !== "CANCELLED" && q.status !== "PENDING_PAYMENT");
-    const pendingPayment = queue.filter(q => q.status === "PENDING_PAYMENT").length;
+    // A slot is only actionable once its linked consultation fee is actually
+    // PAID — checked live against consultationFees, not the appointment's own
+    // (unreliable) status field.
+    const isCleared = (q: QueueEntry) => q.feeStatus === "PAID";
+    const active = queue.filter(q => q.status !== "COMPLETED" && q.status !== "CANCELLED");
+    const pendingPayment = queue.filter(q => q.status !== "COMPLETED" && q.status !== "CANCELLED" && !isCleared(q)).length;
     const done   = queue.filter(q => q.status === "COMPLETED").length;
 
     return (
@@ -170,12 +186,17 @@ export default function DoctorDashboard() {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
-                                            {entry.status === "PENDING_PAYMENT" && (
+                                            {entry.status === "COMPLETED" ? (
+                                                <span className="text-xs text-green-600 font-bold flex items-center gap-1">
+                                                    <CheckCircle2 className="h-3.5 w-3.5" /> Completed
+                                                </span>
+                                            ) : entry.status === "CANCELLED" ? (
+                                                <span className="text-xs text-gray-400 font-bold">Cancelled</span>
+                                            ) : !isCleared(entry) ? (
                                                 <span className="text-xs text-amber-600 font-bold flex items-center gap-1">
                                                     <Clock className="h-3.5 w-3.5" /> Awaiting payment
                                                 </span>
-                                            )}
-                                            {entry.status !== "COMPLETED" && entry.status !== "CANCELLED" && entry.status !== "PENDING_PAYMENT" && (
+                                            ) : (
                                                 <>
                                                     <Link href={`/doctor/diagnose/${entry.patientId || entry.id}`}
                                                         className="h-9 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors">
@@ -188,11 +209,6 @@ export default function DoctorDashboard() {
                                                             : <><CheckCircle2 className="h-3.5 w-3.5" /> Done</>}
                                                     </button>
                                                 </>
-                                            )}
-                                            {entry.status === "COMPLETED" && (
-                                                <span className="text-xs text-green-600 font-bold flex items-center gap-1">
-                                                    <CheckCircle2 className="h-3.5 w-3.5" /> Completed
-                                                </span>
                                             )}
                                         </div>
                                     </motion.div>
