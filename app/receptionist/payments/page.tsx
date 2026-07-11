@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import {
     collection, query, where, getDocs,
-    doc, setDoc, serverTimestamp
+    doc, setDoc, updateDoc, serverTimestamp
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -139,10 +139,11 @@ export default function ReceptionistPaymentsPage() {
         e.preventDefault();
         setCreating(true); setCreateError("");
         try {
+            const email = form.patientEmail.toLowerCase().trim();
             const id = `fee_${Date.now()}`;
             await setDoc(doc(db, "consultationFees", id), {
                 patientName: form.patientName.trim(),
-                patientEmail: form.patientEmail.toLowerCase().trim(),
+                patientEmail: email,
                 patientId: pickedPatient?.uid || null,
                 consultationType: form.consultationType,
                 amount: parseFloat(form.amount),
@@ -151,6 +152,23 @@ export default function ReceptionistPaymentsPage() {
                 createdBy: profile?.uid,
                 createdByName: profile?.name,
             });
+
+            // Link to any appointment already reserved for this patient that's
+            // stuck waiting on a fee that never existed (e.g. booked before this
+            // fee was created) — without this, PENDING_PAYMENT appointments with
+            // no feeId can never be confirmed since nothing links them to a fee
+            // for the cashier's approval flow to find.
+            const orphanedAppts = await getDocs(query(
+                collection(db, "appointments"),
+                where("patientEmail", "==", email),
+                where("status", "==", "PENDING_PAYMENT")
+            ));
+            await Promise.all(
+                orphanedAppts.docs
+                    .filter(d => !d.data().feeId)
+                    .map(d => updateDoc(doc(db, "appointments", d.id), { feeId: id }))
+            );
+
             if (pickedPatient?.uid) {
                 await notify({
                     targetUid: pickedPatient.uid,
