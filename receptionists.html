@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Receptionists — eHealth System</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+<style>
+.page-tabs { display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:22px; }
+.page-tab { padding:10px 20px;font-size:13px;font-weight:700;color:var(--muted);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:inherit;transition:color .15s,border-color .15s; }
+.page-tab.active { color:var(--teal);border-bottom-color:var(--teal); }
+
+.row-actions { display:flex;gap:10px;font-size:12px;margin-top:3px; }
+.row-actions a { color:var(--teal);text-decoration:none;font-weight:500; }
+.row-actions a.trash-lnk { color:var(--danger,#e53e3e); }
+.row-actions a.restore-lnk { color:var(--success,#38a169); }
+.row-actions a:hover { text-decoration:underline; }
+.trash-row td { opacity:.55; }
+.bulk-bar { display:flex;align-items:center;gap:8px; }
+.bulk-select { padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit; }
+
+/* Form */
+.nf-card { background:#fff;border-radius:12px;border:1px solid var(--border);overflow:hidden;max-width:900px; }
+.nf-hd { padding:18px 24px;border-bottom:1px solid var(--border);font-size:15px;font-weight:800;color:var(--ink); }
+.fr { display:grid;grid-template-columns:180px 1fr;align-items:flex-start;gap:16px 24px;padding:14px 24px;border-bottom:1px solid var(--border); }
+.fr:last-of-type { border-bottom:none; }
+.fr label { font-size:13px;font-weight:700;color:var(--dark,#2d3748);padding-top:9px; }
+.fr label span { color:var(--danger); }
+.fr input,.fr select { width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--ink);background:#fff;outline:none;transition:border-color .15s;box-sizing:border-box; }
+.fr input:focus,.fr select:focus { border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,167,167,.1); }
+.phone-split { display:grid;grid-template-columns:120px 1fr;gap:8px; }
+.pw-wrap { position:relative; }
+.pw-wrap input { padding-right:40px!important; }
+.pw-eye { position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);display:flex;align-items:center; }
+.pw-eye:hover { color:var(--teal); }
+.notif-row { display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-mid); }
+.notif-row input[type=checkbox] { width:15px;height:15px;accent-color:var(--teal);cursor:pointer; }
+.seg { display:inline-flex;border:1.5px solid var(--border);border-radius:8px;overflow:hidden; }
+.seg button { padding:9px 22px;border:none;background:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;color:var(--muted);transition:background .15s,color .15s; }
+.seg button.active { background:var(--teal);color:#fff; }
+.img-upload-box { width:80px;height:80px;border:2px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#fafbfc;position:relative;overflow:hidden;transition:border-color .15s; }
+.img-upload-box:hover { border-color:var(--teal); }
+.form-footer { padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav id="sidebar-mount"></nav>
+  <div class="main">
+    <header class="header">
+      <button class="btn-quick-links"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Links</button>
+      <div class="header-right">
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
+        <span class="lang-badge">EN</span>
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+        <div class="user-chip"><div class="user-avatar">M</div><div class="user-info"><div class="user-name">Moses Semanda</div><div class="user-role">Administrator</div></div></div>
+      </div>
+    </header>
+    <div class="content">
+      <div class="page-title-row">
+        <h1 class="page-title">Receptionists</h1>
+        <button class="btn btn-teal" onclick="showView('add')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New</button>
+      </div>
+
+      <div class="page-tabs">
+        <button class="page-tab active" id="tab-list" onclick="showView('list')">All Receptionists</button>
+        <button class="page-tab" id="tab-add" onclick="showView('add')">Add Receptionist</button>
+      </div>
+
+      <!-- List -->
+      <div id="view-list">
+        <div class="card">
+          <div class="filter-bar">
+            <div class="filter-tabs">
+              <button class="filter-tab active" data-filter="all"      onclick="setFilter(this,'all')">All <span class="tab-count" id="cnt-all"></span></button>
+              <button class="filter-tab" data-filter="active"   onclick="setFilter(this,'active')">Active <span class="tab-count" id="cnt-active"></span></button>
+              <button class="filter-tab" data-filter="deactive" onclick="setFilter(this,'deactive')">DeActive <span class="tab-count" id="cnt-deactive"></span></button>
+              <button class="filter-tab" data-filter="trash"    onclick="setFilter(this,'trash')">Trash <span class="tab-count" id="cnt-trash"></span></button>
+            </div>
+            <div class="filter-right">
+              <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" id="search" placeholder="Search..." oninput="renderList()"></div>
+              <select class="per-page-select" id="per-page" onchange="renderList()"><option>15</option><option>25</option><option>50</option></select>
+              <div class="bulk-bar">
+                <select class="bulk-select" id="bulk-action">
+                  <option value="">Bulk actions</option>
+                  <option value="activate">Activate</option>
+                  <option value="deactivate">Deactivate</option>
+                  <option value="trash">Move to Trash</option>
+                  <option value="restore">Restore</option>
+                  <option value="delete">Delete Permanently</option>
+                </select>
+                <button class="btn-apply" onclick="applyBulk()">Apply</button>
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all" onchange="toggleAll(this)"></th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Created At</th>
+              </tr></thead>
+              <tbody id="list-tbody"></tbody>
+              <tfoot><tr>
+                <th class="cb-col"></th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Created At</th>
+              </tr></tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add / Edit -->
+      <div id="view-add" style="display:none">
+        <div class="nf-card">
+          <div class="nf-hd" id="form-heading">Add Receptionist</div>
+
+          <div class="fr">
+            <label>Profile Image</label>
+            <div>
+              <div class="img-upload-box" onclick="document.getElementById('profile-file').click()">
+                <input type="file" id="profile-file" accept="image/*" style="display:none" onchange="previewProfile(this)">
+                <img id="profile-preview" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:8px">
+                <svg id="profile-plus" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </div>
+              <input type="hidden" id="n-avatar">
+            </div>
+          </div>
+
+          <div class="fr">
+            <label>Hospital <span>*</span></label>
+            <select id="n-hospital"><option value="">Select Hospital</option></select>
+          </div>
+
+          <div class="fr">
+            <label>Name <span>*</span></label>
+            <input type="text" id="n-name" placeholder="Enter Full Name">
+          </div>
+
+          <div class="fr">
+            <label>Email <span>*</span></label>
+            <input type="email" id="n-email" placeholder="Enter Email">
+          </div>
+
+          <div class="fr">
+            <label>Phone</label>
+            <div class="phone-split">
+              <select id="n-country">
+                <option value="+256">+256 🇺🇬</option>
+                <option value="+1">+1 🇺🇸</option>
+                <option value="+44">+44 🇬🇧</option>
+                <option value="+254">+254 🇰🇪</option>
+                <option value="+255">+255 🇹🇿</option>
+                <option value="+250">+250 🇷🇼</option>
+                <option value="+27">+27 🇿🇦</option>
+              </select>
+              <input type="tel" id="n-phone" placeholder="Enter Phone">
+            </div>
+          </div>
+
+          <div class="fr">
+            <label>Gender <span>*</span></label>
+            <select id="n-gender">
+              <option value="">Select Gender</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div class="fr">
+            <label>Password <span>*</span></label>
+            <div class="pw-wrap">
+              <input type="password" id="n-password" placeholder="Enter Password">
+              <button type="button" class="pw-eye" onclick="togglePw('n-password')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+          </div>
+
+          <div class="fr">
+            <label>Confirm <span>*</span></label>
+            <div class="pw-wrap">
+              <input type="password" id="n-confirm" placeholder="Enter Confirm Password">
+              <button type="button" class="pw-eye" onclick="togglePw('n-confirm')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+          </div>
+
+          <div class="fr">
+            <label>Notification</label>
+            <label class="notif-row"><input type="checkbox" id="n-notify"> Send the new Receptionist an email about their account.</label>
+          </div>
+
+          <div class="fr">
+            <label>Status</label>
+            <div class="seg">
+              <button type="button" id="seg-active" class="active" onclick="setStatus('active',this)">Active</button>
+              <button type="button" id="seg-deactive" onclick="setStatus('deactive',this)">DeActive</button>
+            </div>
+          </div>
+
+          <div class="form-footer">
+            <button class="btn btn-secondary" onclick="cancelForm()">Cancel</button>
+            <button class="btn btn-teal" onclick="saveRec()">Save</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.3s</span></div></footer>
+  </div>
+</div>
+
+<script src="assets/js/data-api.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/sidebar.js"></script>
+<script>
+var ACTIVE_PAGE = "receptionists";
+var editingId   = null;
+var currentFilter = 'all';
+var currentStatus = 'active';
+var tenantId = null;
+
+function togglePw(id) { var i=document.getElementById(id); i.type=i.type==='text'?'password':'text'; }
+
+function setStatus(s, btn) {
+  currentStatus = s;
+  document.getElementById('seg-active').classList.toggle('active', s==='active');
+  document.getElementById('seg-deactive').classList.toggle('active', s==='deactive');
+}
+
+function previewProfile(input) {
+  var file = input.files[0]; if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = document.getElementById('profile-preview');
+    var plus = document.getElementById('profile-plus');
+    img.src = e.target.result; img.style.display = 'block'; plus.style.display = 'none';
+    document.getElementById('n-avatar').value = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function populateHospitals() {
+  var sel = document.getElementById('n-hospital');
+  sel.innerHTML = '<option value="">Select Hospital</option>';
+  EH.getTenants().forEach(function(t) {
+    var o = document.createElement('option');
+    o.value = t.id; o.textContent = t.name; sel.appendChild(o);
+  });
+}
+
+function getReceptionists() {
+  return EH.getUsers(tenantId).filter(function(u){ return u.role === 'receptionist'; });
+}
+
+function setFilter(btn, f) {
+  document.querySelectorAll('.filter-tab').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  currentFilter = f;
+  renderList();
+}
+
+function toggleAll(cb) {
+  document.querySelectorAll('.row-cb').forEach(function(c){ c.checked = cb.checked; });
+}
+
+function getSelected() {
+  var ids = [];
+  document.querySelectorAll('.row-cb:checked').forEach(function(c){ ids.push(c.dataset.id); });
+  return ids;
+}
+
+function applyBulk() {
+  var action = document.getElementById('bulk-action').value;
+  var ids = getSelected();
+  if (!action) { ehToast('Select a bulk action.', 'error'); return; }
+  if (!ids.length) { ehToast('Select at least one row.', 'error'); return; }
+  ids.forEach(function(id) {
+    if (action === 'activate')   EH.updateUser(id, { status:'active' });
+    if (action === 'deactivate') EH.updateUser(id, { status:'deactive' });
+    if (action === 'trash')      EH.updateUser(id, { status:'trash' });
+    if (action === 'restore')    EH.updateUser(id, { status:'active' });
+    if (action === 'delete')     EH.deleteUser(id);
+  });
+  document.getElementById('sel-all').checked = false;
+  document.getElementById('bulk-action').value = '';
+  renderList();
+  ehToast('Bulk action applied.', 'success');
+}
+
+function renderList() {
+  var recs = getReceptionists();
+  var q = (document.getElementById('search').value || '').toLowerCase();
+  var perPage = parseInt(document.getElementById('per-page').value || 15);
+
+  var all      = recs.filter(function(u){ return u.status !== 'trash'; });
+  var active   = recs.filter(function(u){ return u.status === 'active'; });
+  var deactive = recs.filter(function(u){ return u.status === 'deactive' || u.status === 'inactive'; });
+  var trash    = recs.filter(function(u){ return u.status === 'trash'; });
+
+  var el;
+  el=document.getElementById('cnt-all');      if(el) el.textContent='('+all.length+')';
+  el=document.getElementById('cnt-active');   if(el) el.textContent='('+active.length+')';
+  el=document.getElementById('cnt-deactive'); if(el) el.textContent='('+deactive.length+')';
+  el=document.getElementById('cnt-trash');    if(el) el.textContent='('+trash.length+')';
+
+  var filtered;
+  if (currentFilter==='active')   filtered=active;
+  else if (currentFilter==='deactive') filtered=deactive;
+  else if (currentFilter==='trash')    filtered=trash;
+  else filtered=all;
+
+  if (q) filtered=filtered.filter(function(u){ return (u.name||'').toLowerCase().indexOf(q)>-1||(u.email||'').toLowerCase().indexOf(q)>-1; });
+  filtered=filtered.slice(0,perPage);
+
+  var tbody = document.getElementById('list-tbody');
+  if (!filtered.length) {
+    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted)">No receptionists found.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(function(u) {
+    var isTrash  = u.status==='trash';
+    var isActive = u.status==='active';
+    var letter   = (u.name||'N').charAt(0).toUpperCase();
+    var avatar   = u.avatar
+      ? '<img src="'+u.avatar+'" style="width:32px;height:32px;border-radius:8px;object-fit:cover">'
+      : '<div style="width:32px;height:32px;border-radius:8px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0">'+letter+'</div>';
+    var actions = isTrash
+      ? '<div class="row-actions"><a href="#" class="restore-lnk" onclick="restoreRec(\''+u.id+'\');return false">Restore</a> | <a href="#" class="trash-lnk" onclick="permDeleteRec(\''+u.id+'\');return false">Delete</a></div>'
+      : '<div class="row-actions"><a href="#" onclick="editRec(\''+u.id+'\');return false">Edit</a> | <a href="#" class="trash-lnk" onclick="trashRec(\''+u.id+'\');return false">Move To Trash</a></div>';
+    var toggle = isTrash ? '' :
+      '<label class="sw"><input type="checkbox" '+(isActive?'checked':'')+' onchange="toggleStatus(\''+u.id+'\',this.checked)"><span class="sw-track"><span class="sw-thumb"></span></span></label>';
+    return '<tr class="'+(isTrash?'trash-row':'')+'">'
+      +'<td><input type="checkbox" class="tbl-checkbox row-cb" data-id="'+u.id+'"></td>'
+      +'<td><div style="display:flex;align-items:center;gap:10px">'+avatar
+        +'<div><div style="font-size:13px;font-weight:700;color:var(--dark,#2d3748)">'+u.name+'</div>'+actions+'</div></div></td>'
+      +'<td>'+toggle+'</td>'
+      +'<td style="font-size:12px;color:var(--muted);white-space:nowrap">'+(u.createdAt||'—')+'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+function toggleStatus(id, active) {
+  EH.updateUser(id, { status: active ? 'active' : 'deactive' });
+  ehToast('Status updated.', 'success');
+}
+function trashRec(id) { EH.updateUser(id,{status:'trash'}); renderList(); ehToast('Moved to trash.','success'); }
+function restoreRec(id) { EH.updateUser(id,{status:'active'}); renderList(); ehToast('Receptionist restored.','success'); }
+function permDeleteRec(id) {
+  if (!confirm('Permanently delete this receptionist?')) return;
+  EH.deleteUser(id); renderList(); ehToast('Receptionist deleted.','success');
+}
+
+function editRec(id) {
+  var u = EH.getUsers(null).find(function(x){return x.id===id;});
+  if (!u) return;
+  editingId = id;
+  document.getElementById('n-hospital').value = u.hospitalId||u.tenantId||'';
+  document.getElementById('n-name').value     = u.name||'';
+  document.getElementById('n-email').value    = u.email||'';
+  document.getElementById('n-phone').value    = (u.phone||'').replace(/^\+\d+\s*/,'');
+  document.getElementById('n-gender').value   = u.gender||'';
+  document.getElementById('n-password').value = '';
+  document.getElementById('n-confirm').value  = '';
+  currentStatus = u.status==='deactive'||u.status==='inactive' ? 'deactive' : 'active';
+  document.getElementById('seg-active').classList.toggle('active', currentStatus==='active');
+  document.getElementById('seg-deactive').classList.toggle('active', currentStatus==='deactive');
+  if (u.avatar) {
+    document.getElementById('profile-preview').src = u.avatar;
+    document.getElementById('profile-preview').style.display = 'block';
+    document.getElementById('profile-plus').style.display = 'none';
+    document.getElementById('n-avatar').value = u.avatar;
+  }
+  document.getElementById('form-heading').textContent = 'Edit Receptionist';
+  document.getElementById('tab-add').textContent = 'Edit Receptionist';
+  showView('add');
+}
+
+function saveRec() {
+  var name     = document.getElementById('n-name').value.trim();
+  var email    = document.getElementById('n-email').value.trim();
+  var hospital = document.getElementById('n-hospital').value;
+  var gender   = document.getElementById('n-gender').value;
+  var phone    = document.getElementById('n-country').value+' '+document.getElementById('n-phone').value.trim();
+  var password = document.getElementById('n-password').value;
+  var confirm  = document.getElementById('n-confirm').value;
+  var avatar   = document.getElementById('n-avatar').value;
+
+  if (!name)     { ehToast('Name is required.', 'error'); return; }
+  if (!email)    { ehToast('Email is required.', 'error'); return; }
+  if (!hospital) { ehToast('Please select a hospital.', 'error'); return; }
+  if (!gender)   { ehToast('Please select a gender.', 'error'); return; }
+  if (!editingId) {
+    if (!password)           { ehToast('Password is required.', 'error'); return; }
+    if (password !== confirm) { ehToast('Passwords do not match.', 'error'); return; }
+  }
+
+  var data = { name:name, email:email, phone:phone, gender:gender, role:'receptionist',
+               hospitalId:hospital, tenantId:hospital, status:currentStatus, avatar:avatar };
+
+  if (editingId) {
+    EH.updateUser(editingId, data);
+    if (password && password===confirm) EH.updateUser(editingId,{password:password});
+    ehToast('"'+name+'" updated.', 'success');
+  } else {
+    var dup = EH.getUsers(null).find(function(u){return u.email.toLowerCase()===email.toLowerCase();});
+    if (dup) { ehToast('A user with this email already exists.','error'); return; }
+    EH.addUser(Object.assign({password:password},data));
+    ehToast('"'+name+'" added.', 'success');
+  }
+  cancelForm();
+}
+
+function showView(v) {
+  var isList = v==='list';
+  document.getElementById('view-list').style.display = isList ? '' : 'none';
+  document.getElementById('view-add').style.display  = isList ? 'none' : '';
+  document.getElementById('tab-list').classList.toggle('active', isList);
+  document.getElementById('tab-add').classList.toggle('active', !isList);
+  if (isList) renderList();
+}
+
+function cancelForm() {
+  editingId=null; currentStatus='active';
+  ['n-name','n-email','n-phone','n-password','n-confirm','n-avatar'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('n-hospital').value='';
+  document.getElementById('n-gender').value='';
+  document.getElementById('n-notify').checked=false;
+  document.getElementById('profile-preview').src='';
+  document.getElementById('profile-preview').style.display='none';
+  document.getElementById('profile-plus').style.display='';
+  document.getElementById('seg-active').classList.add('active');
+  document.getElementById('seg-deactive').classList.remove('active');
+  document.getElementById('form-heading').textContent='Add Receptionist';
+  document.getElementById('tab-add').textContent='Add Receptionist';
+  showView('list');
+}
+
+document.addEventListener('eh:ready', function() {
+  EHAuth.init();
+  populateHospitals();
+  renderList();
+  if (window.location.search.indexOf('view=add')>=0) showView('add');
+});
+</script>
+</body>
+</html>
