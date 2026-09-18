@@ -234,22 +234,22 @@
           <div class="stat-card-m">
             <span class="stat-pct up">+5.2%</span>
             <div class="stat-sq-icon" style="background:#E0F2FE">👨‍⚕️</div>
-            <div class="sn">48</div><div class="sl">Total Doctors</div>
+            <div class="sn" id="stat-doctors">48</div><div class="sl">Total Doctors</div>
           </div>
           <div class="stat-card-m">
             <span class="stat-pct up">+12.1%</span>
             <div class="stat-sq-icon" style="background:#FCE7F3">🧑‍🤝‍🧑</div>
-            <div class="sn">2,847</div><div class="sl">Total Patients</div>
+            <div class="sn" id="stat-patients">2,847</div><div class="sl">Total Patients</div>
           </div>
           <div class="stat-card-m">
             <span class="stat-pct up">+3.0%</span>
             <div class="stat-sq-icon" style="background:#D1FAE5">🏥</div>
-            <div class="sn">5</div><div class="sl">Total Hospitals</div>
+            <div class="sn" id="stat-hospitals">5</div><div class="sl">Total Hospitals</div>
           </div>
           <div class="stat-card-m">
             <span class="stat-pct up">+8.4%</span>
             <div class="stat-sq-icon" style="background:#EDE9FE">📅</div>
-            <div class="sn">1,264</div><div class="sl">Total Appointments</div>
+            <div class="sn" id="stat-appointments">1,264</div><div class="sl">Total Appointments</div>
           </div>
         </div>
         <!-- Stats row 2 -->
@@ -310,7 +310,7 @@
             <div class="table-wrap">
               <table class="ctable">
                 <thead><tr><th>Appt. ID</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
-                <tbody>
+                <tbody id="dash-appts-tbody">
                   <tr><td><span class="num-pill">#10245</span></td><td><div class="row-chip"><div class="row-av">J</div><div><div class="rn">John Katende</div><div class="re">john@example.com</div></div></div></td><td>Dr. Sophia Reed</td><td>2026-09-18</td><td>$70.00</td><td><span class="badge badge-pending">Pending</span></td></tr>
                   <tr><td><span class="num-pill">#10244</span></td><td><div class="row-chip"><div class="row-av ora">A</div><div><div class="rn">Aisha Namukasa</div><div class="re">aisha@example.com</div></div></div></td><td>Dr. Ethan Walker</td><td>2026-09-18</td><td>$85.00</td><td><span class="badge badge-confirmed">Confirmed</span></td></tr>
                   <tr><td><span class="num-pill">#10243</span></td><td><div class="row-chip"><div class="row-av pur">P</div><div><div class="rn">Peter Wasswa</div><div class="re">peter@example.com</div></div></div></td><td>Dr. Ava Richardson</td><td>2026-09-16</td><td>$60.00</td><td><span class="badge badge-completed">Completed</span></td></tr>
@@ -606,6 +606,58 @@ function switchRole(role) {
 <script src="assets/js/data.js"></script>
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/sidebar.js"></script>
-<script>document.addEventListener('DOMContentLoaded', function(){ EHAuth.init(); });</script>
+<script>
+var dashTenantId = null;
+var APPT_STATUS_BADGE = {
+  pending:     '<span class="badge badge-pending">Pending</span>',
+  confirmed:   '<span class="badge badge-confirmed">Confirmed</span>',
+  completed:   '<span class="badge badge-completed">Completed</span>',
+  visited:     '<span class="badge badge-visited">Visited</span>',
+  rescheduled: '<span class="badge badge-rescheduled">Rescheduled</span>',
+  rejected:    '<span class="badge badge-rejected">Rejected</span>',
+  cancelled:   '<span class="badge" style="background:#FEE2E2;color:#DC2626">Cancelled</span>'
+};
+var ROW_COLORS = ['','ora','grn','pur','blu','pnk'];
+function renderDashStats() {
+  var stats = EH.getTenantStats(dashTenantId);
+  var docEl = document.getElementById('stat-doctors');
+  if (docEl) docEl.textContent = stats.doctors;
+  var patEl = document.getElementById('stat-patients');
+  if (patEl) patEl.textContent = stats.patients;
+  var hospEl = document.getElementById('stat-hospitals');
+  if (hospEl) {
+    var hCount = dashTenantId ? 1 : EH.getTenants().length;
+    hospEl.textContent = hCount;
+  }
+  var apptEl = document.getElementById('stat-appointments');
+  if (apptEl) apptEl.textContent = stats.appointments;
+
+  var tb = document.getElementById('dash-appts-tbody');
+  if (tb) {
+    var appts = EH.getAppointments(dashTenantId).slice(0, 5);
+    if (!appts.length) {
+      tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">No appointments yet.</td></tr>';
+    } else {
+      tb.innerHTML = appts.map(function(a, i) {
+        var cls = ROW_COLORS[i % ROW_COLORS.length];
+        return '<tr>'
+          + '<td><span class="num-pill">'+a.num+'</span></td>'
+          + '<td><div class="row-chip"><div class="row-av '+cls+'">'+a.patient.charAt(0)+'</div><div><div class="rn">'+a.patient+'</div><div class="re">'+a.patientEmail+'</div></div></div></td>'
+          + '<td>'+a.doctor+'</td>'
+          + '<td>'+a.date+'</td>'
+          + '<td>—</td>'
+          + '<td>'+(APPT_STATUS_BADGE[a.status]||'<span class="badge">'+a.status+'</span>')+'</td>'
+          + '</tr>';
+      }).join('');
+    }
+  }
+}
+document.addEventListener('DOMContentLoaded', function() {
+  var s = EHAuth.init(); if (!s) return;
+  dashTenantId = window.EH_TENANT || null;
+  renderDashStats();
+});
+window.addEventListener('eh:tenantchange', function(e){ dashTenantId=e.detail.tenantId; renderDashStats(); });
+</script>
 </body>
 </html>

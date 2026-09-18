@@ -71,13 +71,52 @@
       { id:'a7', tenantId:'t1', num:'#10239', patientId:'p1',  patient:'Madhuranjan Thakur', patientEmail:'madhuranjan@example.com', doctorId:'d1', doctor:'Dr. Sophia Reed', type:'In-Person', date:'2026-09-18', time:'11:30 AM', status:'pending', hospital:'Sunrise Care Hospital', createdAt:'2026-09-11 06:00 AM' },
       { id:'a8', tenantId:'t1', num:'#10238', patientId:'p2',  patient:'Srinivas',           patientEmail:'srinivas@example.com',   doctorId:'d4', doctor:'Dr. Olivia Bennett', type:'Virtual', date:'2026-09-18', time:'02:00 PM', status:'confirmed', hospital:'Sunrise Care Hospital', createdAt:'2026-09-10 04:00 PM' },
       { id:'a9', tenantId:'t3', num:'#10237', patientId:'p16', patient:'Test User',          patientEmail:'testuser@example.com',   doctorId:'d3', doctor:'Dr. Ava Richardson', type:'In-Person', date:'2026-09-18', time:'03:00 PM', status:'cancelled', hospital:'BlueCross General', createdAt:'2026-09-09 02:30 PM' }
+    ],
+    departments: [
+      { id:'dept1', name:'Cardiology',       status:'active', createdAt:'2026-05-27 06:40:51 PM' },
+      { id:'dept2', name:'Dermatology',      status:'active', createdAt:'2026-05-27 06:40:51 PM' },
+      { id:'dept3', name:'Pediatrics',       status:'active', createdAt:'2026-05-27 06:40:51 PM' },
+      { id:'dept4', name:'Orthopedics',      status:'active', createdAt:'2026-05-27 06:40:51 PM' },
+      { id:'dept5', name:'Neurology',        status:'active', createdAt:'2026-05-27 06:40:51 PM' },
+      { id:'dept6', name:'Gastroenterology', status:'active', createdAt:'2026-05-27 06:40:51 PM' },
+      { id:'dept7', name:'ENT',              status:'active', createdAt:'2026-05-27 06:40:51 PM' },
+      { id:'dept8', name:'General Medicine', status:'active', createdAt:'2026-05-27 06:40:51 PM' }
+    ],
+    specialties: [
+      { id:'sp1',  name:'General Practice', icon:'🩺', status:'active',   createdAt:'2026-05-27 06:35:05 PM' },
+      { id:'sp2',  name:'Pediatrics',       icon:'👶', status:'active',   createdAt:'2026-05-27 06:35:05 PM' },
+      { id:'sp3',  name:'Orthopedics',      icon:'🦴', status:'active',   createdAt:'2026-05-27 06:23:25 PM' },
+      { id:'sp4',  name:'Gynaecology',      icon:'🤰', status:'active',   createdAt:'2026-05-27 06:34:19 PM' },
+      { id:'sp5',  name:'Cardiology',       icon:'❤️', status:'active',   createdAt:'2026-05-27 06:35:05 PM' },
+      { id:'sp6',  name:'Sexual Health',    icon:'💊', status:'active',   createdAt:'2026-05-27 06:36:57 PM' },
+      { id:'sp7',  name:'Mental Wellness',  icon:'🧠', status:'active',   createdAt:'2026-05-27 06:37:53 PM' },
+      { id:'sp8',  name:'Dentistry',        icon:'🦷', status:'active',   createdAt:'2026-05-27 06:39:47 PM' },
+      { id:'sp9',  name:'Dermatology',      icon:'🧴', status:'active',   createdAt:'2026-05-27 06:40:55 PM' },
+      { id:'sp10', name:'ENT',              icon:'👂', status:'active',   createdAt:'2026-05-27 06:41:48 PM' },
+      { id:'sp11', name:'Homeopathy',       icon:'🌿', status:'active',   createdAt:'2026-05-27 06:42:45 PM' },
+      { id:'sp12', name:'Diet & Nutrition', icon:'🥗', status:'active',   createdAt:'2026-05-27 06:44:38 PM' },
+      { id:'sp13', name:'Urinary Issues',   icon:'🫧', status:'inactive', createdAt:'2026-05-27 06:38:57 PM' }
+    ],
+    labTests: [
+      { id:'lt1', name:'Complete Blood Count (CBC)',  icon:'🩺', description:'Comprehensive blood test to evaluate overall health and detect infections or anemia.',    pathologist:'Dr. Amelia Brooks',   status:'active', createdAt:'2026-05-29 04:18:06 AM' },
+      { id:'lt2', name:'Liver Function Test (LFT)',   icon:'🫁', description:'Measures liver enzymes and proteins to assess liver health and detect liver diseases.',    pathologist:'Dr. Lucas Bennett',   status:'active', createdAt:'2026-05-29 04:21:34 AM' },
+      { id:'lt3', name:'Lipid Profile Test',          icon:'💉', description:'Measures cholesterol and triglyceride levels to assess heart disease risk.',               pathologist:'Dr. Ethan Collins',   status:'active', createdAt:'2026-05-29 04:30:47 AM' },
+      { id:'lt4', name:'Thyroid Function Test (TFT)', icon:'⚡', description:'Detects thyroid hormone imbalances affecting metabolism and energy levels.',               pathologist:'Dr. Grace Mitchell',  status:'active', createdAt:'2026-05-29 04:33:19 AM' },
+      { id:'lt5', name:'Blood Sugar Test',            icon:'🫀', description:'Measures glucose levels to diagnose and monitor diabetes conditions.',                      pathologist:'Dr. Grace Mitchell',  status:'active', createdAt:'2026-05-29 04:37:05 AM' },
+      { id:'lt6', name:'Vitamin D Test',              icon:'🩸', description:'Determines Vitamin D levels important for bone and immune health.',                        pathologist:'Dr. Noah Richardson', status:'active', createdAt:'2026-05-29 04:40:14 AM' },
+      { id:'lt7', name:'Allergy Test',                icon:'🔬', description:'Identifies allergic reactions to specific substances.',                                     pathologist:'Pathologist user',    status:'active', createdAt:'2026-06-03 12:10:10 PM' }
+    ],
+    ambulanceBookings: [
+      { id:'ab1', tenantId:'t1', num:'#10002', patientId:'p1',  patient:'Madhuranjan Thakur', patientEmail:'madhuranjan@example.com', ambulance:'AMB-001', hospital:'Sunrise Care Hospital', type:'Emergency',    total:'UGX 50,000', status:'pending', createdAt:'2026-06-06 09:40:00 AM' },
+      { id:'ab2', tenantId:'t2', num:'#10001', patientId:'p8',  patient:'John Katende',       patientEmail:'john@example.com',        ambulance:'AMB-002', hospital:'MapleCare Medical',     type:'Non-Emergency', total:'UGX 30,000', status:'pending', createdAt:'2026-06-05 08:20:00 AM' },
+      { id:'ab3', tenantId:'t3', num:'#10000', patientId:'p14', patient:'David Mugisha',      patientEmail:'david@example.com',       ambulance:'AMB-003', hospital:'BlueCross General',     type:'Emergency',    total:'UGX 60,000', status:'pending', createdAt:'2026-06-04 11:15:00 AM' }
     ]
   };
 
   function seed() {
-    if (!g('seeded_v2')) {
+    if (!g('seeded_v3')) {
       Object.keys(SEED).forEach(function(k) { s(k, SEED[k]); });
-      s('seeded_v2', true);
+      s('seeded_v3', true);
     }
   }
 
@@ -197,6 +236,41 @@
         pending:      this.getAppointments(tenantId).filter(function(a){return a.status==='pending';}).length,
         today:        this.getAppointments(tenantId).filter(function(a){return a.date==='2026-09-18';}).length
       };
+    },
+
+    /* ── Departments ─────────────────────────────────────── */
+    getDepartments: function() { return g('departments') || []; },
+    addDepartment: function(data) {
+      var list = this.getDepartments();
+      var d = Object.assign({ id: nextId('dept'), status:'active', createdAt: nowStr() }, data);
+      list.push(d); s('departments', list); return d;
+    },
+    deleteDepartment: function(id) { s('departments', this.getDepartments().filter(function(d){return d.id!==id;})); },
+
+    /* ── Specialties ─────────────────────────────────────── */
+    getSpecialties: function() { return g('specialties') || []; },
+    addSpecialty: function(data) {
+      var list = this.getSpecialties();
+      var sp = Object.assign({ id: nextId('sp'), status:'active', createdAt: nowStr() }, data);
+      list.push(sp); s('specialties', list); return sp;
+    },
+    deleteSpecialty: function(id) { s('specialties', this.getSpecialties().filter(function(sp){return sp.id!==id;})); },
+
+    /* ── Lab Tests ───────────────────────────────────────── */
+    getLabTests: function() { return g('labTests') || []; },
+    addLabTest: function(data) {
+      var list = this.getLabTests();
+      var lt = Object.assign({ id: nextId('lt'), status:'active', createdAt: nowStr() }, data);
+      list.push(lt); s('labTests', list); return lt;
+    },
+    deleteLabTest: function(id) { s('labTests', this.getLabTests().filter(function(lt){return lt.id!==id;})); },
+
+    /* ── Ambulance Bookings ──────────────────────────────── */
+    getAmbulanceBookings: function(tenantId) { return filterByTenant(g('ambulanceBookings')||[], tenantId); },
+    addAmbulanceBooking: function(data, tenantId) {
+      var list = g('ambulanceBookings') || [];
+      var ab = Object.assign({ id: nextId('ab'), status:'pending', tenantId: tenantId||null, createdAt: nowStr() }, data);
+      list.unshift(ab); s('ambulanceBookings', list); return ab;
     }
   };
 

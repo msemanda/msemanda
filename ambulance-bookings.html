@@ -46,14 +46,11 @@
       <div class="card">
         <div class="filter-bar">
           <div class="filter-tabs">
-            <button class="filter-tab active">All <span class="tab-count">(3)</span></button>
-            <button class="filter-tab">Pending <span class="tab-count">(3)</span></button>
-            <button class="filter-tab">Accepted <span class="tab-count">(0)</span></button>
-            <button class="filter-tab">Confirmed <span class="tab-count">(0)</span></button>
-            <button class="filter-tab">Completed <span class="tab-count">(0)</span></button>
-            <button class="filter-tab">Rejected <span class="tab-count">(0)</span></button>
-            <button class="filter-tab">Cancelled <span class="tab-count">(0)</span></button>
-            <button class="filter-tab">Trashed <span class="tab-count">(0)</span></button>
+            <button class="filter-tab active" data-filter="all">All <span class="tab-count" id="amb-cnt-all"></span></button>
+            <button class="filter-tab" data-filter="pending">Pending <span class="tab-count" id="amb-cnt-pending"></span></button>
+            <button class="filter-tab" data-filter="confirmed">Accepted <span class="tab-count" id="amb-cnt-confirmed"></span></button>
+            <button class="filter-tab" data-filter="completed">Completed <span class="tab-count" id="amb-cnt-completed"></span></button>
+            <button class="filter-tab" data-filter="cancelled">Cancelled <span class="tab-count" id="amb-cnt-cancelled"></span></button>
           </div>
           <div class="filter-right">
             <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" placeholder="Search..."></div>
@@ -75,44 +72,7 @@
               <th>Created At &#9650;</th>
               <th>Action</th>
             </tr></thead>
-            <tbody>
-              <tr>
-                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
-                <td><span class="num-pill">#10002</span></td>
-                <td><div class="user-chip-small"><div class="mini-avatar">M</div><div><div class="uc-name">Michael Brown</div><div class="uc-email">patient@example.com</div></div></div></td>
-                <td>AMB-CA-1021</td>
-                <td><div class="user-chip-small"><div class="mini-avatar green" style="border-radius:6px;font-size:10px">H</div><div><div class="uc-name">Sunrise Care Hospital</div><div class="uc-email">hospital@example.com</div></div></div></td>
-                <td>book_ambulance</td>
-                <td>$15.94</td>
-                <td><span class="badge badge-pending">Pending</span></td>
-                <td>2026-06-06 09:41:13 AM</td>
-                <td><button class="action-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
-                <td><span class="num-pill">#10001</span></td>
-                <td><div class="user-chip-small"><div class="mini-avatar">M</div><div><div class="uc-name">Michael Brown</div><div class="uc-email">patient@example.com</div></div></div></td>
-                <td>AMB-IL-5508</td>
-                <td><div class="user-chip-small"><div class="mini-avatar green" style="border-radius:6px;font-size:10px">H</div><div><div class="uc-name">Sunrise Care Hospital</div><div class="uc-email">hospital@example.com</div></div></div></td>
-                <td>book_ambulance</td>
-                <td>$17.20</td>
-                <td><span class="badge badge-pending">Pending</span></td>
-                <td>2026-06-06 09:40:47 AM</td>
-                <td><button class="action-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
-                <td><span class="num-pill">#10000</span></td>
-                <td><div class="user-chip-small"><div class="mini-avatar">M</div><div><div class="uc-name">Michael Brown</div><div class="uc-email">patient@example.com</div></div></div></td>
-                <td>AMB-CA-1021</td>
-                <td><div class="user-chip-small"><div class="mini-avatar green" style="border-radius:6px;font-size:10px">H</div><div><div class="uc-name">Sunrise Care Hospital</div><div class="uc-email">hospital@example.com</div></div></div></td>
-                <td>book_ambulance</td>
-                <td>$28.90</td>
-                <td><span class="badge badge-pending">Pending</span></td>
-                <td>2026-06-06 09:40:00 AM</td>
-                <td><button class="action-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>
-              </tr>
-            </tbody>
+            <tbody id="amb-tbody"></tbody>
             <tfoot><tr><td colspan="10" style="padding:12px 14px;font-size:12px;color:var(--muted);">Booking No. &#9650;</td></tr></tfoot>
           </table>
         </div>
@@ -123,7 +83,53 @@
 </div>
 <script src="assets/js/data.js"></script>
 <script src="assets/js/auth.js"></script>
-<script src="assets/js/admin.js"></script>
-<script>document.addEventListener('DOMContentLoaded', function(){ EHAuth.init(); });</script>
+<script>
+var ACTIVE_PAGE='ambulance-bookings';
+var ambFilter='all';
+var tenantId=null;
+var AMB_STATUS = {
+  pending:'<span class="badge badge-pending">Pending</span>',
+  confirmed:'<span class="badge badge-confirmed">Confirmed</span>',
+  completed:'<span class="badge badge-completed">Completed</span>',
+  cancelled:'<span class="badge" style="background:#FEE2E2;color:#DC2626">Cancelled</span>',
+  rejected:'<span class="badge badge-rejected">Rejected</span>'
+};
+function renderAmb() {
+  var all = EH.getAmbulanceBookings(tenantId);
+  var filtered = all.filter(function(b){ return ambFilter==='all'||b.status===ambFilter; });
+  ['all','pending','confirmed','completed','cancelled'].forEach(function(s){
+    var el=document.getElementById('amb-cnt-'+s); if(!el) return;
+    el.textContent='('+(s==='all'?all.length:all.filter(function(b){return b.status===s;}).length)+')';
+  });
+  var tb=document.getElementById('amb-tbody');
+  if(!filtered.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted)">No bookings found.</td></tr>';return;}
+  tb.innerHTML=filtered.map(function(b){
+    return '<tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td>'
+      +'<td><span class="num-pill">'+b.num+'</span></td>'
+      +'<td><div class="user-chip-small"><div class="mini-avatar" style="background:var(--teal);color:#fff;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">'+b.patient.charAt(0)+'</div><div><div style="font-weight:700;font-size:13px">'+b.patient+'</div><div style="font-size:11px;color:var(--muted)">'+b.patientEmail+'</div></div></div></td>'
+      +'<td style="font-size:12px">'+b.ambulance+'</td>'
+      +'<td style="font-size:12px;color:var(--muted)">'+b.hospital+'</td>'
+      +'<td style="font-size:12px">'+b.type+'</td>'
+      +'<td style="font-size:12px">'+b.total+'</td>'
+      +'<td>'+(AMB_STATUS[b.status]||'<span class="badge">'+b.status+'</span>')+'</td>'
+      +'<td style="font-size:12px;color:var(--muted)">'+b.createdAt+'</td>'
+      +'<td><button class="action-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>'
+      +'</tr>';
+  }).join('');
+}
+document.querySelectorAll('.filter-tab[data-filter]').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.filter-tab').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active'); ambFilter=btn.dataset.filter; renderAmb();
+  });
+});
+document.addEventListener('DOMContentLoaded', function(){
+  var s=EHAuth.init(); if(!s) return;
+  tenantId=window.EH_TENANT||null;
+  renderAmb();
+});
+window.addEventListener('eh:tenantchange', function(e){ tenantId=e.detail.tenantId; renderAmb(); });
+</script>
+<script src="assets/js/sidebar.js"></script>
 </body>
 </html>

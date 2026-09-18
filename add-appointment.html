@@ -88,48 +88,7 @@ input[type=radio].pay-radio-input { accent-color:var(--teal); }
               </div>
             </div>
             <!-- Specialty cards horizontal scroll -->
-            <div class="specialty-scroll">
-              <div class="specialty-card selected">
-                <div class="sc-icon">🩺</div>
-                <div class="sc-name">General Ph...</div>
-                <div class="sc-count">4 doctors</div>
-              </div>
-              <div class="specialty-card">
-                <div class="sc-icon">👶</div>
-                <div class="sc-name">Pediatrics</div>
-                <div class="sc-count">3 doctors</div>
-              </div>
-              <div class="specialty-card">
-                <div class="sc-icon">🦴</div>
-                <div class="sc-name">Orthopedics</div>
-                <div class="sc-count">2 doctors</div>
-              </div>
-              <div class="specialty-card">
-                <div class="sc-icon">🤰</div>
-                <div class="sc-name">Gynaecolo...</div>
-                <div class="sc-count">2 doctors</div>
-              </div>
-              <div class="specialty-card">
-                <div class="sc-icon">❤️</div>
-                <div class="sc-name">Cardiology</div>
-                <div class="sc-count">3 doctors</div>
-              </div>
-              <div class="specialty-card">
-                <div class="sc-icon">💊</div>
-                <div class="sc-name">Sexual Heal...</div>
-                <div class="sc-count">1 doctor</div>
-              </div>
-              <div class="specialty-card">
-                <div class="sc-icon">🧠</div>
-                <div class="sc-name">Mental Welln...</div>
-                <div class="sc-count">2 doctors</div>
-              </div>
-              <div class="specialty-card">
-                <div class="sc-icon">🦷</div>
-                <div class="sc-name">Dentistry</div>
-                <div class="sc-count">1 doctor</div>
-              </div>
-            </div>
+            <div class="specialty-scroll" id="specialty-scroll"></div>
             <!-- Doctor list placeholder -->
             <div class="no-doctors">
               <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" stroke="currentColor" style="opacity:.3;margin-bottom:10px" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -147,7 +106,7 @@ input[type=radio].pay-radio-input { accent-color:var(--teal); }
           <div class="booking-sidebar-body">
             <div class="form-group">
               <label class="form-label">Patient <span style="color:#f87171">*</span></label>
-              <select class="form-control"><option value="">Select Patient</option><option>John Katende</option><option>Aisha Namukasa</option><option>Peter Wasswa</option></select>
+              <select class="form-control" id="appt-patient"><option value="">Select Patient</option></select>
             </div>
             <div class="form-group">
               <label class="form-label">Date <span style="color:#f87171">*</span></label>
@@ -203,8 +162,45 @@ input[type=radio].pay-radio-input { accent-color:var(--teal); }
 </div>
 <script src="assets/js/data.js"></script>
 <script src="assets/js/auth.js"></script>
-<script>var ACTIVE_PAGE='add-appointment';</script>
+<script>
+var ACTIVE_PAGE='add-appointment';
+var tenantId=null;
+var selectedSpecialty=null;
+function renderApptForm() {
+  var patients = EH.getPatients(tenantId);
+  var sel = document.getElementById('appt-patient');
+  if (sel) {
+    sel.innerHTML = '<option value="">Select Patient</option>'
+      + patients.map(function(p){ return '<option value="'+p.id+'">'+p.name+'</option>'; }).join('');
+  }
+  var specs = EH.getSpecialties().filter(function(s){ return s.status==='active'; });
+  var doctors = EH.getDoctors(tenantId);
+  var scroll = document.getElementById('specialty-scroll');
+  if (scroll) {
+    if (!selectedSpecialty && specs.length) selectedSpecialty = specs[0].id;
+    scroll.innerHTML = specs.map(function(s) {
+      var cnt = doctors.filter(function(d){ return d.specialty===s.name; }).length;
+      return '<div class="specialty-card'+(s.id===selectedSpecialty?' selected':'')+'" data-sid="'+s.id+'" data-sname="'+s.name+'">'
+        + '<div class="sc-icon">'+s.icon+'</div>'
+        + '<div class="sc-name">'+s.name+'</div>'
+        + '<div class="sc-count">'+cnt+' doctor'+(cnt!==1?'s':'')+'</div>'
+        + '</div>';
+    }).join('');
+    scroll.querySelectorAll('.specialty-card').forEach(function(card) {
+      card.addEventListener('click', function() {
+        selectedSpecialty = card.dataset.sid;
+        renderApptForm();
+      });
+    });
+  }
+}
+document.addEventListener('DOMContentLoaded', function() {
+  var s = EHAuth.init(); if (!s) return;
+  tenantId = window.EH_TENANT || null;
+  renderApptForm();
+});
+window.addEventListener('eh:tenantchange', function(e){ tenantId=e.detail.tenantId; renderApptForm(); });
+</script>
 <script src="assets/js/sidebar.js"></script>
-<script>document.addEventListener('DOMContentLoaded', function(){ EHAuth.init(); });</script>
 </body>
 </html>
