@@ -236,11 +236,10 @@ function setStatus(s) {
   document.getElementById('status-inactive').classList.toggle('active', s === 'inactive');
 }
 
-/* ── Role dropdown (from localStorage roles) ─────────── */
+/* ── Role dropdown ───────────────────────────────────── */
 function populateRoles() {
   var sel = document.getElementById('u-role');
-  var roles = [];
-  try { roles = JSON.parse(localStorage.getItem('eh_roles')) || []; } catch(e){}
+  var roles = EH.getRoles();
   sel.innerHTML = '<option value="">Select Role</option>';
   roles.forEach(function(r) {
     var opt = document.createElement('option');
@@ -402,7 +401,6 @@ window.addEventListener('eh:tenantchange', function(e) {
   if (isSuperAdmin) { usersTenantId = e.detail.tenantId; renderUsers(); }
 });
 </script>
-<script>var ACTIVE_PAGE='users';</script>
 <script src="assets/js/sidebar.js"></script>
 </body>
 </html>

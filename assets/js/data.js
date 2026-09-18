@@ -16,6 +16,16 @@
     labTests:         [],
     ambulanceBookings:[],
     mediaFiles:       [],
+    roles: [
+      { id:'r1', name:'Admin',        permissions:'all', createdAt:'2026-01-01', userCount:0 },
+      { id:'r2', name:'Doctor',       permissions:'appointments,patients,prescriptions,lab_tests,video_consultations', createdAt:'2026-01-01', userCount:0 },
+      { id:'r3', name:'Nurse',        permissions:'patients,appointments,check_ins,bed_assigns', createdAt:'2026-01-01', userCount:0 },
+      { id:'r4', name:'Receptionist', permissions:'appointments,check_ins,patients,calendars', createdAt:'2026-01-01', userCount:0 },
+      { id:'r5', name:'Pathologist',  permissions:'lab_tests,lab_test_bookings,lab_categories,reports', createdAt:'2026-01-01', userCount:0 },
+      { id:'r6', name:'Hospital',     permissions:'hospitals,departments,doctors,patients,appointments', createdAt:'2026-01-01', userCount:0 },
+      { id:'r7', name:'Collector',    permissions:'lab_test_bookings,patients,reports', createdAt:'2026-01-01', userCount:0 },
+      { id:'r8', name:'Pharmacist',   permissions:'medicines,prescriptions,patients', createdAt:'2026-01-01', userCount:0 }
+    ],
     services: [
       { id:'svc1', name:'Clinic Visit',       icon:'➕', bg:'#E0F7FA', status:'active', createdAt:'2026-01-01' },
       { id:'svc2', name:'Video Consultation', icon:'🎥', bg:'#E3F2FD', status:'active', createdAt:'2026-01-01' },
@@ -27,10 +37,10 @@
   };
 
   function seed() {
-    if (!g('seeded_v6')) {
-      ['seeded_v1','seeded_v2','seeded_v3','seeded_v4','seeded_v5'].forEach(function(k){ try { localStorage.removeItem('eh_'+k); } catch(e){} });
+    if (!g('seeded_v7')) {
+      ['seeded_v1','seeded_v2','seeded_v3','seeded_v4','seeded_v5','seeded_v6'].forEach(function(k){ try { localStorage.removeItem('eh_'+k); } catch(e){} });
       Object.keys(SEED).forEach(function(k) { s(k, SEED[k]); });
-      s('seeded_v6', true);
+      s('seeded_v7', true);
     }
   }
 
@@ -198,6 +208,18 @@
       list.push(sv); s('services', list); return sv;
     },
     deleteService: function(id) { s('services', (g('services')||[]).filter(function(sv){return sv.id!==id;})); },
+
+    /* ── Roles ───────────────────────────────────────────── */
+    getRoles: function() { return g('roles') || []; },
+    addRole: function(data) {
+      var list = this.getRoles();
+      var r = Object.assign({ id: nextId('r'), userCount:0, createdAt: nowStr().slice(0,10) }, data);
+      list.unshift(r); s('roles', list); return r;
+    },
+    updateRole: function(id, data) {
+      s('roles', (g('roles')||[]).map(function(r){ return r.id===id ? Object.assign(r,data) : r; }));
+    },
+    deleteRole: function(id) { s('roles', (g('roles')||[]).filter(function(r){return r.id!==id;})); },
 
     /* ── Media Files ─────────────────────────────────────── */
     getMediaFiles: function() { return g('mediaFiles') || []; },

@@ -103,6 +103,8 @@
   </div>
 </div>
 
+<script src="assets/js/data.js"></script>
+<script src="assets/js/auth.js"></script>
 <script>
 var ACTIVE_PAGE = 'roles';
 
@@ -221,24 +223,8 @@ var PERMS = [
   ['Vendor Packages',             ['All','Index','Create','Edit','Restore','Trash','ForceDelete']]
 ];
 
-/* ─── Seed roles in localStorage ─── */
-var ROLE_KEY = 'eh_roles';
-var DEFAULT_ROLES = [
-  { id:'r1', name:'Admin',         permissions:'all', createdAt:'2026-05-27', userCount:1 },
-  { id:'r2', name:'Doctor',        permissions:'appointments,patients,prescriptions,lab_tests,video_consultations', createdAt:'2026-05-27', userCount:3 },
-  { id:'r3', name:'Nurse',         permissions:'patients,appointments,check_ins,bed_assigns', createdAt:'2026-05-27', userCount:2 },
-  { id:'r4', name:'Receptionist',  permissions:'appointments,check_ins,patients,calendars', createdAt:'2026-05-27', userCount:1 },
-  { id:'r5', name:'Pathologist',   permissions:'lab_tests,lab_test_bookings,lab_categories,reports', createdAt:'2026-05-27', userCount:1 },
-  { id:'r6', name:'Hospital',      permissions:'hospitals,departments,doctors,patients,appointments', createdAt:'2026-05-27', userCount:1 },
-  { id:'r7', name:'Collector',     permissions:'lab_test_bookings,patients,reports', createdAt:'2026-05-27', userCount:1 },
-  { id:'r8', name:'Pharmacist',    permissions:'medicines,prescriptions,patients', createdAt:'2026-05-27', userCount:1 }
-];
-
-function getRoles() {
-  try { var r = JSON.parse(localStorage.getItem(ROLE_KEY)); return r || DEFAULT_ROLES; } catch(e) { return DEFAULT_ROLES; }
-}
-function setRoles(roles) { try { localStorage.setItem(ROLE_KEY, JSON.stringify(roles)); } catch(e) {} }
-if (!localStorage.getItem(ROLE_KEY)) setRoles(DEFAULT_ROLES);
+function getRoles() { return EH.getRoles(); }
+function setRoles(roles) { try { localStorage.setItem('eh_roles', JSON.stringify(roles)); } catch(e) {} }
 
 var editingId = null;
 
@@ -322,17 +308,13 @@ function saveRole() {
   var name = document.getElementById('role-name').value.trim();
   if (!name) { ehToast('Please enter a role name.', 'error'); return; }
   var perms = getSelectedPerms();
-  var roles = getRoles();
-  var now = new Date().toISOString().slice(0,10);
   if (editingId) {
-    roles = roles.map(function(r) { return r.id === editingId ? Object.assign(r,{name:name,permissions:perms,updatedAt:now}) : r; });
+    EH.updateRole(editingId, { name:name, permissions:perms });
     ehToast('Role "'+name+'" updated successfully.', 'success');
   } else {
-    var newRole = { id:'r'+Date.now(), name:name, permissions:perms, createdAt:now, userCount:0 };
-    roles.unshift(newRole);
+    EH.addRole({ name:name, permissions:perms });
     ehToast('Role "'+name+'" created successfully.', 'success');
   }
-  setRoles(roles);
   editingId = null;
   document.getElementById('role-name').value = '';
   toggleAllPerms(false);
@@ -354,8 +336,7 @@ function editRole(id) {
 /* ─── Delete Role ─── */
 function deleteRole(id, name) {
   if (!confirm('Delete role "'+name+'"? This cannot be undone.')) return;
-  var roles = getRoles().filter(function(r){return r.id!==id;});
-  setRoles(roles);
+  EH.deleteRole(id);
   renderRoleList();
   ehToast('Role "'+name+'" deleted.', 'info');
 }
@@ -395,13 +376,12 @@ function showTab(which) {
 }
 
 /* ─── Init ─── */
-buildPermRows();
-renderRoleList();
+document.addEventListener('DOMContentLoaded', function() {
+  EHAuth.init();
+  buildPermRows();
+  renderRoleList();
+});
 </script>
-<script src="assets/js/data.js"></script>
-<script src="assets/js/auth.js"></script>
-<script>document.addEventListener('DOMContentLoaded', function(){ EHAuth.init(); });</script>
-<script>var ACTIVE_PAGE='roles';</script>
 <script src="assets/js/sidebar.js"></script>
 </body>
 </html>
