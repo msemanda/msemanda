@@ -75,7 +75,7 @@
   var tenantPill = '';
   if (window.EHAuth && window.EH) {
     var _sess = EHAuth.getSession();
-    if (_sess && _sess.role === 'admin' && !_sess.tenantId) {
+    if (_sess && _sess.role === 'admin' && !_sess.tenantId && _sess.email === 'semandamoses91@gmail.com') {
       var _tenants = EH.getTenants();
       var _activeCtx = _sess.activeContext || '';
       var _activeName = _activeCtx ? (EH.getTenant(_activeCtx)||{}).name||'Unknown' : 'All Hospitals';

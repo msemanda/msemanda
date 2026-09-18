@@ -14,7 +14,8 @@
     if (avatarEl) avatarEl.textContent = (session.avatar || session.name.charAt(0)).toUpperCase();
     if (nameEl)   nameEl.textContent   = session.name;
     if (roleEl) {
-      var label = session.role.charAt(0).toUpperCase() + session.role.slice(1);
+      var roleMap = { admin:'Administrator', hospital:'Hospital Admin', doctor:'Doctor', nurse:'Nurse', receptionist:'Receptionist', pathologist:'Pathologist', collector:'Collector', pharmacist:'Pharmacist' };
+      var label = roleMap[session.role] || (session.role.charAt(0).toUpperCase() + session.role.slice(1));
       // Append tenant name for non-super-admin
       if (session.tenantId && window.EH) {
         var t = EH.getTenant(session.tenantId);
@@ -74,7 +75,7 @@
 
     isSuperAdmin: function() {
       var s = getSession();
-      return s && s.role === 'admin' && !s.tenantId;
+      return !!(s && s.role === 'admin' && !s.tenantId && s.email === 'semandamoses91@gmail.com');
     },
 
     /* Effective tenant: activeContext (super-admin override) or user's own tenantId */
@@ -87,7 +88,7 @@
     /* Super-admin can switch context to view as a specific hospital */
     switchContext: function(tenantId) {
       var s = getSession();
-      if (!s || s.role !== 'admin') return;
+      if (!s || !this.isSuperAdmin()) return;
       s.activeContext = tenantId || null;
       setSession(s);
       updateHeader(s);
