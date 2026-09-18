@@ -16,6 +16,16 @@
     labTests:         [],
     ambulanceBookings:[],
     mediaFiles:       [],
+    medicines:        [
+      { id:'med1', name:'Ibuprofen 200mg',    description:'Anti-inflammatory pain relief.',      status:'active', createdAt:'2026-01-01' },
+      { id:'med2', name:'Amoxicillin 500mg',  description:'Antibiotic for bacterial infections.', status:'active', createdAt:'2026-01-01' },
+      { id:'med3', name:'Cetirizine 10mg',    description:'Allergy relief.',                     status:'active', createdAt:'2026-01-01' },
+      { id:'med4', name:'Omeprazole 20mg',    description:'Reduces stomach acid.',               status:'active', createdAt:'2026-01-01' },
+      { id:'med5', name:'Metformin 500mg',    description:'Supports blood sugar management.',    status:'active', createdAt:'2026-01-01' },
+      { id:'med6', name:'Atorvastatin 10mg',  description:'Supports cholesterol management.',    status:'active', createdAt:'2026-01-01' },
+      { id:'med7', name:'Amlodipine 5mg',     description:'Supports blood pressure management.', status:'active', createdAt:'2026-01-01' },
+      { id:'med8', name:'Azithromycin 250mg', description:'Antibiotic for bacterial infections.', status:'active', createdAt:'2026-01-01' }
+    ],
     roles: [
       { id:'r1', name:'Admin',        permissions:'all', createdAt:'2026-01-01', userCount:0 },
       { id:'r2', name:'Doctor',       permissions:'appointments,patients,prescriptions,lab_tests,video_consultations', createdAt:'2026-01-01', userCount:0 },
@@ -37,10 +47,10 @@
   };
 
   function seed() {
-    if (!g('seeded_v7')) {
-      ['seeded_v1','seeded_v2','seeded_v3','seeded_v4','seeded_v5','seeded_v6'].forEach(function(k){ try { localStorage.removeItem('eh_'+k); } catch(e){} });
+    if (!g('seeded_v8')) {
+      ['seeded_v1','seeded_v2','seeded_v3','seeded_v4','seeded_v5','seeded_v6','seeded_v7'].forEach(function(k){ try { localStorage.removeItem('eh_'+k); } catch(e){} });
       Object.keys(SEED).forEach(function(k) { s(k, SEED[k]); });
-      s('seeded_v7', true);
+      s('seeded_v8', true);
     }
   }
 
@@ -240,7 +250,22 @@
       var f = Object.assign({ id: nextId('mf'), createdAt: nowStr() }, data);
       list.unshift(f); s('mediaFiles', list); return f;
     },
-    deleteMediaFile: function(id) { s('mediaFiles', (g('mediaFiles')||[]).filter(function(f){return f.id!==id;})); }
+    deleteMediaFile: function(id) { s('mediaFiles', (g('mediaFiles')||[]).filter(function(f){return f.id!==id;})); },
+
+    /* ── Medicines ──────────────────────────────────────────── */
+    getMedicines: function() { return g('medicines') || []; },
+    addMedicine: function(data) {
+      var list = this.getMedicines();
+      var m = Object.assign({ id: nextId('med'), status:'active', createdAt: nowStr().slice(0,10) }, data);
+      list.push(m); s('medicines', list); return m;
+    },
+    updateMedicine: function(id, data) {
+      var list = this.getMedicines();
+      var i = list.findIndex(function(m){return m.id===id;});
+      if (i > -1) { list[i] = Object.assign({}, list[i], data); s('medicines', list); return list[i]; }
+      return null;
+    },
+    deleteMedicine: function(id) { s('medicines', this.getMedicines().filter(function(m){return m.id!==id;})); }
   };
 
   seed();
