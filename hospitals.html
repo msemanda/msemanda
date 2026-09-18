@@ -10,46 +10,82 @@
 .page-tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:22px; }
 .page-tab { padding:10px 20px; font-size:13px; font-weight:700; color:var(--muted); background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; font-family:inherit; transition:color .15s,border-color .15s; }
 .page-tab.active { color:var(--teal); border-bottom-color:var(--teal); }
-/* Hospital cards grid */
-.hospital-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
-.hospital-card { background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden; transition:box-shadow .15s; }
-.hospital-card:hover { box-shadow:0 4px 16px rgba(0,0,0,.08); }
-.hc-header { padding:16px; display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--border); }
-.hc-avatar { width:46px; height:46px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; color:#fff; flex-shrink:0; }
-.hc-name { font-size:14px; font-weight:800; color:var(--ink); }
-.hc-slug { font-size:11px; color:var(--muted); margin-top:2px; font-family:monospace; }
-.hc-body { padding:14px 16px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.hc-stat { text-align:center; }
-.hc-stat-n { font-size:20px; font-weight:800; color:var(--teal); }
-.hc-stat-l { font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; font-weight:700; }
-.hc-footer { padding:10px 16px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
-.hc-meta { font-size:11px; color:var(--muted); }
-.hc-actions { display:flex; gap:6px; }
-.plan-badge { display:inline-block; padding:2px 8px; border-radius:99px; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
-.plan-premium { background:#FEF3C7; color:#D97706; }
-.plan-basic   { background:#E0F2FE; color:#0369A1; }
-.plan-free    { background:#F1F5F9; color:#64748B; }
-/* Add/Edit form */
-.hosp-form-wrap { background:#fff; border-radius:12px; border:1px solid var(--border); overflow:hidden; max-width:760px; }
-.hosp-form-hd { padding:16px 22px; border-bottom:1px solid var(--border); font-size:15px; font-weight:800; color:var(--ink); }
-.hosp-form-body { padding:24px 22px; display:grid; grid-template-columns:1fr 1fr; gap:16px 20px; }
-.hosp-form-body .full { grid-column:1/-1; }
-.hf-field label { display:block; font-size:12px; font-weight:700; color:var(--ink); margin-bottom:5px; }
-.hf-field label span { color:var(--danger); }
-.hf-field input, .hf-field select, .hf-field textarea { width:100%; padding:9px 13px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; color:var(--ink); background:var(--page-bg); outline:none; transition:border-color .15s; resize:vertical; }
-.hf-field input:focus, .hf-field select:focus, .hf-field textarea:focus { border-color:var(--teal); background:#fff; }
-.hf-section { grid-column:1/-1; font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding-bottom:4px; border-bottom:1px solid var(--border); }
-.status-toggle { display:inline-flex; border:1.5px solid var(--border); border-radius:8px; overflow:hidden; }
-.status-toggle button { padding:8px 20px; border:none; background:#fff; font-family:inherit; font-size:12.5px; font-weight:700; cursor:pointer; color:var(--muted); transition:background .15s,color .15s; }
-.status-toggle button.active { background:var(--teal); color:#fff; }
-.plan-toggle { display:flex; gap:8px; }
-.plan-opt { flex:1; border:1.5px solid var(--border); border-radius:7px; padding:8px 6px; text-align:center; cursor:pointer; font-size:12px; font-weight:700; color:var(--muted); transition:border-color .15s,color .15s; }
-.plan-opt.active { border-color:var(--teal); color:var(--teal); background:rgba(13,167,167,.06); }
-.form-actions { grid-column:1/-1; display:flex; gap:10px; padding-top:4px; }
-/* View hospital modal overlay */
-.tenant-view-bar { background:linear-gradient(135deg,var(--teal),#066060); color:#fff; padding:10px 20px; display:flex; align-items:center; justify-content:space-between; border-radius:10px; margin-bottom:18px; font-size:13px; font-weight:700; }
-.tenant-view-bar a { color:rgba(255,255,255,.8); text-decoration:none; font-size:12px; border:1px solid rgba(255,255,255,.3); padding:4px 12px; border-radius:6px; }
-.tenant-view-bar a:hover { background:rgba(255,255,255,.15); }
+
+/* Inline row actions */
+.row-actions { display:flex; gap:10px; font-size:12px; margin-top:3px; }
+.row-actions a { color:var(--teal); text-decoration:none; font-weight:500; }
+.row-actions a.trash-lnk { color:var(--danger,#e53e3e); }
+.row-actions a.restore-lnk { color:var(--success,#38a169); }
+.row-actions a:hover { text-decoration:underline; }
+.trash-row td { opacity:.55; }
+
+/* Eye action button */
+.eye-btn { width:30px;height:30px;border-radius:7px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:border-color .15s,color .15s; }
+.eye-btn:hover { border-color:var(--teal);color:var(--teal); }
+
+/* Bulk bar */
+.bulk-bar { display:flex;align-items:center;gap:8px; }
+.bulk-select { padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit; }
+
+/* ── Add Hospital form ── */
+.hosp-form-card { background:#fff;border-radius:12px;border:1px solid var(--border);overflow:hidden;max-width:900px; }
+.hosp-form-hd { padding:16px 24px;border-bottom:1px solid var(--border);font-size:15px;font-weight:800;color:var(--ink); }
+
+/* Sub-tabs */
+.sub-tabs { display:flex;gap:0;padding:0 24px;border-bottom:1px solid var(--border);background:#fafbfc; }
+.sub-tab { display:flex;align-items:center;gap:6px;padding:12px 18px;font-size:13px;font-weight:600;color:var(--muted);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;font-family:inherit;transition:color .15s,border-color .15s; }
+.sub-tab.active { color:var(--teal);border-bottom-color:var(--teal);background:none; }
+.sub-tab svg { opacity:.6; }
+.sub-tab.active svg { opacity:1; }
+
+/* Tab panels */
+.sub-panel { display:none;padding:28px 24px; }
+.sub-panel.active { display:block; }
+
+/* Form rows */
+.fr { display:grid;grid-template-columns:200px 1fr;align-items:flex-start;gap:16px 24px;margin-bottom:22px; }
+.fr label { font-size:13px;font-weight:700;color:var(--dark,#2d3748);padding-top:9px; }
+.fr label span { color:var(--danger); }
+.fr input[type=text],.fr input[type=email],.fr input[type=tel],.fr input[type=number],.fr input[type=url],.fr textarea,.fr select { width:100%;padding:9px 13px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--ink);background:#fff;outline:none;transition:border-color .15s;box-sizing:border-box; }
+.fr textarea { resize:vertical;min-height:90px; }
+.fr input:focus,.fr textarea:focus,.fr select:focus { border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,167,167,.1); }
+.fr .hint { font-size:11.5px;color:var(--muted);margin-top:4px; }
+.fr .hint a { color:var(--teal);font-weight:700;text-decoration:none; }
+
+/* Image upload box */
+.img-upload-box { width:80px;height:80px;border:2px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#fafbfc;position:relative;overflow:hidden;transition:border-color .15s; }
+.img-upload-box:hover { border-color:var(--teal); }
+.img-upload-box input { position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%; }
+.img-upload-box img { width:100%;height:100%;object-fit:cover;border-radius:8px; }
+.img-upload-box .plus-icon { color:var(--muted);pointer-events:none; }
+
+/* Slug prefix */
+.slug-wrap { display:flex;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .15s; }
+.slug-wrap:focus-within { border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,167,167,.1); }
+.slug-prefix { padding:9px 12px;background:#f1f5f9;font-size:11.5px;color:var(--muted);white-space:nowrap;border-right:1px solid var(--border);flex-shrink:0; }
+.slug-wrap input { border:none!important;border-radius:0!important;box-shadow:none!important;background:#fff; }
+
+/* Phone split */
+.phone-split { display:grid;grid-template-columns:120px 1fr;gap:8px; }
+
+/* Multi-select tags */
+.ms-wrap { border:1.5px solid var(--border);border-radius:8px;padding:6px 8px;min-height:42px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;cursor:text;transition:border-color .15s; }
+.ms-wrap:focus-within { border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,167,167,.1); }
+.ms-tag { display:inline-flex;align-items:center;gap:4px;background:rgba(13,167,167,.1);color:var(--teal);border-radius:5px;padding:2px 8px;font-size:12px;font-weight:600; }
+.ms-tag button { background:none;border:none;cursor:pointer;color:var(--teal);padding:0;font-size:14px;line-height:1; }
+.ms-dropdown { display:none;position:absolute;z-index:200;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);min-width:220px;max-height:200px;overflow-y:auto;padding:4px 0; }
+.ms-dropdown.open { display:block; }
+.ms-dropdown div { padding:8px 14px;font-size:13px;cursor:pointer; }
+.ms-dropdown div:hover { background:#f1f5f9;color:var(--teal); }
+.ms-container { position:relative; }
+
+/* Segmented */
+.seg { display:inline-flex;border:1.5px solid var(--border);border-radius:8px;overflow:hidden; }
+.seg button { padding:8px 20px;border:none;background:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;color:var(--muted);transition:background .15s,color .15s; }
+.seg button.active { background:var(--teal);color:#fff; }
+
+/* Form footer */
+.form-footer { padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px; }
 </style>
 </head>
 <body>
@@ -68,326 +104,727 @@
     <div class="content">
       <div class="page-title-row">
         <h1 class="page-title">Hospitals</h1>
-        <button class="btn btn-teal" onclick="showView('add')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Hospital</button>
+        <button class="btn btn-teal" onclick="showView('add')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New</button>
       </div>
 
       <div class="page-tabs">
         <button class="page-tab active" id="tab-list" onclick="showView('list')">All Hospitals</button>
-        <button class="page-tab" id="tab-add"  onclick="showView('add')">Add Hospital</button>
+        <button class="page-tab" id="tab-add" onclick="showView('add')">Add Hospital</button>
       </div>
 
-      <!-- ── List ────────────────────────────────────────── -->
+      <!-- ── List ── -->
       <div id="view-list">
-        <div class="filter-bar" style="margin-bottom:16px">
-          <div class="filter-tabs">
-            <button class="filter-tab active" data-filter="all">All <span class="tab-count" id="cnt-all"></span></button>
-            <button class="filter-tab" data-filter="active">Active <span class="tab-count" id="cnt-active"></span></button>
-            <button class="filter-tab" data-filter="inactive">Inactive <span class="tab-count" id="cnt-inactive"></span></button>
+        <div class="card">
+          <div class="filter-bar">
+            <div class="filter-tabs">
+              <button class="filter-tab active" data-filter="all"      onclick="setFilter(this,'all')">All <span class="tab-count" id="cnt-all"></span></button>
+              <button class="filter-tab" data-filter="active"   onclick="setFilter(this,'active')">Active <span class="tab-count" id="cnt-active"></span></button>
+              <button class="filter-tab" data-filter="deactive" onclick="setFilter(this,'deactive')">DeActive <span class="tab-count" id="cnt-deactive"></span></button>
+              <button class="filter-tab" data-filter="trash"    onclick="setFilter(this,'trash')">Trash <span class="tab-count" id="cnt-trash"></span></button>
+            </div>
+            <div class="filter-right">
+              <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" id="hosp-search" placeholder="Search..." oninput="renderList()"></div>
+              <select class="per-page-select" id="per-page" onchange="renderList()"><option>15</option><option>25</option><option>50</option></select>
+              <div class="bulk-bar">
+                <select class="bulk-select" id="bulk-action">
+                  <option value="">Bulk actions</option>
+                  <option value="activate">Activate</option>
+                  <option value="deactivate">Deactivate</option>
+                  <option value="verify">Mark Verified</option>
+                  <option value="unverify">Mark Unverified</option>
+                  <option value="trash">Move to Trash</option>
+                  <option value="restore">Restore</option>
+                  <option value="delete">Delete Permanently</option>
+                </select>
+                <button class="btn-apply" onclick="applyBulk()">Apply</button>
+              </div>
+            </div>
           </div>
-          <div class="filter-right">
-            <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" id="hosp-search" placeholder="Search hospitals..." oninput="renderHospitals()"></div>
-            <select class="per-page-select" id="plan-filter" onchange="renderHospitals()"><option value="">All Plans</option><option>premium</option><option>basic</option><option>free</option></select>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all" onchange="toggleAll(this)"></th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Verified</th>
+                <th>Created At</th>
+                <th>Action</th>
+              </tr></thead>
+              <tbody id="hosp-tbody"></tbody>
+            </table>
           </div>
         </div>
-        <div class="hospital-grid" id="hosp-grid"></div>
       </div>
 
-      <!-- ── Add / Edit ──────────────────────────────────── -->
+      <!-- ── Add / Edit ── -->
       <div id="view-add" style="display:none">
-        <div class="hosp-form-wrap">
+        <div class="hosp-form-card">
           <div class="hosp-form-hd" id="form-heading">Add Hospital</div>
-          <div class="hosp-form-body">
 
-            <div class="hf-section">Hospital Information</div>
+          <!-- Sub-tabs -->
+          <div class="sub-tabs">
+            <button class="sub-tab active" data-panel="general" onclick="gotoSubTab('general')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>General
+            </button>
+            <button class="sub-tab" data-panel="addinfo" onclick="gotoSubTab('addinfo')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>Additional Info
+            </button>
+            <button class="sub-tab" data-panel="ambulance" onclick="gotoSubTab('ambulance')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Ambulance
+            </button>
+            <button class="sub-tab" data-panel="seo" onclick="gotoSubTab('seo')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>SEO
+            </button>
+            <button class="sub-tab" data-panel="address" onclick="gotoSubTab('address')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Address
+            </button>
+          </div>
 
-            <div class="hf-field">
-              <label>Hospital Name <span>*</span></label>
-              <input type="text" id="h-name" placeholder="e.g. Sunrise Care Hospital">
+          <!-- General -->
+          <div class="sub-panel active" id="panel-general">
+            <div class="fr">
+              <label>Logo <span>*</span></label>
+              <div>
+                <div class="img-upload-box" onclick="document.getElementById('logo-file').click()" id="logo-box">
+                  <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="previewImg(this,'logo-box','logo-preview','h-logo')">
+                  <img id="logo-preview" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:8px">
+                  <svg id="logo-plus" class="plus-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </div>
+                <input type="hidden" id="h-logo">
+              </div>
             </div>
-            <div class="hf-field">
-              <label>Slug / Short Code <span>*</span></label>
-              <input type="text" id="h-slug" placeholder="e.g. sunrise-care">
+            <div class="fr">
+              <label>Images</label>
+              <div>
+                <div class="img-upload-box" onclick="document.getElementById('images-file').click()" id="images-box">
+                  <input type="file" id="images-file" accept="image/*" style="display:none" onchange="previewImg(this,'images-box','images-preview','h-images')">
+                  <img id="images-preview" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:8px">
+                  <svg id="images-plus" class="plus-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </div>
+                <input type="hidden" id="h-images">
+              </div>
             </div>
-            <div class="hf-field">
-              <label>Email <span>*</span></label>
-              <input type="email" id="h-email" placeholder="hospital@domain.com">
+            <div class="fr">
+              <label>Name <span>*</span></label>
+              <input type="text" id="h-name" placeholder="Enter Name" oninput="autoSlug()">
             </div>
-            <div class="hf-field">
+            <div class="fr">
+              <label>Slug</label>
+              <div class="slug-wrap">
+                <span class="slug-prefix">ehealth/hospital/</span>
+                <input type="text" id="h-slug" placeholder="Enter Slug">
+              </div>
+            </div>
+            <div class="fr">
+              <label>Email</label>
+              <input type="email" id="h-email" placeholder="Enter Email">
+            </div>
+            <div class="fr">
               <label>Phone <span>*</span></label>
-              <input type="tel" id="h-phone" placeholder="+256 700 000 000">
-            </div>
-            <div class="hf-field full">
-              <label>Address</label>
-              <input type="text" id="h-address" placeholder="City, District, Country">
-            </div>
-
-            <div class="hf-section">Plan &amp; Status</div>
-
-            <div class="hf-field">
-              <label>Plan</label>
-              <div class="plan-toggle">
-                <div class="plan-opt active" onclick="setPlan('free',this)">Free</div>
-                <div class="plan-opt" onclick="setPlan('basic',this)">Basic</div>
-                <div class="plan-opt" onclick="setPlan('premium',this)">Premium</div>
+              <div class="phone-split">
+                <select id="h-country">
+                  <option value="+256">+256 🇺🇬</option>
+                  <option value="+1">+1 🇺🇸</option>
+                  <option value="+44">+44 🇬🇧</option>
+                  <option value="+254">+254 🇰🇪</option>
+                  <option value="+255">+255 🇹🇿</option>
+                  <option value="+250">+250 🇷🇼</option>
+                  <option value="+27">+27 🇿🇦</option>
+                </select>
+                <input type="tel" id="h-phone" placeholder="Enter Phone">
               </div>
             </div>
-            <div class="hf-field">
-              <label>Status</label>
-              <div class="status-toggle">
-                <button type="button" id="hs-active" class="active" onclick="setHStatus('active')">Active</button>
-                <button type="button" id="hs-inactive" onclick="setHStatus('inactive')">Inactive</button>
+            <div class="fr">
+              <label>Description</label>
+              <textarea id="h-desc" placeholder="Enter Description (en)"></textarea>
+            </div>
+            <div class="fr">
+              <label>Registration Id</label>
+              <input type="text" id="h-reg-id" placeholder="Enter Registration Id">
+            </div>
+            <div class="fr">
+              <label>Google Map Embed Url</label>
+              <input type="url" id="h-map-url" placeholder="Enter Google Map Embed Url">
+            </div>
+            <div class="fr">
+              <label>Departments <span>*</span></label>
+              <div>
+                <div class="ms-container" id="ms-dept-container">
+                  <div class="ms-wrap" id="ms-dept-wrap" onclick="toggleDropdown('ms-dept-dd')"></div>
+                  <div class="ms-dropdown" id="ms-dept-dd"></div>
+                </div>
+                <div class="hint">*To add new department, simply click <a href="departments.html">here</a></div>
               </div>
             </div>
-
-            <div class="hf-section">Admin Account</div>
-
-            <div class="hf-field">
-              <label>Admin Full Name <span>*</span></label>
-              <input type="text" id="h-admin-name" placeholder="Dr. Full Name">
+            <div class="fr">
+              <label>Zones <span>*</span></label>
+              <div>
+                <div class="ms-container" id="ms-zone-container">
+                  <div class="ms-wrap" id="ms-zone-wrap" onclick="toggleDropdown('ms-zone-dd')"></div>
+                  <div class="ms-dropdown" id="ms-zone-dd">
+                    <div onclick="pickZone('World')">World</div>
+                    <div onclick="pickZone('East Africa')">East Africa</div>
+                    <div onclick="pickZone('Uganda')">Uganda</div>
+                    <div onclick="pickZone('Kenya')">Kenya</div>
+                    <div onclick="pickZone('Tanzania')">Tanzania</div>
+                    <div onclick="pickZone('Rwanda')">Rwanda</div>
+                  </div>
+                </div>
+                <div class="hint">*Required when "Zone Selection" is enabled in settings.</div>
+              </div>
             </div>
-            <div class="hf-field">
-              <label>Admin Email <span>*</span></label>
-              <input type="email" id="h-admin-email" placeholder="admin@hospital.com">
+            <div class="fr">
+              <label>Specialties <span>*</span></label>
+              <div>
+                <div class="ms-container" id="ms-spec-container">
+                  <div class="ms-wrap" id="ms-spec-wrap" onclick="toggleDropdown('ms-spec-dd')"></div>
+                  <div class="ms-dropdown" id="ms-spec-dd"></div>
+                </div>
+                <div class="hint">*To add new specialty, simply click <a href="specialties.html">here</a></div>
+              </div>
             </div>
-            <div class="hf-field">
-              <label>Admin Password <span>*</span></label>
-              <input type="password" id="h-admin-password" placeholder="Min 8 characters">
+            <div class="fr">
+              <label>Hospital Type <span>*</span></label>
+              <select id="h-type">
+                <option value="">Select Hospital Type</option>
+                <option>Government</option>
+                <option>Private</option>
+                <option>NGO</option>
+                <option>Mission</option>
+                <option>Clinic</option>
+                <option>Specialized</option>
+              </select>
             </div>
-            <div class="hf-field">
-              <label>Admin Phone</label>
-              <input type="tel" id="h-admin-phone" placeholder="+256 700 000 000">
+            <div class="fr">
+              <label>Ambulance Service</label>
+              <div class="seg" id="seg-amb">
+                <button type="button" class="active" onclick="setSeg('seg-amb','active',this)">Active</button>
+                <button type="button" onclick="setSeg('seg-amb','deactive',this)">DeActive</button>
+              </div>
             </div>
-
-            <div class="form-actions">
-              <button class="btn btn-teal" onclick="saveHospital()">Save Hospital</button>
-              <button class="btn" style="background:var(--page-bg);border:1px solid var(--border);color:var(--ink-mid)" onclick="cancelForm()">Cancel</button>
+            <div class="fr">
+              <label>Facilities</label>
+              <input type="text" id="h-facilities" placeholder="Enter Facilities Detail">
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:8px">
+              <button class="btn btn-secondary" onclick="cancelForm()">Cancel</button>
+              <button class="btn btn-teal" onclick="gotoSubTab('addinfo')">Next</button>
             </div>
           </div>
+
+          <!-- Additional Info -->
+          <div class="sub-panel" id="panel-addinfo">
+            <div class="fr">
+              <label>Admin Full Name <span>*</span></label>
+              <input type="text" id="h-admin-name" placeholder="Enter Admin Full Name">
+            </div>
+            <div class="fr">
+              <label>Admin Email <span>*</span></label>
+              <input type="email" id="h-admin-email" placeholder="Enter Admin Email">
+            </div>
+            <div class="fr">
+              <label>Admin Password <span>*</span></label>
+              <input type="password" id="h-admin-pass" placeholder="Enter Password">
+            </div>
+            <div class="fr">
+              <label>Admin Phone</label>
+              <input type="tel" id="h-admin-phone" placeholder="Enter Admin Phone">
+            </div>
+            <div class="fr">
+              <label>Plan</label>
+              <select id="h-plan">
+                <option value="free">Free</option>
+                <option value="basic">Basic</option>
+                <option value="premium">Premium</option>
+              </select>
+            </div>
+            <div class="fr">
+              <label>Status</label>
+              <div class="seg" id="seg-status">
+                <button type="button" class="active" onclick="setSeg('seg-status','active',this)">Active</button>
+                <button type="button" onclick="setSeg('seg-status','deactive',this)">DeActive</button>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:8px">
+              <button class="btn btn-secondary" onclick="gotoSubTab('general')">Previous</button>
+              <button class="btn btn-teal" onclick="gotoSubTab('ambulance')">Next</button>
+            </div>
+          </div>
+
+          <!-- Ambulance -->
+          <div class="sub-panel" id="panel-ambulance">
+            <div class="fr">
+              <label>Description <span>*</span></label>
+              <textarea id="h-amb-desc" placeholder="Enter Vehicle Description"></textarea>
+            </div>
+            <div class="fr">
+              <label>Per Km Charge <span>*</span></label>
+              <input type="number" id="h-amb-km" placeholder="Enter Per Km Charge" min="0" step="0.01">
+            </div>
+            <div class="fr">
+              <label>Plate Number <span>*</span></label>
+              <input type="text" id="h-amb-plate" placeholder="Enter Plate Number">
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:8px">
+              <button class="btn btn-secondary" onclick="gotoSubTab('addinfo')">Previous</button>
+              <button class="btn btn-teal" onclick="gotoSubTab('seo')">Next</button>
+            </div>
+          </div>
+
+          <!-- SEO -->
+          <div class="sub-panel" id="panel-seo">
+            <div class="fr">
+              <label>Meta Title</label>
+              <input type="text" id="h-meta-title" placeholder="Enter Meta Title">
+            </div>
+            <div class="fr">
+              <label>Meta Description</label>
+              <textarea id="h-meta-desc" placeholder="Enter Meta Description"></textarea>
+            </div>
+            <div class="fr">
+              <label>Meta Image</label>
+              <div>
+                <div class="img-upload-box" onclick="document.getElementById('meta-img-file').click()" id="meta-img-box">
+                  <input type="file" id="meta-img-file" accept="image/*" style="display:none" onchange="previewImg(this,'meta-img-box','meta-img-preview','h-meta-img')">
+                  <img id="meta-img-preview" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:8px">
+                  <svg id="meta-img-plus" class="plus-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </div>
+                <input type="hidden" id="h-meta-img">
+              </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:8px">
+              <button class="btn btn-secondary" onclick="gotoSubTab('ambulance')">Previous</button>
+              <button class="btn btn-teal" onclick="gotoSubTab('address')">Next</button>
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div class="sub-panel" id="panel-address">
+            <div class="fr">
+              <label>Street / Building</label>
+              <input type="text" id="h-street" placeholder="Enter Street Address">
+            </div>
+            <div class="fr">
+              <label>City</label>
+              <input type="text" id="h-city" placeholder="Enter City">
+            </div>
+            <div class="fr">
+              <label>State / District</label>
+              <input type="text" id="h-state" placeholder="Enter State or District">
+            </div>
+            <div class="fr">
+              <label>Country</label>
+              <input type="text" id="h-country" placeholder="Enter Country">
+            </div>
+            <div class="fr">
+              <label>Zip / Postal Code</label>
+              <input type="text" id="h-zip" placeholder="Enter Zip Code">
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:8px">
+              <button class="btn btn-secondary" onclick="gotoSubTab('seo')">Previous</button>
+              <button class="btn btn-secondary" onclick="cancelForm()">Cancel</button>
+              <button class="btn btn-teal" onclick="saveHospital()">Save</button>
+            </div>
+          </div>
+
         </div>
       </div>
 
     </div>
-    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.4s</span></div></footer>
+    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.3s</span></div></footer>
   </div>
 </div>
 
 <script src="assets/js/data-api.js"></script>
 <script src="assets/js/auth.js"></script>
+<script src="assets/js/sidebar.js"></script>
 <script>
 var ACTIVE_PAGE = 'hospitals';
 var editingId   = null;
-var currentPlan = 'free';
-var currentStat = 'active';
 var currentFilter = 'all';
+var segVals = { 'seg-amb':'active', 'seg-status':'active' };
+var selectedDepts = [], selectedZones = [], selectedSpecs = [];
 
-var HC_COLORS = ['#0DA7A7','#7C3AED','#059669','#DB2777','#D97706','#2563EB','#DC2626','#0891B2'];
-function hColor(name) { return HC_COLORS[(name||'H').charCodeAt(0) % HC_COLORS.length]; }
-
-/* ── Plan/status toggles ─────────────────────────────── */
-function setPlan(p, el) {
-  currentPlan = p;
-  document.querySelectorAll('.plan-opt').forEach(function(o){o.classList.remove('active');});
-  el.classList.add('active');
+/* ── Image preview ─────────────────────────────────── */
+function previewImg(input, boxId, previewId, hiddenId) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = document.getElementById(previewId);
+    var plus = document.getElementById(boxId).querySelector('.plus-icon');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    if (plus) plus.style.display = 'none';
+    document.getElementById(hiddenId).value = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
-function setHStatus(s) {
-  currentStat = s;
-  document.getElementById('hs-active').classList.toggle('active',   s==='active');
-  document.getElementById('hs-inactive').classList.toggle('active', s==='inactive');
+
+/* ── Segmented buttons ─────────────────────────────── */
+function setSeg(groupId, val, btn) {
+  segVals[groupId] = val;
+  var group = document.getElementById(groupId);
+  group.querySelectorAll('button').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
 }
 
-/* ── Render hospital cards ───────────────────────────── */
-function renderHospitals() {
-  var tenants = EH.getTenants();
-  var q  = (document.getElementById('hosp-search').value||'').toLowerCase();
-  var pf = (document.getElementById('plan-filter').value||'').toLowerCase();
+/* ── Sub-tab navigation ────────────────────────────── */
+function gotoSubTab(panel) {
+  document.querySelectorAll('.sub-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.panel === panel); });
+  document.querySelectorAll('.sub-panel').forEach(function(p){ p.classList.toggle('active', p.id === 'panel-'+panel); });
+}
 
-  var filtered = tenants.filter(function(t){
-    if (currentFilter !== 'all' && t.status !== currentFilter) return false;
-    if (q  && t.name.toLowerCase().indexOf(q)<0 && t.slug.toLowerCase().indexOf(q)<0) return false;
-    if (pf && t.plan !== pf) return false;
-    return true;
-  });
-
-  document.getElementById('cnt-all').textContent     = '(' + tenants.length + ')';
-  document.getElementById('cnt-active').textContent  = '(' + tenants.filter(function(t){return t.status==='active';}).length + ')';
-  document.getElementById('cnt-inactive').textContent= '(' + tenants.filter(function(t){return t.status!=='active';}).length + ')';
-
-  var grid = document.getElementById('hosp-grid');
-  if (!filtered.length) {
-    grid.innerHTML = '<p style="color:var(--muted);padding:40px;text-align:center;grid-column:1/-1">No hospitals found.</p>';
-    return;
+/* ── Auto slug ─────────────────────────────────────── */
+function autoSlug() {
+  if (!editingId) {
+    document.getElementById('h-slug').value = document.getElementById('h-name').value.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
   }
+}
 
-  grid.innerHTML = filtered.map(function(t) {
-    var stats = EH.getTenantStats(t.id);
-    var planCls = 'plan-' + (t.plan||'free');
-    var color   = hColor(t.name);
-    var statusDot = t.status==='active'
-      ? '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--success);margin-right:4px"></span>Active'
-      : '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#94A3B8;margin-right:4px"></span>Inactive';
-    return '<div class="hospital-card">'
-      + '<div class="hc-header">'
-      + '<div class="hc-avatar" style="background:'+color+'">'+t.name.charAt(0)+'</div>'
-      + '<div><div class="hc-name">'+t.name+'</div><div class="hc-slug">@'+t.slug+'</div></div>'
-      + '<span class="plan-badge '+planCls+'" style="margin-left:auto">'+t.plan+'</span>'
-      + '</div>'
-      + '<div class="hc-body">'
-      + '<div class="hc-stat"><div class="hc-stat-n">'+stats.doctors+'</div><div class="hc-stat-l">Doctors</div></div>'
-      + '<div class="hc-stat"><div class="hc-stat-n">'+stats.patients+'</div><div class="hc-stat-l">Patients</div></div>'
-      + '<div class="hc-stat"><div class="hc-stat-n">'+stats.today+'</div><div class="hc-stat-l">Today</div></div>'
-      + '<div class="hc-stat"><div class="hc-stat-n">'+stats.pending+'</div><div class="hc-stat-l">Pending</div></div>'
-      + '</div>'
-      + '<div class="hc-footer">'
-      + '<div class="hc-meta" style="font-size:11px"><span style="font-size:10px">'+statusDot+'</span><br>Admin: '+t.adminName+'<br>Created: '+t.createdAt+'</div>'
-      + '<div class="hc-actions">'
-      + '<button class="btn" style="font-size:11px;padding:5px 12px;background:rgba(13,167,167,.1);border:1px solid var(--teal);color:var(--teal)" onclick="viewHospital(\''+t.id+'\')" title="View as this hospital">View</button>'
-      + '<button class="btn" style="font-size:11px;padding:5px 12px;background:rgba(124,58,237,.08);border:1px solid #7C3AED;color:#7C3AED" onclick="migrateToHospital(\''+t.id+'\',\''+t.name+'\')" title="Migrate unassigned data to this hospital">Migrate Data</button>'
-      + '<button class="action-btn" style="color:var(--teal);border-color:var(--teal)" onclick="editHospital(\''+t.id+'\')" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
-      + '<button class="action-btn" style="color:var(--danger);border-color:var(--danger)" onclick="deleteHospital(\''+t.id+'\',\''+t.name+'\')" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'
-      + '</div></div></div>';
+/* ── Multi-select helpers ──────────────────────────── */
+function toggleDropdown(ddId) {
+  var dd = document.getElementById(ddId);
+  dd.classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  document.querySelectorAll('.ms-dropdown.open').forEach(function(dd) {
+    if (!dd.parentElement.contains(e.target)) dd.classList.remove('open');
+  });
+});
+
+function renderTags(wrapId, items, removeFunc) {
+  var wrap = document.getElementById(wrapId);
+  wrap.innerHTML = items.map(function(it) {
+    return '<span class="ms-tag">'+it+'<button type="button" onclick="'+removeFunc+'(\''+it+'\')">×</button></span>';
   }).join('');
 }
 
-/* ── View as hospital (set context) ─────────────────── */
-function viewHospital(tenantId) {
-  EHAuth.switchContext(tenantId);
-  ehToast('Viewing as: ' + EH.getTenant(tenantId).name, 'info');
+function populateDeptDropdown() {
+  var dd = document.getElementById('ms-dept-dd');
+  var depts = EH.getDepartments().filter(function(d){ return d.status !== 'trash'; });
+  dd.innerHTML = depts.map(function(d) {
+    return '<div onclick="pickDept(\''+d.name+'\')">'+d.name+'</div>';
+  }).join('') || '<div style="color:var(--muted)">No departments</div>';
+}
+function pickDept(name) {
+  if (selectedDepts.indexOf(name) < 0) { selectedDepts.push(name); renderTags('ms-dept-wrap', selectedDepts, 'removeDept'); }
+  document.getElementById('ms-dept-dd').classList.remove('open');
+}
+function removeDept(name) { selectedDepts = selectedDepts.filter(function(x){return x!==name;}); renderTags('ms-dept-wrap', selectedDepts, 'removeDept'); }
+
+function populateSpecDropdown() {
+  var dd = document.getElementById('ms-spec-dd');
+  var specs = EH.getSpecialties().filter(function(s){ return s.status !== 'trash'; });
+  dd.innerHTML = specs.map(function(s) {
+    return '<div onclick="pickSpec(\''+s.name+'\')">'+s.name+'</div>';
+  }).join('') || '<div style="color:var(--muted)">No specialties</div>';
+}
+function pickSpec(name) {
+  if (selectedSpecs.indexOf(name) < 0) { selectedSpecs.push(name); renderTags('ms-spec-wrap', selectedSpecs, 'removeSpec'); }
+  document.getElementById('ms-spec-dd').classList.remove('open');
+}
+function removeSpec(name) { selectedSpecs = selectedSpecs.filter(function(x){return x!==name;}); renderTags('ms-spec-wrap', selectedSpecs, 'removeSpec'); }
+
+function pickZone(name) {
+  if (selectedZones.indexOf(name) < 0) { selectedZones.push(name); renderTags('ms-zone-wrap', selectedZones, 'removeZone'); }
+  document.getElementById('ms-zone-dd').classList.remove('open');
+}
+function removeZone(name) { selectedZones = selectedZones.filter(function(x){return x!==name;}); renderTags('ms-zone-wrap', selectedZones, 'removeZone'); }
+
+/* ── Filter ────────────────────────────────────────── */
+function setFilter(btn, f) {
+  document.querySelectorAll('.filter-tab').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  currentFilter = f;
+  renderList();
+}
+
+function toggleAll(cb) {
+  document.querySelectorAll('.row-cb').forEach(function(c){ c.checked = cb.checked; });
+}
+
+function getSelected() {
+  var ids = [];
+  document.querySelectorAll('.row-cb:checked').forEach(function(c){ ids.push(c.dataset.id); });
+  return ids;
+}
+
+function applyBulk() {
+  var action = document.getElementById('bulk-action').value;
+  var ids = getSelected();
+  if (!action) { ehToast('Select a bulk action.', 'error'); return; }
+  if (!ids.length) { ehToast('Select at least one row.', 'error'); return; }
+  ids.forEach(function(id) {
+    if (action === 'activate')   EH.updateTenant(id, { status:'active' });
+    if (action === 'deactivate') EH.updateTenant(id, { status:'deactive' });
+    if (action === 'verify')     EH.updateTenant(id, { verified:true });
+    if (action === 'unverify')   EH.updateTenant(id, { verified:false });
+    if (action === 'trash')      EH.updateTenant(id, { status:'trash' });
+    if (action === 'restore')    EH.updateTenant(id, { status:'active' });
+    if (action === 'delete')     EH.deleteTenant(id);
+  });
+  document.getElementById('sel-all').checked = false;
+  document.getElementById('bulk-action').value = '';
+  renderList();
+  ehToast('Bulk action applied.', 'success');
+}
+
+/* ── Render list ───────────────────────────────────── */
+function renderList() {
+  var tenants = EH.getTenants();
+  var q = (document.getElementById('hosp-search').value || '').toLowerCase();
+  var perPage = parseInt(document.getElementById('per-page').value || 15);
+
+  var all      = tenants.filter(function(t){ return t.status !== 'trash'; });
+  var active   = tenants.filter(function(t){ return t.status === 'active'; });
+  var deactive = tenants.filter(function(t){ return t.status === 'deactive'; });
+  var trash    = tenants.filter(function(t){ return t.status === 'trash'; });
+
+  var el;
+  el = document.getElementById('cnt-all');      if(el) el.textContent = '('+all.length+')';
+  el = document.getElementById('cnt-active');   if(el) el.textContent = '('+active.length+')';
+  el = document.getElementById('cnt-deactive'); if(el) el.textContent = '('+deactive.length+')';
+  el = document.getElementById('cnt-trash');    if(el) el.textContent = '('+trash.length+')';
+
+  var filtered;
+  if (currentFilter === 'active')   filtered = active;
+  else if (currentFilter === 'deactive') filtered = deactive;
+  else if (currentFilter === 'trash')    filtered = trash;
+  else filtered = all;
+
+  if (q) filtered = filtered.filter(function(t){ return (t.name||'').toLowerCase().indexOf(q)>-1; });
+  filtered = filtered.slice(0, perPage);
+
+  var tbody = document.getElementById('hosp-tbody');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No hospitals found.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(function(t) {
+    var isTrash   = t.status === 'trash';
+    var isActive  = t.status === 'active';
+    var isVerified = !!t.verified;
+    var letter = (t.name||'H').charAt(0).toUpperCase();
+
+    var thumb = t.logo
+      ? '<img src="'+t.logo+'" style="width:32px;height:32px;border-radius:8px;object-fit:cover">'
+      : '<div style="width:32px;height:32px;border-radius:8px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0">'+letter+'</div>';
+
+    var actions = isTrash
+      ? '<div class="row-actions"><a href="#" class="restore-lnk" onclick="restoreHosp(\''+t.id+'\');return false">Restore</a> | <a href="#" class="trash-lnk" onclick="permDeleteHosp(\''+t.id+'\');return false">Delete</a></div>'
+      : '<div class="row-actions"><a href="#" onclick="editHosp(\''+t.id+'\');return false">Edit</a> | <a href="#" class="trash-lnk" onclick="trashHosp(\''+t.id+'\');return false">Move To Trash</a></div>';
+
+    var statusToggle = isTrash ? '' :
+      '<label class="sw"><input type="checkbox" '+(isActive?'checked':'')+' onchange="toggleStatus(\''+t.id+'\',this.checked)"><span class="sw-track"><span class="sw-thumb"></span></span></label>';
+    var verifiedToggle = isTrash ? '' :
+      '<label class="sw"><input type="checkbox" '+(isVerified?'checked':'')+' onchange="toggleVerified(\''+t.id+'\',this.checked)"><span class="sw-track"><span class="sw-thumb"></span></span></label>';
+
+    return '<tr class="'+(isTrash?'trash-row':'')+'">'
+      + '<td><input type="checkbox" class="tbl-checkbox row-cb" data-id="'+t.id+'"></td>'
+      + '<td><div style="display:flex;align-items:center;gap:10px">'+thumb
+        + '<div><div style="font-size:13px;font-weight:700;color:var(--dark,#2d3748)">'+t.name+'</div>'+actions+'</div></div></td>'
+      + '<td>'+statusToggle+'</td>'
+      + '<td>'+verifiedToggle+'</td>'
+      + '<td style="font-size:12px;color:var(--muted);white-space:nowrap">'+(t.createdAt||'—')+'</td>'
+      + '<td><button class="eye-btn" onclick="viewHosp(\''+t.id+'\')" title="View"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>'
+      + '</tr>';
+  }).join('');
+}
+
+function toggleStatus(id, active) {
+  EH.updateTenant(id, { status: active ? 'active' : 'deactive' });
+  ehToast('Status updated.', 'success');
+}
+function toggleVerified(id, verified) {
+  EH.updateTenant(id, { verified: verified });
+  ehToast(verified ? 'Hospital verified.' : 'Verification removed.', 'success');
+}
+function trashHosp(id) {
+  EH.updateTenant(id, { status:'trash' });
+  renderList();
+  ehToast('Moved to trash.', 'success');
+}
+function restoreHosp(id) {
+  EH.updateTenant(id, { status:'active' });
+  renderList();
+  ehToast('Hospital restored.', 'success');
+}
+function permDeleteHosp(id) {
+  if (!confirm('Permanently delete this hospital? This cannot be undone.')) return;
+  EH.deleteTenant(id);
+  renderList();
+  ehToast('Hospital deleted.', 'success');
+}
+function viewHosp(id) {
+  EHAuth.switchContext(id);
+  ehToast('Viewing as: ' + (EH.getTenant(id)||{}).name, 'info');
   setTimeout(function(){ window.location.href = 'index.html'; }, 800);
 }
 
-/* ── Migrate unassigned data → hospital ──────────────── */
-function migrateToHospital(tenantId, name) {
-  if (!confirm('Migrate all unassigned records (patients, doctors, appointments, lab tests, ambulance bookings) to "'+name+'"?\n\nThis cannot be undone.')) return;
-  var count = 0;
-  ['patients','doctors','appointments','labTests','ambulanceBookings'].forEach(function(col) {
-    var key = 'eh_' + col;
-    var list; try { list = JSON.parse(localStorage.getItem(key)) || []; } catch(e) { list = []; }
-    var updated = list.map(function(r) {
-      if (!r.tenantId) { count++; return Object.assign({}, r, { tenantId: tenantId }); }
-      return r;
-    });
-    localStorage.setItem(key, JSON.stringify(updated));
-  });
-  renderHospitals();
-  ehToast(count + ' record(s) migrated to "'+name+'".', count ? 'success' : 'info');
-}
-
-/* ── Edit hospital ───────────────────────────────────── */
-function editHospital(id) {
+/* ── Edit hospital ─────────────────────────────────── */
+function editHosp(id) {
   var t = EH.getTenant(id);
   if (!t) return;
   editingId = id;
-  document.getElementById('h-name').value    = t.name;
-  document.getElementById('h-slug').value    = t.slug;
-  document.getElementById('h-email').value   = t.email;
-  document.getElementById('h-phone').value   = t.phone;
-  document.getElementById('h-address').value = t.address||'';
+  document.getElementById('h-name').value       = t.name||'';
+  document.getElementById('h-slug').value       = t.slug||'';
+  document.getElementById('h-email').value      = t.email||'';
+  document.getElementById('h-phone').value      = (t.phone||'').replace(/^\+\d+\s*/,'');
+  document.getElementById('h-desc').value       = t.description||'';
+  document.getElementById('h-reg-id').value     = t.registrationId||'';
+  document.getElementById('h-map-url').value    = t.googleMapUrl||'';
+  document.getElementById('h-type').value       = t.hospitalType||'';
+  document.getElementById('h-facilities').value = t.facilities||'';
   document.getElementById('h-admin-name').value  = t.adminName||'';
   document.getElementById('h-admin-email').value = t.adminEmail||'';
-  document.getElementById('h-admin-password').value = '';
+  document.getElementById('h-admin-pass').value  = '';
   document.getElementById('h-admin-phone').value = t.adminPhone||'';
-  currentPlan = t.plan||'free';
-  document.querySelectorAll('.plan-opt').forEach(function(o){o.classList.toggle('active', o.textContent.toLowerCase()===currentPlan);});
-  setHStatus(t.status||'active');
-  document.getElementById('form-heading').textContent = 'Edit Hospital — ' + t.name;
+  document.getElementById('h-plan').value        = t.plan||'free';
+  document.getElementById('h-amb-desc').value    = (t.ambulance||{}).description||'';
+  document.getElementById('h-amb-km').value      = (t.ambulance||{}).perKmCharge||'';
+  document.getElementById('h-amb-plate').value   = (t.ambulance||{}).plateNumber||'';
+  document.getElementById('h-meta-title').value  = (t.seo||{}).metaTitle||'';
+  document.getElementById('h-meta-desc').value   = (t.seo||{}).metaDescription||'';
+  document.getElementById('h-street').value  = (t.address||{}).street||'';
+  document.getElementById('h-city').value    = (t.address||{}).city||'';
+  document.getElementById('h-state').value   = (t.address||{}).state||'';
+  document.getElementById('h-country').value = '';
+  document.getElementById('h-zip').value     = (t.address||{}).zip||'';
+
+  selectedDepts = t.departments||[];
+  selectedZones = t.zones||[];
+  selectedSpecs = t.specialties||[];
+  renderTags('ms-dept-wrap', selectedDepts, 'removeDept');
+  renderTags('ms-zone-wrap', selectedZones, 'removeZone');
+  renderTags('ms-spec-wrap', selectedSpecs, 'removeSpec');
+
+  // status seg
+  var statusBtns = document.getElementById('seg-status').querySelectorAll('button');
+  var sv = t.status === 'active' ? 'active' : 'deactive';
+  segVals['seg-status'] = sv;
+  statusBtns[0].classList.toggle('active', sv === 'active');
+  statusBtns[1].classList.toggle('active', sv === 'deactive');
+
+  if (t.logo) {
+    document.getElementById('logo-preview').src = t.logo;
+    document.getElementById('logo-preview').style.display = 'block';
+    var lp = document.getElementById('logo-box').querySelector('.plus-icon');
+    if (lp) lp.style.display = 'none';
+    document.getElementById('h-logo').value = t.logo;
+  }
+
+  document.getElementById('form-heading').textContent = 'Edit Hospital';
+  document.getElementById('tab-add').textContent = 'Edit Hospital';
+  gotoSubTab('general');
   showView('add');
 }
 
-/* ── Delete hospital ─────────────────────────────────── */
-function deleteHospital(id, name) {
-  if (!confirm('Delete "'+name+'"? All tenant data (patients, appointments, doctors, users) for this hospital will be removed.')) return;
-  EH.deleteTenant(id);
-  // Remove users, patients, appointments, doctors scoped to this tenant
-  ['users','patients','doctors','appointments'].forEach(function(col) {
-    var list = (JSON.parse(localStorage.getItem('eh_'+col))||[]).filter(function(r){ return r.tenantId !== id; });
-    localStorage.setItem('eh_'+col, JSON.stringify(list));
-  });
-  renderHospitals();
-  ehToast('"'+name+'" deleted.', 'info');
-}
-
-/* ── Save hospital ───────────────────────────────────── */
+/* ── Save hospital ─────────────────────────────────── */
 function saveHospital() {
-  var name      = document.getElementById('h-name').value.trim();
-  var slug      = document.getElementById('h-slug').value.trim().toLowerCase().replace(/\s+/g,'-');
-  var email     = document.getElementById('h-email').value.trim();
-  var phone     = document.getElementById('h-phone').value.trim();
-  var address   = document.getElementById('h-address').value.trim();
-  var adminName = document.getElementById('h-admin-name').value.trim();
-  var adminEmail= document.getElementById('h-admin-email').value.trim();
-  var adminPass = document.getElementById('h-admin-password').value;
-  var adminPhone= document.getElementById('h-admin-phone').value.trim();
+  var name  = document.getElementById('h-name').value.trim();
+  var email = document.getElementById('h-email').value.trim();
+  var phone = document.getElementById('h-country').value + ' ' + document.getElementById('h-phone').value.trim();
+  if (!name) { ehToast('Hospital name is required.', 'error'); gotoSubTab('general'); return; }
 
-  if (!name)  { ehToast('Hospital Name is required.', 'error'); return; }
-  if (!slug)  { ehToast('Slug is required.', 'error'); return; }
-  if (!email) { ehToast('Email is required.', 'error'); return; }
+  var adminName  = document.getElementById('h-admin-name').value.trim();
+  var adminEmail = document.getElementById('h-admin-email').value.trim();
+  var adminPass  = document.getElementById('h-admin-pass').value;
   if (!editingId && (!adminName || !adminEmail || !adminPass)) {
-    ehToast('Admin Name, Email and Password are required.', 'error'); return;
+    ehToast('Admin name, email and password are required.', 'error'); gotoSubTab('addinfo'); return;
   }
 
-  var data = { name:name, slug:slug, email:email, phone:phone, address:address,
-               plan:currentPlan, status:currentStat,
-               adminName:adminName, adminEmail:adminEmail, adminPhone:adminPhone };
+  var data = {
+    name:           name,
+    slug:           document.getElementById('h-slug').value.trim(),
+    email:          email,
+    phone:          phone,
+    description:    document.getElementById('h-desc').value.trim(),
+    registrationId: document.getElementById('h-reg-id').value.trim(),
+    googleMapUrl:   document.getElementById('h-map-url').value.trim(),
+    departments:    selectedDepts,
+    zones:          selectedZones,
+    specialties:    selectedSpecs,
+    hospitalType:   document.getElementById('h-type').value,
+    ambulanceService: segVals['seg-amb'],
+    facilities:     document.getElementById('h-facilities').value.trim(),
+    adminName:      adminName,
+    adminEmail:     adminEmail,
+    adminPhone:     document.getElementById('h-admin-phone').value.trim(),
+    plan:           document.getElementById('h-plan').value,
+    status:         segVals['seg-status'] === 'active' ? 'active' : 'deactive',
+    logo:           document.getElementById('h-logo').value,
+    ambulance: {
+      description:  document.getElementById('h-amb-desc').value.trim(),
+      perKmCharge:  document.getElementById('h-amb-km').value,
+      plateNumber:  document.getElementById('h-amb-plate').value.trim()
+    },
+    seo: {
+      metaTitle:       document.getElementById('h-meta-title').value.trim(),
+      metaDescription: document.getElementById('h-meta-desc').value.trim(),
+      metaImage:       document.getElementById('h-meta-img').value
+    },
+    address: {
+      street:  document.getElementById('h-street').value.trim(),
+      city:    document.getElementById('h-city').value.trim(),
+      state:   document.getElementById('h-state').value.trim(),
+      country: document.getElementById('h-country').value,
+      zip:     document.getElementById('h-zip').value.trim()
+    }
+  };
 
   if (editingId) {
     EH.updateTenant(editingId, data);
-    // Update admin user if password provided
-    if (adminPass) {
-      var users = JSON.parse(localStorage.getItem('eh_users')||'[]');
-      users = users.map(function(u){ return (u.tenantId===editingId && u.role==='hospital') ? Object.assign(u,{name:adminName,email:adminEmail,password:adminPass}) : u; });
-      localStorage.setItem('eh_users', JSON.stringify(users));
-    }
+    if (adminPass) EH.updateUser && EH.getUsers(editingId).forEach(function(u){ if(u.role==='hospital') EH.updateUser(u.id,{name:adminName,email:adminEmail,password:adminPass}); });
     ehToast('"'+name+'" updated.', 'success');
   } else {
     var t = EH.addTenant(data);
-    // Auto-create hospital admin user
-    EH.addUser({ name:adminName, email:adminEmail, password:adminPass, phone:adminPhone, role:'hospital', tenantId:t.id, avatar:adminName.charAt(0).toUpperCase(), status:'active' });
-    ehToast('"'+name+'" created with admin account.', 'success');
+    EH.addUser({ name:adminName, email:adminEmail, password:adminPass, phone:data.adminPhone, role:'hospital', tenantId:t.id, status:'active' });
+    ehToast('"'+name+'" created.', 'success');
   }
-
   cancelForm();
 }
 
-/* ── Filter tabs ─────────────────────────────────────── */
-document.querySelectorAll('.filter-tab[data-filter]').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    document.querySelectorAll('.filter-tab').forEach(function(b){b.classList.remove('active');});
-    btn.classList.add('active');
-    currentFilter = btn.dataset.filter;
-    renderHospitals();
-  });
-});
-
-/* ── View switching ──────────────────────────────────── */
+/* ── View switching ────────────────────────────────── */
 function showView(v) {
-  var isList = v==='list';
+  var isList = v === 'list';
   document.getElementById('view-list').style.display = isList ? '' : 'none';
   document.getElementById('view-add').style.display  = isList ? 'none' : '';
   document.getElementById('tab-list').classList.toggle('active', isList);
-  document.getElementById('tab-add').classList.toggle('active',  !isList);
-  if (isList) { editingId=null; document.getElementById('form-heading').textContent='Add Hospital'; renderHospitals(); }
+  document.getElementById('tab-add').classList.toggle('active', !isList);
+  if (isList) renderList();
 }
+
 function cancelForm() {
-  ['h-name','h-slug','h-email','h-phone','h-address','h-admin-name','h-admin-email','h-admin-password','h-admin-phone'].forEach(function(id){document.getElementById(id).value='';});
-  currentPlan='free'; currentStat='active';
-  document.querySelectorAll('.plan-opt').forEach(function(o,i){o.classList.toggle('active',i===0);});
-  setHStatus('active');
-  document.getElementById('form-heading').textContent='Add Hospital';
-  editingId=null;
+  editingId = null;
+  ['h-name','h-slug','h-email','h-phone','h-desc','h-reg-id','h-map-url','h-facilities',
+   'h-admin-name','h-admin-email','h-admin-pass','h-admin-phone',
+   'h-amb-desc','h-amb-km','h-amb-plate','h-meta-title','h-meta-desc',
+   'h-street','h-city','h-state','h-zip','h-logo','h-images','h-meta-img'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.value='';
+  });
+  ['logo-preview','images-preview','meta-img-preview'].forEach(function(id){
+    var el = document.getElementById(id); if(el){ el.src=''; el.style.display='none'; }
+  });
+  selectedDepts=[]; selectedZones=[]; selectedSpecs=[];
+  ['ms-dept-wrap','ms-zone-wrap','ms-spec-wrap'].forEach(function(id){ var el=document.getElementById(id); if(el) el.innerHTML=''; });
+  segVals = { 'seg-amb':'active', 'seg-status':'active' };
+  document.getElementById('seg-amb').querySelectorAll('button').forEach(function(b,i){ b.classList.toggle('active',i===0); });
+  document.getElementById('seg-status').querySelectorAll('button').forEach(function(b,i){ b.classList.toggle('active',i===0); });
+  document.getElementById('form-heading').textContent = 'Add Hospital';
+  document.getElementById('tab-add').textContent = 'Add Hospital';
+  gotoSubTab('general');
   showView('list');
 }
 
-/* ── Auto slug from name ─────────────────────────────── */
 document.addEventListener('eh:ready', function() {
   EHAuth.init();
-  renderHospitals();
-  document.getElementById('h-name').addEventListener('input', function() {
-    if (!editingId) document.getElementById('h-slug').value = this.value.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
-  });
+  populateDeptDropdown();
+  populateSpecDropdown();
+  renderList();
   if (window.location.search.indexOf('view=add') >= 0) showView('add');
 });
 </script>
-<script>var ACTIVE_PAGE='hospitals';</script>
-<script src="assets/js/sidebar.js"></script>
 </body>
 </html>

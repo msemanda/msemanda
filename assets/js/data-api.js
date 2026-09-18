@@ -134,6 +134,14 @@
     updateTenant:  function(id,data) { var list=this.getTenants(); var i=list.findIndex(function(x){return x.id===id;}); if(i>-1){list[i]=Object.assign({},list[i],data); _set('tenants',list); return list[i];} return null; },
     deleteTenant:  function(id) { _set('tenants',this.getTenants().filter(function(x){return x.id!==id;})); },
     getTenant:     function(id) { return this.getTenants().find(function(t){return t.id===id;})||null; },
+    getTenantStats: function(tenantId) {
+      return {
+        doctors:  filterByTenant(_get('doctors'),      tenantId).length,
+        patients: filterByTenant(_get('patients'),     tenantId).length,
+        today:    filterByTenant(_get('appointments'), tenantId).filter(function(a){ return (a.date||'').startsWith(nowStr().slice(0,10)); }).length,
+        pending:  filterByTenant(_get('appointments'), tenantId).filter(function(a){ return a.status==='pending'; }).length
+      };
+    },
 
     /* ── Users ─────────────────────────────────────────── */
     getUsers:      function(tenantId) { return filterByTenant(_get('users'), tenantId); },
