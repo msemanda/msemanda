@@ -149,7 +149,7 @@ document.getElementById('avatar-input').addEventListener('change',function(){
 });
 
 /* Load current session into form */
-document.addEventListener('DOMContentLoaded',function(){
+document.addEventListener('eh:ready',function(){
   var s=EHAuth.init(); if(!s) return;
   document.getElementById('prof-name').value=s.name||'';
   document.getElementById('prof-email').value=s.email||'';

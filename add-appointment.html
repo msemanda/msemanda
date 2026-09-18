@@ -313,7 +313,7 @@ function bookAppointment() {
 }
 
 /* ── Init ────────────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('eh:ready', function() {
   var s = EHAuth.init(); if (!s) return;
   tenantId = window.EH_TENANT || null;
   /* Default date to today */

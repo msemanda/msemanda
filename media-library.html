@@ -125,7 +125,7 @@ function deleteMedia(id,name){
 function copyFileName(name){
   try{navigator.clipboard.writeText(name);ehToast('Copied: '+name,'success');}catch(e){ehToast('Copy not supported.','error');}
 }
-document.addEventListener('DOMContentLoaded',function(){
+document.addEventListener('eh:ready',function(){
   var s=EHAuth.init(); if(!s) return;
   renderMedia();
   var fileInput=document.querySelector('#drop-zone input[type=file]');

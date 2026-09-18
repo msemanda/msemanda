@@ -91,7 +91,7 @@ function renderCheckins(){
   }).join('');
 }
 function checkIn(id){ EH.updateAppointmentStatus(id,'visited'); renderCheckins(); ehToast('Patient checked in.','success'); }
-document.addEventListener('DOMContentLoaded',function(){
+document.addEventListener('eh:ready',function(){
   var s=EHAuth.init(); if(!s) return;
   ciTenantId=window.EH_TENANT||null;
   var sel=document.getElementById('ci-doctor-filter');

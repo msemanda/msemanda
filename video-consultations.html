@@ -97,7 +97,7 @@ document.querySelectorAll('.filter-tab[data-filter]').forEach(function(btn){
     btn.classList.add('active'); vcFilter=btn.dataset.filter; renderVC();
   });
 });
-document.addEventListener('DOMContentLoaded',function(){
+document.addEventListener('eh:ready',function(){
   var s=EHAuth.init(); if(!s) return;
   vcTenantId=window.EH_TENANT||null;
   renderVC();

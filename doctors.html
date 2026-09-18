@@ -114,7 +114,7 @@ function submitAddDoctor() {
   renderDoctors();
   ehToast('"'+name+'" added successfully.', 'success');
 }
-document.addEventListener('DOMContentLoaded', function(){
+document.addEventListener('eh:ready', function(){
   var s = EHAuth.init();
   if (!s) return;
   tenantId = window.EH_TENANT || null;

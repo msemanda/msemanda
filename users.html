@@ -388,7 +388,7 @@ function cancelForm() {
 }
 
 /* ── Init ────────────────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('eh:ready', function() {
   var sess = EHAuth.init(); if (!sess) return;
   isSuperAdmin = EHAuth.isSuperAdmin();
   /* Super-admin sees the active context; tenant user is locked to their own tenantId */
