@@ -207,10 +207,13 @@
           View as:
           <select id="role-select" onchange="switchRole(this.value)">
             <option value="admin">Administrator</option>
+            <option value="hospital">Hospital</option>
             <option value="doctor">Doctor</option>
-            <option value="patient">Patient</option>
+            <option value="nurse">Nurse</option>
             <option value="receptionist">Receptionist</option>
             <option value="pathologist">Pathologist</option>
+            <option value="collector">Collector</option>
+            <option value="pharmacist">Pharmacist</option>
           </select>
         </div>
         <button class="sort-btn">Sort By</button>
@@ -554,27 +557,51 @@
 <script>
 var ACTIVE_PAGE = 'dashboard';
 var ROLE_GREETINGS = {
-  admin: 'Hello, Administrator 👋',
-  doctor: 'Hello, Doctor 👨‍⚕️',
-  patient: 'Hello, Patient 🙋',
+  admin:        'Hello, Administrator 👋',
+  hospital:     'Hello, Hospital Manager 🏥',
+  doctor:       'Hello, Doctor 👨‍⚕️',
+  nurse:        'Hello, Nurse 👩‍⚕️',
   receptionist: 'Hello, Receptionist 📋',
-  pathologist: 'Hello, Pathologist 🔬'
+  pathologist:  'Hello, Pathologist 🔬',
+  collector:    'Hello, Collector 🧾',
+  pharmacist:   'Hello, Pharmacist 💊'
 };
 var ROLE_LABELS = {
-  admin: 'Administrator',
-  doctor: 'Doctor',
-  patient: 'Patient',
+  admin:        'Administrator',
+  hospital:     'Hospital',
+  doctor:       'Doctor',
+  nurse:        'Nurse',
   receptionist: 'Receptionist',
-  pathologist: 'Pathologist'
+  pathologist:  'Pathologist',
+  collector:    'Collector',
+  pharmacist:   'Pharmacist'
 };
 
 function switchRole(role) {
+  var sel = document.getElementById('role-select');
+  if (sel) sel.value = role;
   document.querySelectorAll('[data-role-section]').forEach(function(el) {
-    el.classList.toggle('visible', el.dataset.roleSection === role);
+    var sections = el.dataset.roleSection.split('|');
+    el.classList.toggle('visible', sections.indexOf(role) !== -1);
   });
-  document.getElementById('greeting-text').textContent = ROLE_GREETINGS[role] || 'Hello 👋';
-  document.getElementById('role-label').textContent = ROLE_LABELS[role] || role;
+  var gt = document.getElementById('greeting-text');
+  if (gt) gt.textContent = ROLE_GREETINGS[role] || 'Hello 👋';
+  var rl = document.getElementById('role-label');
+  if (rl) rl.textContent = ROLE_LABELS[role] || role;
+  try { sessionStorage.setItem('ehRole', role); } catch(e) {}
 }
+
+// Auto-detect role from URL param or sessionStorage on load
+(function() {
+  var role = 'admin';
+  try {
+    var urlRole = new URLSearchParams(window.location.search).get('role');
+    var ssRole  = sessionStorage.getItem('ehRole');
+    if (urlRole) role = urlRole;
+    else if (ssRole) role = ssRole;
+  } catch(e) {}
+  document.addEventListener('DOMContentLoaded', function() { switchRole(role); });
+})();
 </script>
 <script src="assets/js/sidebar.js"></script>
 </body>
