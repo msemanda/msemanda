@@ -6,43 +6,54 @@
 <title>Users — eHealth System</title>
 <link rel="stylesheet" href="assets/css/admin.css">
 <style>
-/* Two-column form layout */
+/* Tabs */
+.page-tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:22px; }
+.page-tab { padding:10px 20px; font-size:13px; font-weight:700; color:var(--muted); background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; font-family:inherit; transition:color .15s,border-color .15s; }
+.page-tab.active { color:var(--teal); border-bottom-color:var(--teal); }
+
+/* Form layout */
 .user-form-wrap { background:#fff; border-radius:12px; border:1px solid var(--border); overflow:hidden; max-width:900px; }
 .user-form-hd { padding:18px 24px; border-bottom:1px solid var(--border); font-size:15px; font-weight:800; color:var(--ink); }
-.user-form-body { padding:28px 24px; display:flex; flex-direction:column; gap:0; }
-.form-field-row { display:grid; grid-template-columns:180px 1fr; align-items:flex-start; gap:16px; padding:14px 0; border-bottom:1px solid var(--border); }
+.form-field-row { display:grid; grid-template-columns:180px 1fr; align-items:flex-start; gap:16px; padding:14px 24px; border-bottom:1px solid var(--border); }
 .form-field-row:last-child { border-bottom:none; }
 .ffl { font-size:13px; font-weight:700; color:var(--ink); padding-top:9px; }
 .ffl span { color:var(--danger); }
 .ffr { display:flex; flex-direction:column; gap:5px; }
-.ffr input, .ffr select { width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; color:var(--ink); background:var(--page-bg); outline:none; transition:border-color .15s; }
-.ffr input:focus, .ffr select:focus { border-color:var(--teal); background:#fff; }
+.ffr input, .ffr select { width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; color:var(--ink); background:#fff; outline:none; transition:border-color .15s; box-sizing:border-box; }
+.ffr input:focus, .ffr select:focus { border-color:var(--teal); }
 .ffr .hint { font-size:11.5px; color:var(--muted); }
 .ffr .hint a { color:var(--teal); font-weight:700; text-decoration:none; }
-/* Phone row */
+.form-save-row { padding:16px 24px; display:flex; justify-content:flex-end; gap:8px; border-top:1px solid var(--border); }
+
+/* Phone */
 .phone-split { display:grid; grid-template-columns:130px 1fr; gap:8px; }
+
 /* Password eye */
 .pw-wrap-u { position:relative; }
-.pw-wrap-u input { padding-right:40px; }
-.pw-eye-u { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--muted); display:flex; align-items:center; transition:color .15s; }
+.pw-wrap-u input { padding-right:40px !important; }
+.pw-eye-u { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--muted); display:flex; align-items:center; }
 .pw-eye-u:hover { color:var(--teal); }
-/* Status toggle */
-.status-toggle { display:inline-flex; border:1.5px solid var(--border); border-radius:8px; overflow:hidden; }
-.status-toggle button { padding:9px 22px; border:none; background:#fff; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:background .15s,color .15s; color:var(--muted); }
-.status-toggle button.active { background:var(--teal); color:#fff; }
+
+/* Status segmented */
+.seg-status { display:inline-flex; border:1.5px solid var(--border); border-radius:8px; overflow:hidden; }
+.seg-status button { padding:9px 22px; border:none; background:#fff; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:background .15s,color .15s; color:var(--muted); }
+.seg-status button.active { background:var(--teal); color:#fff; }
+
 /* Notification checkbox */
 .notif-row { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-mid); }
 .notif-row input { width:15px; height:15px; accent-color:var(--teal); cursor:pointer; }
-.notif-row a { color:var(--teal); text-decoration:none; font-weight:600; }
-/* Users table */
-.badge-role { display:inline-block; padding:2px 10px; border-radius:99px; font-size:11px; font-weight:700; background:#E0F2FE; color:#0369A1; }
-.u-status-dot { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; }
-.u-status-dot::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--success); display:inline-block; }
-.u-status-dot.inactive::before { background:#94A3B8; }
-/* Page tabs */
-.page-tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:22px; }
-.page-tab { padding:10px 20px; font-size:13px; font-weight:700; color:var(--muted); background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; font-family:inherit; transition:color .15s,border-color .15s; }
-.page-tab.active { color:var(--teal); border-bottom-color:var(--teal); }
+
+/* Inline row actions */
+.row-actions { display:flex; gap:10px; font-size:12px; margin-top:3px; }
+.row-actions a { color:var(--teal); text-decoration:none; font-weight:500; }
+.row-actions a.trash-lnk { color:var(--danger,#e53e3e); }
+.row-actions a.restore-lnk { color:var(--success,#38a169); }
+.row-actions a:hover { text-decoration:underline; }
+
+/* Bulk bar */
+.bulk-bar { display:flex; align-items:center; gap:8px; }
+.bulk-select { padding:6px 10px; border:1px solid var(--border); border-radius:8px; font-size:12px; font-family:inherit; }
+.trash-row td { opacity:.55; }
 </style>
 </head>
 <body>
@@ -61,46 +72,52 @@
     <div class="content">
       <div class="page-title-row">
         <h1 class="page-title">Users</h1>
-        <button class="btn btn-teal" onclick="showView('add')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add User</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary" onclick="exportUsers()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Export</button>
+          <button class="btn btn-secondary" onclick="importUsers()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Import</button>
+          <button class="btn btn-teal" onclick="showView('add')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New</button>
+        </div>
       </div>
 
       <div class="page-tabs">
         <button class="page-tab active" id="tab-list" onclick="showView('list')">All Users</button>
-        <button class="page-tab" id="tab-add"  onclick="showView('add')">Add User</button>
+        <button class="page-tab" id="tab-add" onclick="showView('add')">Add User</button>
       </div>
 
-      <!-- ── List view ─────────────────────────────────────── -->
+      <!-- ── List ── -->
       <div id="view-list">
         <div class="card">
           <div class="filter-bar">
             <div class="filter-tabs">
-              <button class="filter-tab active" data-filter="all">All <span class="tab-count" id="cnt-all">(0)</span></button>
-              <button class="filter-tab" data-filter="active">Active <span class="tab-count" id="cnt-active">(0)</span></button>
-              <button class="filter-tab" data-filter="inactive">Inactive <span class="tab-count" id="cnt-inactive">(0)</span></button>
+              <button class="filter-tab active" data-filter="all"      onclick="setFilter(this,'all')">All <span class="tab-count" id="cnt-all"></span></button>
+              <button class="filter-tab" data-filter="active"   onclick="setFilter(this,'active')">Active <span class="tab-count" id="cnt-active"></span></button>
+              <button class="filter-tab" data-filter="deactive" onclick="setFilter(this,'deactive')">Deactive <span class="tab-count" id="cnt-deactive"></span></button>
+              <button class="filter-tab" data-filter="trash"    onclick="setFilter(this,'trash')">Trash <span class="tab-count" id="cnt-trash"></span></button>
             </div>
             <div class="filter-right">
-              <div class="search-input-wrap">
-                <span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
-                <input type="text" id="user-search" placeholder="Search users..." oninput="renderUsers()">
+              <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" id="user-search" placeholder="Search..." oninput="renderUsers()"></div>
+              <select class="per-page-select" id="per-page" onchange="renderUsers()"><option>15</option><option>25</option><option>50</option></select>
+              <div class="bulk-bar">
+                <select class="bulk-select" id="bulk-action">
+                  <option value="">Bulk actions</option>
+                  <option value="activate">Activate</option>
+                  <option value="deactivate">Deactivate</option>
+                  <option value="trash">Move to Trash</option>
+                  <option value="restore">Restore</option>
+                  <option value="delete">Delete Permanently</option>
+                </select>
+                <button class="btn-apply" onclick="applyBulk()">Apply</button>
               </div>
-              <select class="per-page-select" id="role-filter" onchange="renderUsers()">
-                <option value="">All Roles</option>
-                <option>admin</option><option>doctor</option><option>nurse</option>
-                <option>receptionist</option><option>pathologist</option>
-                <option>hospital</option><option>collector</option><option>pharmacist</option>
-              </select>
             </div>
           </div>
           <div class="table-wrap">
             <table>
               <thead><tr>
-                <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all" onchange="document.querySelectorAll('.row-cb').forEach(function(c){c.checked=this.checked;}.bind(this))"></th>
-                <th>Name ▲</th>
-                <th>Email ▲</th>
-                <th>Role ▲</th>
-                <th>Status ▲</th>
-                <th>Created At ▲</th>
-                <th>Action</th>
+                <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all" onchange="toggleAll(this)"></th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Created At</th>
               </tr></thead>
               <tbody id="users-tbody"></tbody>
             </table>
@@ -108,104 +125,88 @@
         </div>
       </div>
 
-      <!-- ── Add / Edit view ───────────────────────────────── -->
+      <!-- ── Add / Edit ── -->
       <div id="view-add" style="display:none">
         <div class="user-form-wrap">
           <div class="user-form-hd" id="form-title">Add User</div>
-          <div class="user-form-body">
 
-            <div class="form-field-row">
-              <div class="ffl">Full Name <span>*</span></div>
-              <div class="ffr">
-                <input type="text" id="u-name" placeholder="Enter Full Name">
-              </div>
-            </div>
+          <div class="form-field-row">
+            <div class="ffl">Full Name <span>*</span></div>
+            <div class="ffr"><input type="text" id="u-name" placeholder="Enter Full Name"></div>
+          </div>
 
-            <div class="form-field-row">
-              <div class="ffl">Email <span>*</span></div>
-              <div class="ffr">
-                <input type="email" id="u-email" placeholder="Enter Email">
-              </div>
-            </div>
+          <div class="form-field-row">
+            <div class="ffl">Email <span>*</span></div>
+            <div class="ffr"><input type="email" id="u-email" placeholder="Enter Email"></div>
+          </div>
 
-            <div class="form-field-row">
-              <div class="ffl">Phone <span>*</span></div>
-              <div class="ffr">
-                <div class="phone-split">
-                  <select id="u-country">
-                    <option value="+256">+256 🇺🇬</option>
-                    <option value="+1">+1 🇺🇸</option>
-                    <option value="+44">+44 🇬🇧</option>
-                    <option value="+91">+91 🇮🇳</option>
-                    <option value="+254">+254 🇰🇪</option>
-                    <option value="+255">+255 🇹🇿</option>
-                    <option value="+250">+250 🇷🇼</option>
-                    <option value="+27">+27 🇿🇦</option>
-                  </select>
-                  <input type="tel" id="u-phone" placeholder="Enter Phone">
-                </div>
-              </div>
-            </div>
-
-            <div class="form-field-row">
-              <div class="ffl">Role <span>*</span></div>
-              <div class="ffr">
-                <select id="u-role">
-                  <option value="">Select Role</option>
+          <div class="form-field-row">
+            <div class="ffl">Phone <span>*</span></div>
+            <div class="ffr">
+              <div class="phone-split">
+                <select id="u-country">
+                  <option value="+256">+256 🇺🇬</option>
+                  <option value="+1">+1 🇺🇸</option>
+                  <option value="+44">+44 🇬🇧</option>
+                  <option value="+91">+91 🇮🇳</option>
+                  <option value="+254">+254 🇰🇪</option>
+                  <option value="+255">+255 🇹🇿</option>
+                  <option value="+250">+250 🇷🇼</option>
+                  <option value="+27">+27 🇿🇦</option>
                 </select>
-                <div class="hint">*To add new role, simply click <a href="roles.html">here</a></div>
+                <input type="tel" id="u-phone" placeholder="Enter Phone">
               </div>
             </div>
+          </div>
 
-            <div class="form-field-row">
-              <div class="ffl">Password <span>*</span></div>
-              <div class="ffr">
-                <div class="pw-wrap-u">
-                  <input type="password" id="u-password" placeholder="Enter Password">
-                  <button type="button" class="pw-eye-u" onclick="togglePwU('u-password')">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </button>
-                </div>
+          <div class="form-field-row">
+            <div class="ffl">Role <span>*</span></div>
+            <div class="ffr">
+              <select id="u-role"><option value="">Select Role</option></select>
+              <div class="hint">*To add new role, simply click <a href="roles.html">here</a></div>
+            </div>
+          </div>
+
+          <div class="form-field-row">
+            <div class="ffl">Password <span>*</span></div>
+            <div class="ffr">
+              <div class="pw-wrap-u">
+                <input type="password" id="u-password" placeholder="Enter Password">
+                <button type="button" class="pw-eye-u" onclick="togglePwU('u-password')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
               </div>
             </div>
+          </div>
 
-            <div class="form-field-row">
-              <div class="ffl">Confirm <span>*</span></div>
-              <div class="ffr">
-                <div class="pw-wrap-u">
-                  <input type="password" id="u-confirm" placeholder="Enter Confirm Password">
-                  <button type="button" class="pw-eye-u" onclick="togglePwU('u-confirm')">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </button>
-                </div>
+          <div class="form-field-row">
+            <div class="ffl">Confirm <span>*</span></div>
+            <div class="ffr">
+              <div class="pw-wrap-u">
+                <input type="password" id="u-confirm" placeholder="Enter Confirm Password">
+                <button type="button" class="pw-eye-u" onclick="togglePwU('u-confirm')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
               </div>
             </div>
+          </div>
 
-            <div class="form-field-row">
-              <div class="ffl">Notification</div>
-              <div class="ffr">
-                <label class="notif-row">
-                  <input type="checkbox" id="u-notify">
-                  Send the new user an <a href="#">email</a> about their account.
-                </label>
+          <div class="form-field-row">
+            <div class="ffl">Notification</div>
+            <div class="ffr">
+              <label class="notif-row"><input type="checkbox" id="u-notify"> Send the new user an email about their account.</label>
+            </div>
+          </div>
+
+          <div class="form-field-row">
+            <div class="ffl">Status</div>
+            <div class="ffr">
+              <div class="seg-status">
+                <button type="button" id="seg-active"   class="active"  onclick="setStatus('active')">Active</button>
+                <button type="button" id="seg-deactive"                 onclick="setStatus('deactive')">Deactive</button>
               </div>
             </div>
+          </div>
 
-            <div class="form-field-row">
-              <div class="ffl">Status</div>
-              <div class="ffr">
-                <div class="status-toggle">
-                  <button type="button" id="status-active" class="active" onclick="setStatus('active')">Active</button>
-                  <button type="button" id="status-inactive" onclick="setStatus('inactive')">Deactive</button>
-                </div>
-              </div>
-            </div>
-
-            <div style="display:flex;gap:10px;padding-top:8px">
-              <button class="btn btn-teal" onclick="saveUser()">Save</button>
-              <button class="btn" style="background:var(--page-bg);border:1px solid var(--border);color:var(--ink-mid)" onclick="cancelForm()">Cancel</button>
-            </div>
-
+          <div class="form-save-row">
+            <button class="btn btn-secondary" onclick="cancelForm()">Cancel</button>
+            <button class="btn btn-teal" onclick="saveUser()">Save</button>
           </div>
         </div>
       </div>
@@ -217,6 +218,7 @@
 
 <script src="assets/js/data-api.js"></script>
 <script src="assets/js/auth.js"></script>
+<script src="assets/js/sidebar.js"></script>
 <script>
 var ACTIVE_PAGE = 'users';
 var editingId = null;
@@ -225,84 +227,149 @@ var currentFilter = 'all';
 var usersTenantId = null;
 var isSuperAdmin = false;
 
-/* ── Helpers ─────────────────────────────────────────── */
 function togglePwU(id) {
   var inp = document.getElementById(id);
   inp.type = inp.type === 'text' ? 'password' : 'text';
 }
+
 function setStatus(s) {
   currentStatus = s;
-  document.getElementById('status-active').classList.toggle('active', s === 'active');
-  document.getElementById('status-inactive').classList.toggle('active', s === 'inactive');
+  document.getElementById('seg-active').classList.toggle('active', s === 'active');
+  document.getElementById('seg-deactive').classList.toggle('active', s === 'deactive');
 }
 
-/* ── Role dropdown ───────────────────────────────────── */
+function setFilter(btn, f) {
+  document.querySelectorAll('.filter-tab').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  currentFilter = f;
+  renderUsers();
+}
+
+function toggleAll(cb) {
+  document.querySelectorAll('.row-cb').forEach(function(c){ c.checked = cb.checked; });
+}
+
+function getSelected() {
+  var ids = [];
+  document.querySelectorAll('.row-cb:checked').forEach(function(c){ ids.push(c.dataset.id); });
+  return ids;
+}
+
+function applyBulk() {
+  var action = document.getElementById('bulk-action').value;
+  var ids = getSelected();
+  if (!action) { ehToast('Select a bulk action.', 'error'); return; }
+  if (!ids.length) { ehToast('Select at least one row.', 'error'); return; }
+  ids.forEach(function(id) {
+    if (action === 'activate')   EH.updateUser(id, { status:'active' });
+    if (action === 'deactivate') EH.updateUser(id, { status:'deactive' });
+    if (action === 'trash')      EH.updateUser(id, { status:'trash' });
+    if (action === 'restore')    EH.updateUser(id, { status:'active' });
+    if (action === 'delete')     EH.deleteUser(id);
+  });
+  document.getElementById('sel-all').checked = false;
+  document.getElementById('bulk-action').value = '';
+  renderUsers();
+  ehToast('Bulk action applied.', 'success');
+}
+
 function populateRoles() {
   var sel = document.getElementById('u-role');
   var roles = EH.getRoles();
   sel.innerHTML = '<option value="">Select Role</option>';
   roles.forEach(function(r) {
-    var opt = document.createElement('option');
-    opt.value = r.name.toLowerCase();
-    opt.textContent = r.name;
-    sel.appendChild(opt);
+    var o = document.createElement('option');
+    o.value = r.name.toLowerCase();
+    o.textContent = r.name;
+    sel.appendChild(o);
   });
 }
 
-/* ── Render users table ──────────────────────────────── */
-var ROLE_COLORS = {'admin':'#0DA7A7','doctor':'#7C3AED','nurse':'#059669','receptionist':'#2563EB','pathologist':'#D97706','hospital':'#DB2777','collector':'#DC2626','pharmacist':'#0891B2'};
-function letterColor(role) { return ROLE_COLORS[role] || '#64748B'; }
-
 function renderUsers() {
   var users = EH.getUsers(usersTenantId);
-  var q   = (document.getElementById('user-search').value || '').toLowerCase();
-  var rf  = (document.getElementById('role-filter').value || '').toLowerCase();
+  var q = (document.getElementById('user-search').value || '').toLowerCase();
+  var perPage = parseInt(document.getElementById('per-page').value || 15);
 
-  var filtered = users.filter(function(u) {
-    if (currentFilter === 'active'   && u.status === 'inactive') return false;
-    if (currentFilter === 'inactive' && u.status !== 'inactive') return false;
-    if (q  && u.name.toLowerCase().indexOf(q) < 0 && u.email.toLowerCase().indexOf(q) < 0) return false;
-    if (rf && u.role !== rf) return false;
-    return true;
-  });
+  var all      = users.filter(function(u){ return u.status !== 'trash'; });
+  var active   = users.filter(function(u){ return u.status === 'active'; });
+  var deactive = users.filter(function(u){ return u.status === 'deactive' || u.status === 'inactive'; });
+  var trash    = users.filter(function(u){ return u.status === 'trash'; });
 
-  var all      = users.length;
-  var active   = users.filter(function(u){return u.status !== 'inactive';}).length;
-  var inactive = users.filter(function(u){return u.status === 'inactive';}).length;
-  document.getElementById('cnt-all').textContent     = '(' + all + ')';
-  document.getElementById('cnt-active').textContent  = '(' + active + ')';
-  document.getElementById('cnt-inactive').textContent= '(' + inactive + ')';
+  var el;
+  el = document.getElementById('cnt-all');      if(el) el.textContent = '('+all.length+')';
+  el = document.getElementById('cnt-active');   if(el) el.textContent = '('+active.length+')';
+  el = document.getElementById('cnt-deactive'); if(el) el.textContent = '('+deactive.length+')';
+  el = document.getElementById('cnt-trash');    if(el) el.textContent = '('+trash.length+')';
+
+  var filtered;
+  if (currentFilter === 'active')   filtered = active;
+  else if (currentFilter === 'deactive') filtered = deactive;
+  else if (currentFilter === 'trash')    filtered = trash;
+  else filtered = all;
+
+  if (q) filtered = filtered.filter(function(u){ return (u.name||'').toLowerCase().indexOf(q)>-1||(u.email||'').toLowerCase().indexOf(q)>-1; });
+  filtered = filtered.slice(0, perPage);
 
   var tbody = document.getElementById('users-tbody');
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">No users found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted)">No users found.</td></tr>';
     return;
   }
+
   tbody.innerHTML = filtered.map(function(u) {
-    var color = letterColor(u.role);
-    var statusHtml = u.status === 'inactive'
-      ? '<span class="u-status-dot inactive" style="color:var(--muted)">Inactive</span>'
-      : '<span class="u-status-dot" style="color:var(--success)">Active</span>';
-    return '<tr>'
-      + '<td><input type="checkbox" class="tbl-checkbox row-cb"></td>'
-      + '<td><div class="user-chip-small"><div class="letter-avatar" style="background:'+color+';color:#fff;width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">'+(u.avatar||u.name.charAt(0))+'</div>'
-      + '<div><div style="font-weight:700;font-size:13px">'+u.name+'</div></div></div></td>'
+    var isTrash = u.status === 'trash';
+    var letter = (u.name||'U').charAt(0).toUpperCase();
+    var isActive = u.status === 'active';
+
+    var avatar = u.avatar
+      ? '<img src="'+u.avatar+'" style="width:32px;height:32px;border-radius:8px;object-fit:cover">'
+      : '<div style="width:32px;height:32px;border-radius:8px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0">'+letter+'</div>';
+
+    var actions = isTrash
+      ? '<div class="row-actions"><a href="#" class="restore-lnk" onclick="restoreUser(\''+u.id+'\');return false">Restore</a> | <a href="#" class="trash-lnk" onclick="permDeleteUser(\''+u.id+'\');return false">Delete</a></div>'
+      : '<div class="row-actions"><a href="#" onclick="editUser(\''+u.id+'\');return false">Edit</a> | <a href="#" class="trash-lnk" onclick="trashUser(\''+u.id+'\');return false">Move To Trash</a></div>';
+
+    var toggleHtml = isTrash ? '' :
+      '<label class="sw"><input type="checkbox" '+(isActive?'checked':'')+' onchange="toggleStatus(\''+u.id+'\',this.checked)"><span class="sw-track"><span class="sw-thumb"></span></span></label>';
+
+    return '<tr class="'+(isTrash?'trash-row':'')+'">'
+      + '<td><input type="checkbox" class="tbl-checkbox row-cb" data-id="'+u.id+'"></td>'
+      + '<td><div style="display:flex;align-items:center;gap:10px">'+avatar
+        + '<div><div style="font-size:13px;font-weight:700;color:var(--dark,#2d3748)">'+u.name+'</div>'+actions+'</div></div></td>'
       + '<td style="font-size:12px;color:var(--muted)">'+u.email+'</td>'
-      + '<td><span class="badge-role" style="background:'+color+'22;color:'+color+'">'+u.role+'</span></td>'
-      + '<td>'+statusHtml+'</td>'
-      + '<td style="font-size:12px;color:var(--muted)">'+(u.createdAt||'2026-05-27')+'</td>'
-      + '<td><div style="display:flex;gap:6px">'
-      + '<button class="action-btn" title="Edit" onclick="editUser(\''+u.id+'\')" style="border-color:var(--teal);color:var(--teal)"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
-      + '<button class="action-btn del" title="Delete" onclick="deleteUser(\''+u.id+'\',\''+u.name+'\')" style="color:var(--danger);border-color:var(--danger)"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'
-      + '</div></td>'
+      + '<td>'+toggleHtml+'</td>'
+      + '<td style="font-size:12px;color:var(--muted);white-space:nowrap">'+(u.createdAt||'—')+'</td>'
       + '</tr>';
   }).join('');
 }
 
-/* ── Edit user ───────────────────────────────────────── */
+function toggleStatus(id, active) {
+  EH.updateUser(id, { status: active ? 'active' : 'deactive' });
+  ehToast('Status updated.', 'success');
+}
+
+function trashUser(id) {
+  EH.updateUser(id, { status:'trash' });
+  renderUsers();
+  ehToast('Moved to trash.', 'success');
+}
+
+function restoreUser(id) {
+  EH.updateUser(id, { status:'active' });
+  renderUsers();
+  ehToast('User restored.', 'success');
+}
+
+function permDeleteUser(id) {
+  if (!confirm('Permanently delete this user? This cannot be undone.')) return;
+  EH.deleteUser(id);
+  renderUsers();
+  ehToast('User deleted.', 'success');
+}
+
 function editUser(id) {
   var users = EH.getUsers(usersTenantId);
-  var u = users.find(function(x){return x.id===id;});
+  var u = users.find(function(x){ return x.id === id; });
   if (!u) return;
   editingId = id;
   document.getElementById('u-name').value    = u.name;
@@ -311,20 +378,12 @@ function editUser(id) {
   document.getElementById('u-role').value    = u.role||'';
   document.getElementById('u-password').value= '';
   document.getElementById('u-confirm').value = '';
-  setStatus(u.status||'active');
-  document.getElementById('form-title').textContent = 'Edit User — ' + u.name;
+  setStatus(u.status === 'inactive' ? 'deactive' : (u.status || 'active'));
+  document.getElementById('form-title').textContent = 'Edit User';
+  document.getElementById('tab-add').textContent = 'Edit User';
   showView('add');
 }
 
-/* ── Delete user ─────────────────────────────────────── */
-function deleteUser(id, name) {
-  if (!confirm('Delete user "'+name+'"?')) return;
-  EH.deleteUser(id);
-  renderUsers();
-  ehToast('User "'+name+'" deleted.', 'info');
-}
-
-/* ── Save user ───────────────────────────────────────── */
 function saveUser() {
   var name     = document.getElementById('u-name').value.trim();
   var email    = document.getElementById('u-email').value.trim();
@@ -333,74 +392,79 @@ function saveUser() {
   var password = document.getElementById('u-password').value;
   var confirm  = document.getElementById('u-confirm').value;
 
-  if (!name)     { ehToast('Full Name is required.', 'error'); return; }
-  if (!email)    { ehToast('Email is required.', 'error'); return; }
-  if (!role)     { ehToast('Please select a role.', 'error'); return; }
+  if (!name)  { ehToast('Full Name is required.', 'error'); return; }
+  if (!email) { ehToast('Email is required.', 'error'); return; }
+  if (!role)  { ehToast('Please select a role.', 'error'); return; }
   if (!editingId) {
-    if (!password)          { ehToast('Password is required.', 'error'); return; }
-    if (password !== confirm){ ehToast('Passwords do not match.', 'error'); return; }
+    if (!password)           { ehToast('Password is required.', 'error'); return; }
+    if (password !== confirm) { ehToast('Passwords do not match.', 'error'); return; }
   }
 
-  /* Determine tenant for this user — non-super-admins always create within their tenant */
   var assignTenant = isSuperAdmin ? (usersTenantId || null) : usersTenantId;
+  var allUsers = EH.getUsers(null);
 
-  var allUsers = EH.getUsers(null); /* check duplicates across all */
   if (!editingId) {
-    var dup = allUsers.find(function(u){return u.email.toLowerCase()===email.toLowerCase();});
+    var dup = allUsers.find(function(u){ return u.email.toLowerCase() === email.toLowerCase(); });
     if (dup) { ehToast('A user with this email already exists.', 'error'); return; }
     EH.addUser({ name:name, email:email, phone:phone, role:role, password:password, status:currentStatus, tenantId:assignTenant });
-    ehToast('User "'+name+'" created.', 'success');
+    ehToast('"'+name+'" added.', 'success');
   } else {
     EH.updateUser(editingId, { name:name, email:email, phone:phone, role:role, status:currentStatus });
     if (password && password === confirm) EH.updateUser(editingId, { password:password });
-    ehToast('User "'+name+'" updated.', 'success');
+    ehToast('"'+name+'" updated.', 'success');
   }
   cancelForm();
 }
 
-/* ── Filter tabs ─────────────────────────────────────── */
-document.querySelectorAll('.filter-tab[data-filter]').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    document.querySelectorAll('.filter-tab').forEach(function(b){b.classList.remove('active');});
-    btn.classList.add('active');
-    currentFilter = btn.dataset.filter;
-    renderUsers();
-  });
-});
+function cancelForm() {
+  editingId = null;
+  document.getElementById('u-name').value='';
+  document.getElementById('u-email').value='';
+  document.getElementById('u-phone').value='';
+  document.getElementById('u-role').value='';
+  document.getElementById('u-password').value='';
+  document.getElementById('u-confirm').value='';
+  document.getElementById('u-notify').checked=false;
+  setStatus('active');
+  document.getElementById('form-title').textContent = 'Add User';
+  document.getElementById('tab-add').textContent = 'Add User';
+  showView('list');
+}
 
-/* ── View switching ──────────────────────────────────── */
 function showView(v) {
   var isList = v === 'list';
   document.getElementById('view-list').style.display = isList ? '' : 'none';
   document.getElementById('view-add').style.display  = isList ? 'none' : '';
   document.getElementById('tab-list').classList.toggle('active', isList);
   document.getElementById('tab-add').classList.toggle('active', !isList);
-  if (isList) { editingId=null; renderUsers(); }
-}
-function cancelForm() {
-  editingId = null;
-  document.getElementById('u-name').value=''; document.getElementById('u-email').value='';
-  document.getElementById('u-phone').value=''; document.getElementById('u-role').value='';
-  document.getElementById('u-password').value=''; document.getElementById('u-confirm').value='';
-  setStatus('active');
-  document.getElementById('form-title').textContent = 'Add User';
-  showView('list');
+  if (isList) renderUsers();
 }
 
-/* ── Init ────────────────────────────────────────────── */
+function exportUsers() {
+  var users = EH.getUsers(usersTenantId);
+  var csv = 'Name,Email,Role,Status,Created At\n' + users.map(function(u){
+    return [u.name,u.email,u.role,u.status,u.createdAt||''].join(',');
+  }).join('\n');
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'users.csv';
+  a.click();
+}
+
+function importUsers() { ehToast('Import via CSV coming soon.', 'info'); }
+
 document.addEventListener('eh:ready', function() {
   var sess = EHAuth.init(); if (!sess) return;
   isSuperAdmin = EHAuth.isSuperAdmin();
-  /* Super-admin sees the active context; tenant user is locked to their own tenantId */
   usersTenantId = isSuperAdmin ? (window.EH_TENANT || null) : sess.tenantId;
   populateRoles();
   renderUsers();
   if (window.location.search.indexOf('view=add') >= 0) showView('add');
 });
+
 window.addEventListener('eh:tenantchange', function(e) {
   if (isSuperAdmin) { usersTenantId = e.detail.tenantId; renderUsers(); }
 });
 </script>
-<script src="assets/js/sidebar.js"></script>
 </body>
 </html>
