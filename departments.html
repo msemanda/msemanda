@@ -5,35 +5,47 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Departments — eHealth System</title>
 <link rel="stylesheet" href="assets/css/admin.css">
+<style>
+.dept-tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:24px; }
+.dept-tab { background:none; border:none; padding:10px 20px; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:color .15s,border-color .15s; }
+.dept-tab.active { color:var(--teal); border-bottom-color:var(--teal); }
+.dept-tab-panel { display:none; }
+.dept-tab-panel.active { display:block; }
+.letter-av { width:32px; height:32px; border-radius:8px; background:var(--teal); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; flex-shrink:0; }
+.dept-name-cell { display:flex; align-items:center; gap:10px; }
+.dept-actions { display:flex; gap:10px; font-size:12px; }
+.dept-actions a { color:var(--teal); text-decoration:none; font-weight:500; }
+.dept-actions a.trash { color:var(--danger,#e53e3e); }
+.dept-actions a:hover { text-decoration:underline; }
+.toggle-wrap { display:inline-flex; align-items:center; gap:6px; }
+.toggle-sw { position:relative; width:36px; height:20px; cursor:pointer; }
+.toggle-sw input { opacity:0; width:0; height:0; }
+.toggle-sw .track { position:absolute; inset:0; background:#ccc; border-radius:20px; transition:.2s; }
+.toggle-sw input:checked + .track { background:var(--teal); }
+.toggle-sw .track::after { content:''; position:absolute; width:14px; height:14px; background:#fff; border-radius:50%; top:3px; left:3px; transition:.2s; }
+.toggle-sw input:checked + .track::after { left:19px; }
+.form-group { margin-bottom:18px; }
+.form-group label { display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--dark,#2d3748); }
+.form-group label span { color:var(--danger,#e53e3e); }
+.form-group input[type=text], .form-group textarea { width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit; box-sizing:border-box; }
+.form-group textarea { resize:vertical; min-height:90px; }
+.form-group input:focus, .form-group textarea:focus { outline:none; border-color:var(--teal); box-shadow:0 0 0 3px rgba(13,167,167,.12); }
+.status-toggle-row { display:flex; align-items:center; gap:12px; }
+.status-label { font-size:13px; font-weight:600; color:var(--dark,#2d3748); }
+.form-actions { display:flex; justify-content:flex-end; padding-top:8px; }
+.bulk-bar { display:flex; align-items:center; gap:8px; }
+.bulk-select { padding:6px 10px; border:1px solid var(--border); border-radius:8px; font-size:12px; font-family:inherit; }
+.inline-edit-row td { background:#f9fffe !important; }
+.inline-edit-row input, .inline-edit-row textarea { padding:5px 8px; border:1px solid var(--teal); border-radius:6px; font-size:12px; font-family:inherit; width:100%; box-sizing:border-box; }
+.inline-save-btn { background:var(--teal); color:#fff; border:none; border-radius:6px; padding:4px 12px; font-size:12px; cursor:pointer; }
+.inline-cancel-btn { background:#e2e8f0; color:var(--muted); border:none; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer; margin-left:4px; }
+.trash-row td { opacity:.55; }
+.restore-link { color:var(--success,#38a169) !important; }
+</style>
 </head>
 <body>
 <div class="shell">
-  <nav class="sidebar">
-    <a class="sidebar-logo" href="index.html"><div class="logo-icon"><svg viewBox="0 0 24 24" fill="white"><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="4" y="10" width="16" height="4" rx="1"/></svg></div><div class="logo-text">eHealth<span>Hospital Management</span></div></a>
-    <div class="sidebar-search"><span class="s-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" placeholder="Search..."></div>
-    <div class="nav-section-label">Home</div>
-    <a class="nav-item" href="index.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</span></a>
-    <a class="nav-item" href="medical-services.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Medical Services</span></a>
-    <div class="nav-section-label">Appointment Management</div>
-    <a class="nav-item" href="appointments.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Appointments</span></a>
-    <a class="nav-item" href="ambulance-bookings.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="9" width="22" height="11" rx="1"/><circle cx="7" cy="20" r="2"/><circle cx="17" cy="20" r="2"/></svg>All Ambulance Bookings</span></a>
-    <div class="nav-section-label">Hospital Management</div>
-    <div class="nav-item active" data-toggle="sub-dept">
-      <span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Departments</span>
-      <svg class="nav-chevron open" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
-    </div>
-    <div class="nav-sub" id="sub-dept">
-      <a class="nav-sub-item active" href="departments.html">All Departments</a>
-    </div>
-    <a class="nav-item" href="specialties.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2"/></svg>Specialties</span></a>
-    <a class="nav-item" href="lab-tests.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18"/></svg>Lab Tests</span></a>
-    <div class="nav-section-label">User Management</div>
-    <a class="nav-item" href="doctors.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Doctors</span></a>
-    <a class="nav-item" href="patients.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Patients</span></a>
-    <div class="nav-section-label">Promotion Management</div>
-    <a class="nav-item" href="#"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>Coupons</span></a>
-  </nav>
-
+  <nav id="sidebar-mount"></nav>
   <div class="main">
     <header class="header">
       <button class="btn-quick-links"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Links</button>
@@ -47,87 +59,279 @@
     <div class="content">
       <div class="page-title-row">
         <h1 class="page-title">Departments</h1>
-        <button class="btn btn-teal" onclick="ehOpenModal('modal-add-dept')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Department</button>
+        <button class="btn btn-teal" onclick="switchTab('add')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New</button>
       </div>
-      <div class="card">
-        <div class="filter-bar">
-          <div class="filter-tabs">
-            <button class="filter-tab active" data-filter="all">All <span class="tab-count" id="dept-cnt-all"></span></button>
-            <button class="filter-tab" data-filter="active">Active <span class="tab-count" id="dept-cnt-active"></span></button>
-            <button class="filter-tab" data-filter="inactive">DeActive <span class="tab-count" id="dept-cnt-inactive"></span></button>
+
+      <!-- Tabs -->
+      <div class="dept-tabs">
+        <button class="dept-tab active" data-tab="list" onclick="switchTab('list')">All Departments</button>
+        <button class="dept-tab" data-tab="add" onclick="switchTab('add')" id="add-tab-btn">Add Department</button>
+      </div>
+
+      <!-- List Panel -->
+      <div class="dept-tab-panel active" id="panel-list">
+        <div class="card">
+          <div class="filter-bar">
+            <div class="filter-tabs">
+              <button class="filter-tab active" data-filter="all" onclick="setFilter(this,'all')">All <span class="tab-count" id="cnt-all"></span></button>
+              <button class="filter-tab" data-filter="active" onclick="setFilter(this,'active')">Active <span class="tab-count" id="cnt-active"></span></button>
+              <button class="filter-tab" data-filter="inactive" onclick="setFilter(this,'inactive')">DeActive <span class="tab-count" id="cnt-inactive"></span></button>
+              <button class="filter-tab" data-filter="trash" onclick="setFilter(this,'trash')">Trash <span class="tab-count" id="cnt-trash"></span></button>
+            </div>
+            <div class="filter-right">
+              <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" id="dept-search" placeholder="Search..." oninput="renderDepts()"></div>
+              <select class="per-page-select" id="per-page"><option>15</option><option>25</option><option>50</option></select>
+              <div class="bulk-bar">
+                <select class="bulk-select" id="bulk-action">
+                  <option value="">Bulk actions</option>
+                  <option value="activate">Set Active</option>
+                  <option value="deactivate">Set DeActive</option>
+                  <option value="trash">Move to Trash</option>
+                  <option value="restore">Restore</option>
+                  <option value="delete">Delete Permanently</option>
+                </select>
+                <button class="btn-apply" onclick="applyBulk()">Apply</button>
+              </div>
+            </div>
           </div>
-          <div class="filter-right">
-            <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" placeholder="Search..."></div>
-            <select class="per-page-select"><option>15</option><option>25</option></select>
-            <button class="btn-apply">Apply</button>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all" onchange="toggleAll(this)"></th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Created At</th>
+              </tr></thead>
+              <tbody id="dept-tbody"></tbody>
+            </table>
           </div>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all"></th>
-              <th>Name &#9650;</th>
-              <th>Status &#9650;</th>
-              <th>Created At &#9650;</th>
-            </tr></thead>
-            <tbody id="dept-tbody"></tbody>
-            <tfoot><tr><td colspan="4" style="padding:12px 14px;font-size:12px;color:var(--muted);">Name &#9650;</td></tr></tfoot>
-          </table>
+      </div>
+
+      <!-- Add/Edit Panel -->
+      <div class="dept-tab-panel" id="panel-add">
+        <div class="card" style="max-width:600px;">
+          <h3 id="form-title" style="margin:0 0 20px;font-size:15px;font-weight:700;">Add Department <span style="font-size:12px;color:var(--muted);font-weight:400;">(en)</span></h3>
+          <input type="hidden" id="edit-id">
+          <div class="form-group">
+            <label>Name <span>*</span></label>
+            <input type="text" id="dept-name" placeholder="e.g. Cardiology">
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="dept-desc" placeholder="Brief description of this department..."></textarea>
+          </div>
+          <div class="form-group">
+            <div class="status-toggle-row">
+              <span class="status-label">Status</span>
+              <label class="toggle-sw">
+                <input type="checkbox" id="dept-status" checked>
+                <span class="track"></span>
+              </label>
+              <span id="status-label-txt" style="font-size:12px;color:var(--muted);">Active</span>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-secondary" onclick="switchTab('list')" style="margin-right:8px;">Cancel</button>
+            <button class="btn btn-teal" onclick="saveDept()">Save Department</button>
+          </div>
         </div>
       </div>
     </div>
     <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.3s</span></div></footer>
   </div>
 </div>
-<!-- Add Department Modal -->
-<div id="modal-add-dept" class="eh-modal-overlay" onclick="if(event.target===this)ehCloseModal('modal-add-dept')">
-  <div class="eh-modal">
-    <div class="eh-modal-hd"><h3>Add Department</h3><button class="eh-modal-close" onclick="ehCloseModal('modal-add-dept')">&#x2715;</button></div>
-    <div class="eh-modal-body">
-      <div class="mfield"><label>Department Name <span>*</span></label><input type="text" id="dept-name" placeholder="e.g. Cardiology"></div>
-    </div>
-    <div class="eh-modal-ft"><button class="btn btn-teal" onclick="submitAddDept()">Save Department</button></div>
-  </div>
-</div>
+
 <script src="assets/js/data.js"></script>
 <script src="assets/js/auth.js"></script>
-<script src="assets/js/admin.js"></script>
+<script src="assets/js/sidebar.js"></script>
 <script>
-var ACTIVE_PAGE='departments';
-var deptFilter='all';
+var ACTIVE_PAGE = 'departments';
+var deptFilter = 'all';
+
+function switchTab(tab) {
+  document.querySelectorAll('.dept-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.dept-tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelector('[data-tab="'+tab+'"]').classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+  if (tab === 'add') {
+    var eid = document.getElementById('edit-id').value;
+    if (!eid) resetForm();
+  }
+}
+
+function resetForm() {
+  document.getElementById('edit-id').value = '';
+  document.getElementById('dept-name').value = '';
+  document.getElementById('dept-desc').value = '';
+  document.getElementById('dept-status').checked = true;
+  document.getElementById('status-label-txt').textContent = 'Active';
+  document.getElementById('form-title').innerHTML = 'Add Department <span style="font-size:12px;color:var(--muted);font-weight:400;">(en)</span>';
+}
+
+document.getElementById('dept-status').addEventListener('change', function() {
+  document.getElementById('status-label-txt').textContent = this.checked ? 'Active' : 'DeActive';
+});
+
+function setFilter(btn, f) {
+  document.querySelectorAll('.filter-tab').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  deptFilter = f;
+  renderDepts();
+}
+
+function toggleAll(cb) {
+  document.querySelectorAll('.row-cb').forEach(function(c){ c.checked = cb.checked; });
+}
+
+function getSelected() {
+  var ids = [];
+  document.querySelectorAll('.row-cb:checked').forEach(function(c){ ids.push(c.dataset.id); });
+  return ids;
+}
+
+function applyBulk() {
+  var action = document.getElementById('bulk-action').value;
+  var ids = getSelected();
+  if (!action) { ehToast('Select a bulk action.', 'error'); return; }
+  if (!ids.length) { ehToast('Select at least one row.', 'error'); return; }
+  ids.forEach(function(id) {
+    if (action === 'activate')   EH.updateDepartment(id, { status:'active' });
+    if (action === 'deactivate') EH.updateDepartment(id, { status:'inactive' });
+    if (action === 'trash')      EH.updateDepartment(id, { status:'trash' });
+    if (action === 'restore')    EH.updateDepartment(id, { status:'active' });
+    if (action === 'delete')     EH.deleteDepartment(id);
+  });
+  document.getElementById('sel-all').checked = false;
+  document.getElementById('bulk-action').value = '';
+  renderDepts();
+  ehToast('Bulk action applied.', 'success');
+}
+
+function editDept(id) {
+  var all = EH.getDepartments();
+  var d = all.find(function(x){ return x.id === id; });
+  if (!d) return;
+  document.getElementById('edit-id').value = d.id;
+  document.getElementById('dept-name').value = d.name;
+  document.getElementById('dept-desc').value = d.description || '';
+  document.getElementById('dept-status').checked = (d.status === 'active');
+  document.getElementById('status-label-txt').textContent = (d.status === 'active') ? 'Active' : 'DeActive';
+  document.getElementById('form-title').innerHTML = 'Edit Department <span style="font-size:12px;color:var(--muted);font-weight:400;">(en)</span>';
+  switchTab('add');
+}
+
+function trashDept(id) {
+  EH.updateDepartment(id, { status:'trash' });
+  renderDepts();
+  ehToast('Moved to trash.', 'success');
+}
+
+function restoreDept(id) {
+  EH.updateDepartment(id, { status:'active' });
+  renderDepts();
+  ehToast('Department restored.', 'success');
+}
+
+function permDeleteDept(id) {
+  if (!confirm('Permanently delete this department? This cannot be undone.')) return;
+  EH.deleteDepartment(id);
+  renderDepts();
+  ehToast('Department deleted.', 'success');
+}
+
+function toggleStatus(id, checked) {
+  EH.updateDepartment(id, { status: checked ? 'active' : 'inactive' });
+  renderDepts();
+}
+
+function saveDept() {
+  var name = document.getElementById('dept-name').value.trim();
+  var desc = document.getElementById('dept-desc').value.trim();
+  var active = document.getElementById('dept-status').checked;
+  var status = active ? 'active' : 'inactive';
+  var eid = document.getElementById('edit-id').value;
+  if (!name) { ehToast('Department name is required.', 'error'); return; }
+  if (eid) {
+    EH.updateDepartment(eid, { name:name, description:desc, status:status });
+    ehToast('"'+name+'" updated successfully.', 'success');
+  } else {
+    EH.addDepartment({ name:name, description:desc, status:status });
+    ehToast('"'+name+'" added successfully.', 'success');
+  }
+  resetForm();
+  switchTab('list');
+  renderDepts();
+}
+
 function renderDepts() {
   var all = EH.getDepartments();
-  var filtered = all.filter(function(d){ return deptFilter==='all'||(deptFilter==='active'&&d.status==='active')||(deptFilter==='inactive'&&d.status!=='active'); });
-  var el=document.getElementById('dept-cnt-all'); if(el) el.textContent='('+all.length+')';
-  el=document.getElementById('dept-cnt-active'); if(el) el.textContent='('+all.filter(function(d){return d.status==='active';}).length+')';
-  el=document.getElementById('dept-cnt-inactive'); if(el) el.textContent='('+all.filter(function(d){return d.status!=='active';}).length+')';
-  var tb=document.getElementById('dept-tbody');
-  if(!filtered.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted)">No departments found.</td></tr>';return;}
-  var lockIcon='<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-  var checkIcon='<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
-  tb.innerHTML=filtered.map(function(d){
-    return '<tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td>'
-      +'<td><div class="user-chip-small"><div class="letter-avatar" style="background:var(--teal);color:#fff;width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">'+d.name.charAt(0)+'</div><span>'+d.name+'</span></div></td>'
-      +'<td>'+(d.status==='active'?'<span style="color:var(--success);font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block"></span>Active</span>':'<span class="lock-icon">'+lockIcon+'</span>')+'</td>'
-      +'<td style="font-size:12px;color:var(--muted)">'+d.createdAt+'</td></tr>';
+  var q = (document.getElementById('dept-search')||{}).value||'';
+  q = q.toLowerCase();
+  var perPage = parseInt((document.getElementById('per-page')||{}).value||15);
+
+  var counts = { all:0, active:0, inactive:0, trash:0 };
+  all.forEach(function(d){
+    if (d.status === 'trash') { counts.trash++; }
+    else {
+      counts.all++;
+      if (d.status === 'active') counts.active++;
+      else counts.inactive++;
+    }
+  });
+  function setCount(id, n) { var el=document.getElementById(id); if(el) el.textContent='('+n+')'; }
+  setCount('cnt-all', counts.all);
+  setCount('cnt-active', counts.active);
+  setCount('cnt-inactive', counts.inactive);
+  setCount('cnt-trash', counts.trash);
+
+  var filtered = all.filter(function(d){
+    if (deptFilter === 'trash') return d.status === 'trash';
+    if (deptFilter === 'active') return d.status === 'active';
+    if (deptFilter === 'inactive') return d.status === 'inactive';
+    return d.status !== 'trash'; // 'all' excludes trash
+  });
+
+  if (q) filtered = filtered.filter(function(d){ return (d.name||'').toLowerCase().indexOf(q) > -1 || (d.description||'').toLowerCase().indexOf(q) > -1; });
+  filtered = filtered.slice(0, perPage);
+
+  var tb = document.getElementById('dept-tbody');
+  if (!filtered.length) {
+    tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted)">No departments found.</td></tr>';
+    return;
+  }
+
+  tb.innerHTML = filtered.map(function(d) {
+    var isTrash = d.status === 'trash';
+    var isActive = d.status === 'active';
+    var avatar = '<div class="letter-av">' + d.name.charAt(0).toUpperCase() + '</div>';
+    var nameCell = '<div class="dept-name-cell">' + avatar + '<div><div style="font-size:13px;font-weight:600;color:var(--dark,#2d3748)">' + d.name + '</div>'
+      + (d.description ? '<div style="font-size:11px;color:var(--muted);margin-top:1px">' + d.description + '</div>' : '')
+      + '</div></div>';
+
+    var actions;
+    if (isTrash) {
+      actions = '<div class="dept-actions"><a href="#" class="restore-link" onclick="restoreDept(\''+d.id+'\');return false">Restore</a> | <a href="#" class="trash" onclick="permDeleteDept(\''+d.id+'\');return false">Delete</a></div>';
+    } else {
+      actions = '<div class="dept-actions"><a href="#" onclick="editDept(\''+d.id+'\');return false">Edit</a> | <a href="#" class="trash" onclick="trashDept(\''+d.id+'\');return false">Move To Trash</a></div>';
+    }
+
+    var toggleHtml = isTrash ? '' :
+      '<label class="toggle-sw"><input type="checkbox" '+(isActive?'checked':'')+' onchange="toggleStatus(\''+d.id+'\',this.checked)"><span class="track"></span></label>';
+
+    return '<tr class="'+(isTrash?'trash-row':'')+'">'
+      + '<td><input type="checkbox" class="tbl-checkbox row-cb" data-id="'+d.id+'"></td>'
+      + '<td>' + nameCell + '<div style="margin-top:4px">' + actions + '</div></td>'
+      + '<td style="white-space:nowrap">' + toggleHtml + ' <span style="font-size:11px;color:var(--muted)">'+(isTrash?'Trash':isActive?'Active':'DeActive')+'</span></td>'
+      + '<td style="font-size:12px;color:var(--muted)">' + (d.createdAt||'—') + '</td>'
+      + '</tr>';
   }).join('');
 }
-document.querySelectorAll('.filter-tab[data-filter]').forEach(function(btn){
-  btn.addEventListener('click',function(){
-    document.querySelectorAll('.filter-tab').forEach(function(b){b.classList.remove('active');});
-    btn.classList.add('active'); deptFilter=btn.dataset.filter; renderDepts();
-  });
-});
-function submitAddDept() {
-  var name = document.getElementById('dept-name').value.trim();
-  if (!name) { ehToast('Department name is required.', 'error'); return; }
-  EH.addDepartment({ name:name });
-  ehCloseModal('modal-add-dept');
-  document.getElementById('dept-name').value = '';
+
+document.addEventListener('DOMContentLoaded', function() {
+  EHAuth.init();
   renderDepts();
-  ehToast('"'+name+'" added successfully.', 'success');
-}
-document.addEventListener('DOMContentLoaded', function(){ EHAuth.init(); renderDepts(); });
+});
 </script>
 </body>
 </html>

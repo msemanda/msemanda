@@ -169,6 +169,12 @@
       var d = Object.assign({ id: nextId('dept'), status:'active', createdAt: nowStr() }, data);
       list.push(d); s('departments', list); return d;
     },
+    updateDepartment: function(id, data) {
+      var list = this.getDepartments();
+      var i = list.findIndex(function(d){return d.id===id;});
+      if (i > -1) { list[i] = Object.assign({}, list[i], data); s('departments', list); return list[i]; }
+      return null;
+    },
     deleteDepartment: function(id) { s('departments', this.getDepartments().filter(function(d){return d.id!==id;})); },
 
     /* ── Specialties ─────────────────────────────────────── */
