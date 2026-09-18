@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eHealth Sign In</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --teal: #0DA7A7; --teal-dark: #0A8A8A; --teal-deep: #066060;
+    --white: #FFFFFF; --page-bg: #F2F5F7; --card-bg: #FFFFFF;
+    --ink: #2B3540; --ink-mid: #5A6A78; --muted: #8D9BA8;
+    --border: #E3EAED; --input-bg: #F7FAFB; --success: #51BB25;
+  }
+  html, body { height: 100%; font-family: 'Nunito', system-ui, sans-serif; background: var(--teal); }
+  .layout { display: flex; min-height: 100%; }
+  .left {
+    flex: 1 1 52%;
+    background: linear-gradient(140deg, #0FBFBF 0%, #0DA7A7 30%, #0A8080 65%, #066060 100%);
+    display: flex; flex-direction: column;
+    padding: 2.75rem 2.75rem 2.5rem;
+    position: relative; overflow: hidden;
+  }
+  .left::before, .left::after { content: ''; position: absolute; border-radius: 50%; pointer-events: none; }
+  .left::before { width: 380px; height: 380px; top: -120px; right: -100px; background: rgba(255,255,255,.06); }
+  .left::after { width: 240px; height: 240px; bottom: -60px; left: -70px; background: rgba(255,255,255,.05); }
+  .brand { position: relative; z-index: 1; display: flex; align-items: center; gap: .8rem; margin-bottom: 3rem; }
+  .brand-mark { width: 46px; height: 46px; background: rgba(255,255,255,.18); border: 1.5px solid rgba(255,255,255,.3); border-radius: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .brand-text { line-height: 1.15; }
+  .brand-name { font-size: 1.3rem; font-weight: 800; color: #fff; letter-spacing: -.01em; }
+  .brand-tagline { font-size: .68rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.55); }
+  .modules-label { position: relative; z-index: 1; font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.5); margin-bottom: 1rem; }
+  .modules { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .mod { display: flex; align-items: center; gap: .875rem; padding: .65rem .875rem; border-radius: 11px; transition: background .15s; cursor: default; }
+  .mod:hover { background: rgba(255,255,255,.1); }
+  .mod-icon { width: 36px; height: 36px; background: rgba(255,255,255,.13); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .mod-info { flex: 1; min-width: 0; }
+  .mod-name { font-size: .875rem; font-weight: 700; color: #fff; line-height: 1.2; }
+  .mod-desc { font-size: .72rem; color: rgba(255,255,255,.52); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mod-count { font-size: .75rem; font-weight: 700; color: rgba(255,255,255,.45); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  .stats { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: rgba(255,255,255,.12); border-radius: 14px; overflow: hidden; margin-top: 2rem; }
+  .stat { background: rgba(255,255,255,.08); padding: 1rem .75rem; text-align: center; backdrop-filter: blur(4px); }
+  .stat-n { font-size: 1.5rem; font-weight: 800; color: #fff; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat-l { font-size: .68rem; font-weight: 600; color: rgba(255,255,255,.5); margin-top: 4px; letter-spacing: .03em; }
+  .right { flex: 0 0 48%; max-width: 580px; background: var(--page-bg); display: flex; align-items: center; justify-content: center; padding: 2.5rem 2rem; }
+  .card { width: 100%; max-width: 400px; background: var(--card-bg); border-radius: 20px; padding: 2.25rem 2rem; box-shadow: 0 4px 32px rgba(43,53,64,.1); }
+  .card-brand { display: flex; align-items: center; justify-content: center; gap: .6rem; margin-bottom: 1.5rem; }
+  .card-mark { width: 38px; height: 38px; background: var(--teal); border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(13,167,167,.3); }
+  .card-name { font-size: 1.1rem; font-weight: 800; color: var(--ink); letter-spacing: -.01em; }
+  .card-name span { color: var(--teal); }
+  .card-divider { height: 1px; background: var(--border); margin-bottom: 1.5rem; }
+  .card-heading { font-size: 1.35rem; font-weight: 800; color: var(--ink); margin-bottom: .3rem; letter-spacing: -.01em; }
+  .card-sub { font-size: .85rem; color: var(--muted); margin-bottom: 1.625rem; }
+  .field { margin-bottom: 1rem; }
+  .field-lbl { display: block; font-size: .825rem; font-weight: 700; color: var(--ink); margin-bottom: .45rem; }
+  .input-wrap { position: relative; }
+  .input-ico { position: absolute; left: .875rem; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; display: flex; align-items: center; }
+  .input-wrap input { width: 100%; padding: .72rem .875rem .72rem 2.6rem; background: var(--input-bg); border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; font-size: .9rem; font-weight: 500; color: var(--ink); outline: none; transition: border-color .15s, box-shadow .15s, background .15s; }
+  .input-wrap input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(13,167,167,.12); background: var(--white); }
+  .pw-wrap { position: relative; }
+  .pw-wrap > input { padding-right: 2.6rem; }
+  .pw-btn { position: absolute; right: .75rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--muted); display: flex; align-items: center; padding: .25rem; transition: color .15s; }
+  .pw-btn:hover { color: var(--teal); }
+  .form-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 1rem 0 1.5rem; }
+  .chk-label { display: flex; align-items: center; gap: .5rem; font-size: .825rem; font-weight: 600; color: var(--ink-mid); cursor: pointer; user-select: none; }
+  .chk-label input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--teal); cursor: pointer; flex-shrink: 0; }
+  .forgot-lnk { font-size: .825rem; font-weight: 700; color: var(--teal); text-decoration: none; white-space: nowrap; }
+  .forgot-lnk:hover { text-decoration: underline; }
+  .btn-go { width: 100%; padding: .82rem 1.5rem; background: linear-gradient(135deg, #0FBFBF 0%, #0DA7A7 40%, #0A8A8A 100%); color: #fff; font-family: inherit; font-size: .95rem; font-weight: 800; letter-spacing: .03em; border: none; border-radius: 10px; cursor: pointer; transition: opacity .15s, transform .1s, box-shadow .15s; box-shadow: 0 6px 20px rgba(13,167,167,.38); }
+  .btn-go:hover { opacity: .9; box-shadow: 0 8px 26px rgba(13,167,167,.46); }
+  .btn-go:active { transform: translateY(1px); }
+  .version-badge { display: inline-flex; align-items: center; gap: .35rem; background: var(--page-bg); border: 1px solid var(--border); border-radius: 999px; padding: .2rem .65rem; font-size: .68rem; font-weight: 700; color: var(--muted); margin-bottom: 1rem; letter-spacing: .04em; }
+  .version-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+  .card-footer { text-align: center; font-size: .78rem; color: var(--muted); line-height: 1.6; margin-top: 1.25rem; }
+  .card-footer a { color: var(--teal); font-weight: 700; text-decoration: none; }
+  .card-footer a:hover { text-decoration: underline; }
+  @media (max-width: 760px) {
+    .layout { flex-direction: column; }
+    .left { flex: none; padding: 2rem 1.5rem 1.75rem; }
+    .modules, .modules-label { display: none; }
+    .brand { margin-bottom: 1.5rem; }
+    .right { flex: none; max-width: none; width: 100%; padding: 1.5rem 1rem 2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div class="left">
+    <div class="brand">
+      <div class="brand-mark"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="9" y="2" width="4" height="18" rx="2" fill="white"/><rect x="2" y="9" width="18" height="4" rx="2" fill="white"/></svg></div>
+      <div class="brand-text">
+        <div class="brand-name">eHealth System</div>
+        <div class="brand-tagline">Hospital Management Platform</div>
+      </div>
+    </div>
+    <div class="modules-label">System Modules</div>
+    <div class="modules">
+      <div class="mod"><div class="mod-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="mod-info"><div class="mod-name">Patients</div><div class="mod-desc">Registration, records &amp; history</div></div><div class="mod-count">2,847</div></div>
+      <div class="mod"><div class="mod-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="mod-info"><div class="mod-name">Doctors</div><div class="mod-desc">Staff directory &amp; schedules</div></div><div class="mod-count">48</div></div>
+      <div class="mod"><div class="mod-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="mod-info"><div class="mod-name">Appointments</div><div class="mod-desc">Scheduling &amp; queue management</div></div><div class="mod-count">124</div></div>
+      <div class="mod"><div class="mod-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18"/></svg></div><div class="mod-info"><div class="mod-name">Lab Tests</div><div class="mod-desc">Requests, specimens &amp; results</div></div><div class="mod-count">89</div></div>
+      <div class="mod"><div class="mod-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="1" y="9" width="22" height="11" rx="1"/><path d="M5 9V5a2 2 0 0 1 2-2h6l4 4v2"/><circle cx="7" cy="20" r="2"/><circle cx="17" cy="20" r="2"/></svg></div><div class="mod-info"><div class="mod-name">Ambulance</div><div class="mod-desc">Dispatch &amp; booking management</div></div><div class="mod-count">341</div></div>
+      <div class="mod"><div class="mod-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="mod-info"><div class="mod-name">Billing</div><div class="mod-desc">Invoices, payments &amp; insurance</div></div><div class="mod-count">UGX</div></div>
+      <div class="mod"><div class="mod-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="mod-info"><div class="mod-name">Reports</div><div class="mod-desc">HMIS 105, surveillance &amp; analytics</div></div><div class="mod-count">↗</div></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n">47</div><div class="stat-l">Today's Patients</div></div>
+      <div class="stat"><div class="stat-n">12</div><div class="stat-l">In Queue</div></div>
+      <div class="stat"><div class="stat-n">6</div><div class="stat-l">Pending Labs</div></div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="card">
+      <div class="card-brand">
+        <div class="card-mark"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="8.5" y="2" width="3" height="16" rx="1.5" fill="white"/><rect x="2" y="8.5" width="16" height="3" rx="1.5" fill="white"/></svg></div>
+        <div class="card-name">e<span>Health</span></div>
+      </div>
+      <div class="card-divider"></div>
+      <div class="version-badge"><span class="version-dot"></span>v2.4.0 — All systems operational</div>
+      <h2 class="card-heading">Welcome Back</h2>
+      <p class="card-sub">Sign in to continue to your dashboard</p>
+      <form onsubmit="doLogin(event)" novalidate>
+        <div class="field">
+          <label class="field-lbl" for="email">Email Address</label>
+          <div class="input-wrap">
+            <span class="input-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+            <input type="email" id="email" name="email" value="Moses.semanda" autocomplete="email" placeholder="staff@facility.health" spellcheck="false">
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-lbl" for="password">Password</label>
+          <div class="input-wrap pw-wrap">
+            <span class="input-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+            <input type="password" id="password" name="password" value="ehealth2026" autocomplete="current-password">
+            <button type="button" class="pw-btn" onclick="togglePw(this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="chk-label"><input type="checkbox" checked>Remember me</label>
+          <a href="#" class="forgot-lnk" onclick="return false;">Forgot password?</a>
+        </div>
+        <button type="submit" class="btn-go" id="loginBtn">Sign In</button>
+      </form>
+      <p class="card-footer">Need access? <a href="#" onclick="return false;">Contact your System Administrator</a></p>
+    </div>
+  </div>
+</div>
+<script>
+function togglePw(btn) {
+  var inp = btn.closest('.pw-wrap').querySelector('input');
+  inp.type = inp.type === 'text' ? 'password' : 'text';
+}
+function doLogin(e) {
+  e.preventDefault();
+  var btn = document.getElementById('loginBtn');
+  btn.textContent = 'Signing in…'; btn.disabled = true; btn.style.opacity = '.72';
+  setTimeout(function() { window.location.href = 'index.html'; }, 1500);
+}
+</script>
+</body>
+</html>

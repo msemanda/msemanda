@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Consultations — eHealth System</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+<div class="shell">
+  <nav id="sidebar-mount"></nav>
+  <div class="main">
+    <header class="header">
+      <button class="btn-quick-links"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Links</button>
+      <div class="header-right">
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
+        <span class="lang-badge">EN</span>
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+        <div class="user-chip"><div class="user-avatar">M</div><div class="user-info"><div class="user-name">Moses Semanda</div><div class="user-role">Administrator</div></div></div>
+      </div>
+    </header>
+    <div class="content">
+      <div class="page-title-row"><h1 class="page-title">Video Consultations</h1></div>
+      <div class="card">
+        <div class="filter-bar">
+          <div class="filter-tabs">
+            <button class="filter-tab active">All <span class="tab-count">(1)</span></button>
+            <button class="filter-tab">Instant <span class="tab-count">(1)</span></button>
+            <button class="filter-tab">Scheduled <span class="tab-count">(0)</span></button>
+          </div>
+          <div class="filter-right">
+            <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" placeholder="Search..."></div>
+            <select class="per-page-select"><option>15</option><option>25</option></select>
+            <button class="btn-apply">Apply</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all"></th>
+              <th>Agenda &#9650;</th>
+              <th>Platform &#9650;</th>
+              <th>Type &#9650;</th>
+              <th>Duration &#9650;</th>
+              <th>Start Time &#9650;</th>
+              <th>Created At &#9650;</th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
+                <td>
+                  <div style="font-weight:600;color:var(--ink)">Heal Cancer</div>
+                  <div style="display:flex;gap:8px;margin-top:4px">
+                    <a href="#" style="color:var(--teal);font-size:12px;text-decoration:none">Edit</a>
+                    <span style="color:var(--border)">|</span>
+                    <a href="#" style="color:var(--teal);font-size:12px;text-decoration:none">Room to Team</a>
+                  </div>
+                </td>
+                <td>zoom</td>
+                <td><span class="badge badge-pending">instant</span></td>
+                <td>90 min</td>
+                <td>2026-08-01 00:00:00</td>
+                <td>2026-08-01 09:21 AM</td>
+              </tr>
+            </tbody>
+            <tfoot><tr><td colspan="7" style="padding:12px 14px;font-size:12px;color:var(--muted);">Agenda &#9650;</td></tr></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.5s</span></div></footer>
+  </div>
+</div>
+<script>var ACTIVE_PAGE='video-consultations';</script>
+<script src="assets/js/sidebar.js"></script>
+</body>
+</html>
