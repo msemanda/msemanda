@@ -24,9 +24,9 @@
       <div class="card">
         <div class="filter-bar">
           <div class="filter-tabs">
-            <button class="filter-tab active">All <span class="tab-count">(1)</span></button>
-            <button class="filter-tab">Instant <span class="tab-count">(1)</span></button>
-            <button class="filter-tab">Scheduled <span class="tab-count">(0)</span></button>
+            <button class="filter-tab active" data-filter="all">All <span class="tab-count" id="vc-cnt-all"></span></button>
+            <button class="filter-tab" data-filter="pending">Pending <span class="tab-count" id="vc-cnt-pending"></span></button>
+            <button class="filter-tab" data-filter="completed">Completed <span class="tab-count" id="vc-cnt-completed"></span></button>
           </div>
           <div class="filter-right">
             <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" placeholder="Search..."></div>
@@ -38,32 +38,15 @@
           <table>
             <thead><tr>
               <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all"></th>
-              <th>Agenda &#9650;</th>
-              <th>Platform &#9650;</th>
-              <th>Type &#9650;</th>
-              <th>Duration &#9650;</th>
-              <th>Start Time &#9650;</th>
-              <th>Created At &#9650;</th>
+              <th>Patient &#9650;</th>
+              <th>Doctor &#9650;</th>
+              <th>Date &#9650;</th>
+              <th>Time &#9650;</th>
+              <th>Hospital &#9650;</th>
+              <th>Status &#9650;</th>
             </tr></thead>
-            <tbody>
-              <tr>
-                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
-                <td>
-                  <div style="font-weight:600;color:var(--ink)">Heal Cancer</div>
-                  <div style="display:flex;gap:8px;margin-top:4px">
-                    <a href="#" style="color:var(--teal);font-size:12px;text-decoration:none">Edit</a>
-                    <span style="color:var(--border)">|</span>
-                    <a href="#" style="color:var(--teal);font-size:12px;text-decoration:none">Room to Team</a>
-                  </div>
-                </td>
-                <td>zoom</td>
-                <td><span class="badge badge-pending">instant</span></td>
-                <td>90 min</td>
-                <td>2026-08-01 00:00:00</td>
-                <td>2026-08-01 09:21 AM</td>
-              </tr>
-            </tbody>
-            <tfoot><tr><td colspan="7" style="padding:12px 14px;font-size:12px;color:var(--muted);">Agenda &#9650;</td></tr></tfoot>
+            <tbody id="vc-tbody"></tbody>
+            <tfoot><tr><td colspan="7" style="padding:12px 14px;font-size:12px;color:var(--muted);">Patient &#9650;</td></tr></tfoot>
           </table>
         </div>
       </div>
@@ -73,8 +56,54 @@
 </div>
 <script src="assets/js/data.js"></script>
 <script src="assets/js/auth.js"></script>
-<script>var ACTIVE_PAGE='video-consultations';</script>
+<script>
+var ACTIVE_PAGE='video-consultations';
+var vcTenantId=null, vcFilter='all';
+var VC_BADGES={
+  pending:'<span class="badge badge-pending">Pending</span>',
+  confirmed:'<span class="badge badge-confirmed">Confirmed</span>',
+  completed:'<span class="badge badge-completed">Completed</span>',
+  visited:'<span class="badge badge-visited">Visited</span>',
+  rescheduled:'<span class="badge badge-rescheduled">Rescheduled</span>',
+  cancelled:'<span class="badge" style="background:#FEE2E2;color:#DC2626">Cancelled</span>'
+};
+function renderVC(){
+  var all=EH.getAppointments(vcTenantId).filter(function(a){return a.type==='Virtual';});
+  var filtered=all.filter(function(a){
+    if(vcFilter==='pending') return a.status==='pending';
+    if(vcFilter==='completed') return a.status==='completed'||a.status==='visited';
+    return true;
+  });
+  var ca=document.getElementById('vc-cnt-all'); if(ca) ca.textContent='('+all.length+')';
+  var cp=document.getElementById('vc-cnt-pending'); if(cp) cp.textContent='('+all.filter(function(a){return a.status==='pending';}).length+')';
+  var cc=document.getElementById('vc-cnt-completed'); if(cc) cc.textContent='('+all.filter(function(a){return a.status==='completed'||a.status==='visited';}).length+')';
+  var tb=document.getElementById('vc-tbody');
+  if(!filtered.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">No video consultations found.</td></tr>';return;}
+  tb.innerHTML=filtered.map(function(a){
+    return '<tr>'
+      +'<td><input type="checkbox" class="tbl-checkbox row-cb"></td>'
+      +'<td><div class="user-chip-small"><div style="width:28px;height:28px;border-radius:7px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">'+a.patient.charAt(0)+'</div><div><div style="font-weight:600;font-size:13px">'+a.patient+'</div><div style="font-size:11px;color:var(--muted)">'+a.patientEmail+'</div></div></div></td>'
+      +'<td style="font-size:12px">'+a.doctor+'</td>'
+      +'<td style="font-size:12px;color:var(--muted)">'+a.date+'</td>'
+      +'<td style="font-size:12px">'+a.time+'</td>'
+      +'<td style="font-size:12px;color:var(--muted)">'+a.hospital+'</td>'
+      +'<td>'+(VC_BADGES[a.status]||'<span class="badge">'+a.status+'</span>')+'</td>'
+      +'</tr>';
+  }).join('');
+}
+document.querySelectorAll('.filter-tab[data-filter]').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.filter-tab').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active'); vcFilter=btn.dataset.filter; renderVC();
+  });
+});
+document.addEventListener('DOMContentLoaded',function(){
+  var s=EHAuth.init(); if(!s) return;
+  vcTenantId=window.EH_TENANT||null;
+  renderVC();
+});
+window.addEventListener('eh:tenantchange',function(e){ vcTenantId=e.detail.tenantId; renderVC(); });
+</script>
 <script src="assets/js/sidebar.js"></script>
-<script>document.addEventListener('DOMContentLoaded', function(){ EHAuth.init(); });</script>
 </body>
 </html>

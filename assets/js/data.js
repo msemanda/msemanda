@@ -6,56 +6,31 @@
 
   /* ── Seed data ─────────────────────────────────────────── */
   var SEED = {
-    tenants: [],
-    users: [
-      { id:'u1', name:'Moses Semanda', email:'admin@ehealth.ug', password:'ehealth2026', role:'admin', tenantId:null, avatar:'M', status:'active', createdAt:'2026-01-01' }
-    ],
-    patients: [],
-    doctors: [],
-    appointments: [],
-    departments: [
-      { id:'dept1', name:'Cardiology',       status:'active', createdAt:'2026-05-27 06:40:51 PM' },
-      { id:'dept2', name:'Dermatology',      status:'active', createdAt:'2026-05-27 06:40:51 PM' },
-      { id:'dept3', name:'Pediatrics',       status:'active', createdAt:'2026-05-27 06:40:51 PM' },
-      { id:'dept4', name:'Orthopedics',      status:'active', createdAt:'2026-05-27 06:40:51 PM' },
-      { id:'dept5', name:'Neurology',        status:'active', createdAt:'2026-05-27 06:40:51 PM' },
-      { id:'dept6', name:'Gastroenterology', status:'active', createdAt:'2026-05-27 06:40:51 PM' },
-      { id:'dept7', name:'ENT',              status:'active', createdAt:'2026-05-27 06:40:51 PM' },
-      { id:'dept8', name:'General Medicine', status:'active', createdAt:'2026-05-27 06:40:51 PM' }
-    ],
-    specialties: [
-      { id:'sp1',  name:'General Practice', icon:'🩺', status:'active',   createdAt:'2026-05-27 06:35:05 PM' },
-      { id:'sp2',  name:'Pediatrics',       icon:'👶', status:'active',   createdAt:'2026-05-27 06:35:05 PM' },
-      { id:'sp3',  name:'Orthopedics',      icon:'🦴', status:'active',   createdAt:'2026-05-27 06:23:25 PM' },
-      { id:'sp4',  name:'Gynaecology',      icon:'🤰', status:'active',   createdAt:'2026-05-27 06:34:19 PM' },
-      { id:'sp5',  name:'Cardiology',       icon:'❤️', status:'active',   createdAt:'2026-05-27 06:35:05 PM' },
-      { id:'sp6',  name:'Sexual Health',    icon:'💊', status:'active',   createdAt:'2026-05-27 06:36:57 PM' },
-      { id:'sp7',  name:'Mental Wellness',  icon:'🧠', status:'active',   createdAt:'2026-05-27 06:37:53 PM' },
-      { id:'sp8',  name:'Dentistry',        icon:'🦷', status:'active',   createdAt:'2026-05-27 06:39:47 PM' },
-      { id:'sp9',  name:'Dermatology',      icon:'🧴', status:'active',   createdAt:'2026-05-27 06:40:55 PM' },
-      { id:'sp10', name:'ENT',              icon:'👂', status:'active',   createdAt:'2026-05-27 06:41:48 PM' },
-      { id:'sp11', name:'Homeopathy',       icon:'🌿', status:'active',   createdAt:'2026-05-27 06:42:45 PM' },
-      { id:'sp12', name:'Diet & Nutrition', icon:'🥗', status:'active',   createdAt:'2026-05-27 06:44:38 PM' },
-      { id:'sp13', name:'Urinary Issues',   icon:'🫧', status:'inactive', createdAt:'2026-05-27 06:38:57 PM' }
-    ],
-    labTests: [
-      { id:'lt1', name:'Complete Blood Count (CBC)',  icon:'🩺', description:'Comprehensive blood test to evaluate overall health and detect infections or anemia.',    pathologist:'Dr. Amelia Brooks',   status:'active', createdAt:'2026-05-29 04:18:06 AM' },
-      { id:'lt2', name:'Liver Function Test (LFT)',   icon:'🫁', description:'Measures liver enzymes and proteins to assess liver health and detect liver diseases.',    pathologist:'Dr. Lucas Bennett',   status:'active', createdAt:'2026-05-29 04:21:34 AM' },
-      { id:'lt3', name:'Lipid Profile Test',          icon:'💉', description:'Measures cholesterol and triglyceride levels to assess heart disease risk.',               pathologist:'Dr. Ethan Collins',   status:'active', createdAt:'2026-05-29 04:30:47 AM' },
-      { id:'lt4', name:'Thyroid Function Test (TFT)', icon:'⚡', description:'Detects thyroid hormone imbalances affecting metabolism and energy levels.',               pathologist:'Dr. Grace Mitchell',  status:'active', createdAt:'2026-05-29 04:33:19 AM' },
-      { id:'lt5', name:'Blood Sugar Test',            icon:'🫀', description:'Measures glucose levels to diagnose and monitor diabetes conditions.',                      pathologist:'Dr. Grace Mitchell',  status:'active', createdAt:'2026-05-29 04:37:05 AM' },
-      { id:'lt6', name:'Vitamin D Test',              icon:'🩸', description:'Determines Vitamin D levels important for bone and immune health.',                        pathologist:'Dr. Noah Richardson', status:'active', createdAt:'2026-05-29 04:40:14 AM' },
-      { id:'lt7', name:'Allergy Test',                icon:'🔬', description:'Identifies allergic reactions to specific substances.',                                     pathologist:'Pathologist user',    status:'active', createdAt:'2026-06-03 12:10:10 PM' }
-    ],
-    ambulanceBookings: []
+    tenants:          [],
+    users:            [{ id:'u1', name:'Moses Semanda', email:'admin@ehealth.ug', password:'ehealth2026', role:'admin', tenantId:null, avatar:'M', status:'active', createdAt:'2026-01-01' }],
+    patients:         [],
+    doctors:          [],
+    appointments:     [],
+    departments:      [],
+    specialties:      [],
+    labTests:         [],
+    ambulanceBookings:[],
+    mediaFiles:       [],
+    services: [
+      { id:'svc1', name:'Clinic Visit',       icon:'➕', bg:'#E0F7FA', status:'active', createdAt:'2026-01-01' },
+      { id:'svc2', name:'Video Consultation', icon:'🎥', bg:'#E3F2FD', status:'active', createdAt:'2026-01-01' },
+      { id:'svc3', name:'Home Visit',         icon:'🏠', bg:'#F3E5F5', status:'active', createdAt:'2026-01-01' },
+      { id:'svc4', name:'Lab Test',           icon:'🧪', bg:'#FFF8E1', status:'active', createdAt:'2026-01-01' },
+      { id:'svc5', name:'Book Ambulance',     icon:'🚑', bg:'#FFEBEE', status:'active', createdAt:'2026-01-01' },
+      { id:'svc6', name:'Pharmacy',           icon:'💊', bg:'#E8F5E9', status:'active', createdAt:'2026-01-01' }
+    ]
   };
 
   function seed() {
-    if (!g('seeded_v4')) {
-      /* Clear any previous seed keys so old dummy data is wiped */
-      ['seeded_v1','seeded_v2','seeded_v3'].forEach(function(k){ try { localStorage.removeItem('eh_'+k); } catch(e){} });
+    if (!g('seeded_v5')) {
+      ['seeded_v1','seeded_v2','seeded_v3','seeded_v4'].forEach(function(k){ try { localStorage.removeItem('eh_'+k); } catch(e){} });
       Object.keys(SEED).forEach(function(k) { s(k, SEED[k]); });
-      s('seeded_v4', true);
+      s('seeded_v5', true);
     }
   }
 
@@ -210,7 +185,28 @@
       var list = g('ambulanceBookings') || [];
       var ab = Object.assign({ id: nextId('ab'), status:'pending', tenantId: tenantId||null, createdAt: nowStr() }, data);
       list.unshift(ab); s('ambulanceBookings', list); return ab;
-    }
+    },
+
+    /* ── Services ────────────────────────────────────────── */
+    getServices: function() { return g('services') || []; },
+    updateService: function(id, data) {
+      s('services', (g('services')||[]).map(function(sv){ return sv.id===id ? Object.assign(sv,data) : sv; }));
+    },
+    addService: function(data) {
+      var list = g('services') || [];
+      var sv = Object.assign({ id: nextId('svc'), status:'active', createdAt: nowStr().slice(0,10) }, data);
+      list.push(sv); s('services', list); return sv;
+    },
+    deleteService: function(id) { s('services', (g('services')||[]).filter(function(sv){return sv.id!==id;})); },
+
+    /* ── Media Files ─────────────────────────────────────── */
+    getMediaFiles: function() { return g('mediaFiles') || []; },
+    addMediaFile: function(data) {
+      var list = g('mediaFiles') || [];
+      var f = Object.assign({ id: nextId('mf'), createdAt: nowStr() }, data);
+      list.unshift(f); s('mediaFiles', list); return f;
+    },
+    deleteMediaFile: function(id) { s('mediaFiles', (g('mediaFiles')||[]).filter(function(f){return f.id!==id;})); }
   };
 
   seed();

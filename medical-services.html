@@ -36,9 +36,9 @@ input:checked + .toggle-slider:before { transform:translateX(17px); }
       <div class="card">
         <div class="filter-bar">
           <div class="filter-tabs">
-            <button class="filter-tab active">All <span class="tab-count">(6)</span></button>
-            <button class="filter-tab">Active <span class="tab-count">(6)</span></button>
-            <button class="filter-tab">Deactive <span class="tab-count">(0)</span></button>
+            <button class="filter-tab active" data-filter="all">All <span class="tab-count" id="svc-cnt-all"></span></button>
+            <button class="filter-tab" data-filter="active">Active <span class="tab-count" id="svc-cnt-active"></span></button>
+            <button class="filter-tab" data-filter="inactive">Deactive <span class="tab-count" id="svc-cnt-inactive"></span></button>
           </div>
           <div class="filter-right">
             <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" placeholder="Search..."></div>
@@ -55,74 +55,7 @@ input:checked + .toggle-slider:before { transform:translateX(17px); }
               <th>Status &#9650;</th>
               <th>Created At &#9650;</th>
             </tr></thead>
-            <tbody>
-              <tr>
-                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
-                <td>
-                  <div class="user-chip-small">
-                    <div class="svc-icon" style="background:#E0F7FA">➕</div>
-                    <div><div style="font-weight:600;font-size:13px;color:var(--ink)">Clinic Visit</div><div class="svc-name"><a href="#">Edit</a></div></div>
-                  </div>
-                </td>
-                <td><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></td>
-                <td>2026-05-27 06:14:37 PM</td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
-                <td>
-                  <div class="user-chip-small">
-                    <div class="svc-icon" style="background:#E3F2FD">🎥</div>
-                    <div><div style="font-weight:600;font-size:13px;color:var(--ink)">Video Consultation</div><div class="svc-name"><a href="#">Edit</a></div></div>
-                  </div>
-                </td>
-                <td><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></td>
-                <td>2026-05-27 06:14:37 PM</td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
-                <td>
-                  <div class="user-chip-small">
-                    <div class="svc-icon" style="background:#F3E5F5">🏠</div>
-                    <div><div style="font-weight:600;font-size:13px;color:var(--ink)">Home Visit</div><div class="svc-name"><a href="#">Edit</a></div></div>
-                  </div>
-                </td>
-                <td><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></td>
-                <td>2026-05-27 06:14:37 PM</td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
-                <td>
-                  <div class="user-chip-small">
-                    <div class="svc-icon" style="background:#FFF8E1">🧪</div>
-                    <div><div style="font-weight:600;font-size:13px;color:var(--ink)">Lab Test</div><div class="svc-name"><a href="#">Edit</a></div></div>
-                  </div>
-                </td>
-                <td><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></td>
-                <td>2026-05-27 06:14:37 PM</td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
-                <td>
-                  <div class="user-chip-small">
-                    <div class="svc-icon" style="background:#FFEBEE">🚑</div>
-                    <div><div style="font-weight:600;font-size:13px;color:var(--ink)">Book Ambulance</div><div class="svc-name"><a href="#">Edit</a></div></div>
-                  </div>
-                </td>
-                <td><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></td>
-                <td>2026-05-27 06:14:37 PM</td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
-                <td>
-                  <div class="user-chip-small">
-                    <div class="svc-icon" style="background:#E8F5E9">💊</div>
-                    <div><div style="font-weight:600;font-size:13px;color:var(--ink)">Pharmacy</div><div class="svc-name"><a href="#">Edit</a></div></div>
-                  </div>
-                </td>
-                <td><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></td>
-                <td>2026-05-27 06:14:37 PM</td>
-              </tr>
-            </tbody>
+            <tbody id="svc-tbody"></tbody>
             <tfoot><tr><td colspan="4" style="padding:12px 14px;font-size:12px;color:var(--muted);">Title &#9650;</td></tr></tfoot>
           </table>
         </div>
@@ -133,8 +66,45 @@ input:checked + .toggle-slider:before { transform:translateX(17px); }
 </div>
 <script src="assets/js/data.js"></script>
 <script src="assets/js/auth.js"></script>
-<script>var ACTIVE_PAGE='medical-services';</script>
+<script>
+var ACTIVE_PAGE='medical-services';
+var svcFilter='all';
+function renderServices(){
+  var all=EH.getServices();
+  var filtered=all.filter(function(sv){
+    if(svcFilter==='active') return sv.status==='active';
+    if(svcFilter==='inactive') return sv.status!=='active';
+    return true;
+  });
+  var ca=document.getElementById('svc-cnt-all'); if(ca) ca.textContent='('+all.length+')';
+  var ci=document.getElementById('svc-cnt-active'); if(ci) ci.textContent='('+all.filter(function(sv){return sv.status==='active';}).length+')';
+  var cd=document.getElementById('svc-cnt-inactive'); if(cd) cd.textContent='('+all.filter(function(sv){return sv.status!=='active';}).length+')';
+  var tb=document.getElementById('svc-tbody');
+  if(!filtered.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted)">No services found.</td></tr>';return;}
+  tb.innerHTML=filtered.map(function(sv){
+    return '<tr>'
+      +'<td><input type="checkbox" class="tbl-checkbox row-cb"></td>'
+      +'<td><div class="user-chip-small"><div class="svc-icon" style="background:'+(sv.bg||'#E0F7FA')+'">'+sv.icon+'</div>'
+      +'<div><div style="font-weight:600;font-size:13px;color:var(--ink)">'+sv.name+'</div></div></div></td>'
+      +'<td><label class="toggle-switch"><input type="checkbox" '+(sv.status==='active'?'checked':'')
+      +' onchange="toggleSvc(\''+sv.id+'\',this.checked)"><span class="toggle-slider"></span></label></td>'
+      +'<td style="font-size:12px;color:var(--muted)">'+sv.createdAt+'</td>'
+      +'</tr>';
+  }).join('');
+}
+function toggleSvc(id,active){
+  EH.updateService(id,{status:active?'active':'inactive'});
+  renderServices();
+  ehToast('Service '+(active?'activated':'deactivated')+'.','success');
+}
+document.querySelectorAll('.filter-tab[data-filter]').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.filter-tab').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active'); svcFilter=btn.dataset.filter; renderServices();
+  });
+});
+document.addEventListener('DOMContentLoaded',function(){ EHAuth.init(); renderServices(); });
+</script>
 <script src="assets/js/sidebar.js"></script>
-<script>document.addEventListener('DOMContentLoaded', function(){ EHAuth.init(); });</script>
 </body>
 </html>

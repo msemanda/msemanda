@@ -43,7 +43,7 @@
     <div class="content">
       <div class="page-title-row">
         <h1 class="page-title">Media Library</h1>
-        <button class="btn btn-teal"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New</button>
+        <button class="btn btn-teal" onclick="document.getElementById('drop-zone').style.display='';"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New</button>
       </div>
       <div class="card" style="margin-bottom:20px">
         <div class="upload-zone" id="drop-zone">
@@ -75,84 +75,7 @@
               <th>Type &#9650;</th>
               <th>Created At &#9650;</th>
             </tr></thead>
-            <tbody>
-              <tr>
-                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
-                <td>
-                  <div class="user-chip-small">
-                    <div class="media-thumb">🖼️</div>
-                    <div>
-                      <div class="media-name">Women</div>
-                      <div class="media-actions">
-                        <a href="#">Copy URL</a>
-                        <a href="#">Download</a>
-                        <a href="#" class="del">Delete Permanently</a>
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td>Administrator</td>
-                <td>image/png</td>
-                <td>2026-06-06 08:48:56 AM</td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
-                <td>
-                  <div class="user-chip-small">
-                    <div class="media-thumb">🖼️</div>
-                    <div>
-                      <div class="media-name">Hormone</div>
-                      <div class="media-actions">
-                        <a href="#">Copy URL</a>
-                        <a href="#">Download</a>
-                        <a href="#" class="del">Delete Permanently</a>
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td>Administrator</td>
-                <td>image/png</td>
-                <td>2026-06-06 08:48:50 AM</td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
-                <td>
-                  <div class="user-chip-small">
-                    <div class="media-thumb">🖼️</div>
-                    <div>
-                      <div class="media-name">Hormone</div>
-                      <div class="media-actions">
-                        <a href="#">Copy URL</a>
-                        <a href="#">Download</a>
-                        <a href="#" class="del">Delete Permanently</a>
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td>Administrator</td>
-                <td>image/png</td>
-                <td>2026-06-06 08:46:59 AM</td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
-                <td>
-                  <div class="user-chip-small">
-                    <div class="media-thumb">📄</div>
-                    <div>
-                      <div class="media-name">Report Q2 2026</div>
-                      <div class="media-actions">
-                        <a href="#">Copy URL</a>
-                        <a href="#">Download</a>
-                        <a href="#" class="del">Delete Permanently</a>
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td>Administrator</td>
-                <td>application/pdf</td>
-                <td>2026-05-30 11:20:00 AM</td>
-              </tr>
-            </tbody>
+            <tbody id="media-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -162,8 +85,69 @@
 </div>
 <script src="assets/js/data.js"></script>
 <script src="assets/js/auth.js"></script>
-<script>var ACTIVE_PAGE='media';</script>
+<script>
+var ACTIVE_PAGE='media';
+function getMediaIcon(type){
+  if(!type) return '📁';
+  if(type.startsWith('image')) return '🖼️';
+  if(type.startsWith('video')) return '🎬';
+  if(type.includes('pdf')) return '📄';
+  return '📁';
+}
+function renderMedia(){
+  var files=EH.getMediaFiles();
+  var tb=document.getElementById('media-tbody');
+  if(!files.length){
+    tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted)">No files uploaded yet.</td></tr>';
+    return;
+  }
+  var session=EHAuth.getSession();
+  var uploader=session?session.name:'Administrator';
+  tb.innerHTML=files.map(function(f){
+    return '<tr>'
+      +'<td><input type="checkbox" class="tbl-checkbox row-cb"></td>'
+      +'<td><div class="user-chip-small"><div class="media-thumb">'+getMediaIcon(f.type)+'</div>'
+      +'<div><div class="media-name">'+f.name+'</div>'
+      +'<div class="media-actions">'
+      +'<a href="#" onclick="copyFileName(\''+f.name+'\');return false">Copy URL</a>'
+      +'<a href="#" class="del" onclick="deleteMedia(\''+f.id+'\',\''+f.name+'\');return false">Delete Permanently</a>'
+      +'</div></div></div></td>'
+      +'<td style="font-size:12px;color:var(--muted)">'+uploader+'</td>'
+      +'<td style="font-size:12px;color:var(--muted)">'+(f.type||'unknown')+'</td>'
+      +'<td style="font-size:12px;color:var(--muted)">'+f.createdAt+'</td>'
+      +'</tr>';
+  }).join('');
+}
+function deleteMedia(id,name){
+  if(!confirm('Delete "'+name+'"?')) return;
+  EH.deleteMediaFile(id); renderMedia(); ehToast('"'+name+'" deleted.','info');
+}
+function copyFileName(name){
+  try{navigator.clipboard.writeText(name);ehToast('Copied: '+name,'success');}catch(e){ehToast('Copy not supported.','error');}
+}
+document.addEventListener('DOMContentLoaded',function(){
+  var s=EHAuth.init(); if(!s) return;
+  renderMedia();
+  var fileInput=document.querySelector('#drop-zone input[type=file]');
+  if(fileInput){
+    fileInput.addEventListener('change',function(){
+      var count=this.files.length;
+      Array.from(this.files).forEach(function(file){ EH.addMediaFile({name:file.name,type:file.type,size:file.size}); });
+      renderMedia(); fileInput.value=''; ehToast(count+' file(s) added.','success');
+      document.getElementById('drop-zone').style.display='none';
+    });
+  }
+  var dz=document.getElementById('drop-zone');
+  dz.addEventListener('dragover',function(e){e.preventDefault();});
+  dz.addEventListener('drop',function(e){
+    e.preventDefault();
+    var count=e.dataTransfer.files.length;
+    Array.from(e.dataTransfer.files).forEach(function(file){ EH.addMediaFile({name:file.name,type:file.type,size:file.size}); });
+    renderMedia(); ehToast(count+' file(s) added.','success');
+    dz.style.display='none';
+  });
+});
+</script>
 <script src="assets/js/sidebar.js"></script>
-<script>document.addEventListener('DOMContentLoaded', function(){ EHAuth.init(); });</script>
 </body>
 </html>
