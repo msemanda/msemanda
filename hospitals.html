@@ -401,24 +401,53 @@
           <!-- Address -->
           <div class="sub-panel" id="panel-address">
             <div class="fr">
-              <label>Street / Building</label>
-              <input type="text" id="h-street" placeholder="Enter Street Address">
+              <label>Address <span>*</span></label>
+              <textarea id="h-street" placeholder="Enter Address"></textarea>
             </div>
             <div class="fr">
-              <label>City</label>
+              <label>Country <span>*</span></label>
+              <select id="h-country">
+                <option value="">Select Country</option>
+                <option>Uganda</option>
+                <option>Kenya</option>
+                <option>Tanzania</option>
+                <option>Rwanda</option>
+                <option>Ethiopia</option>
+                <option>Nigeria</option>
+                <option>Ghana</option>
+                <option>South Africa</option>
+                <option>United States</option>
+                <option>United Kingdom</option>
+                <option>India</option>
+              </select>
+            </div>
+            <div class="fr">
+              <label>State <span>*</span></label>
+              <input type="text" id="h-state" placeholder="Enter State">
+            </div>
+            <div class="fr">
+              <label>City <span>*</span></label>
               <input type="text" id="h-city" placeholder="Enter City">
             </div>
             <div class="fr">
-              <label>State / District</label>
-              <input type="text" id="h-state" placeholder="Enter State or District">
+              <label>Postal Code <span>*</span></label>
+              <input type="text" id="h-zip" placeholder="Postal Code">
             </div>
             <div class="fr">
-              <label>Country</label>
-              <input type="text" id="h-country" placeholder="Enter Country">
+              <label>Facebook URL</label>
+              <input type="url" id="h-facebook" placeholder="https://facebook.com/...">
             </div>
             <div class="fr">
-              <label>Zip / Postal Code</label>
-              <input type="text" id="h-zip" placeholder="Enter Zip Code">
+              <label>Instagram URL</label>
+              <input type="url" id="h-instagram" placeholder="https://instagram.com/...">
+            </div>
+            <div class="fr">
+              <label>Twitter URL</label>
+              <input type="url" id="h-twitter" placeholder="https://twitter.com/...">
+            </div>
+            <div class="fr">
+              <label>LinkedIn URL</label>
+              <input type="url" id="h-linkedin" placeholder="https://linkedin.com/...">
             </div>
             <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:8px">
               <button class="btn btn-secondary" onclick="gotoSubTab('seo')">Previous</button>
@@ -687,11 +716,15 @@ function editHosp(id) {
   document.getElementById('h-amb-plate').value   = (t.ambulance||{}).plateNumber||'';
   document.getElementById('h-meta-title').value  = (t.seo||{}).metaTitle||'';
   document.getElementById('h-meta-desc').value   = (t.seo||{}).metaDescription||'';
-  document.getElementById('h-street').value  = (t.address||{}).street||'';
-  document.getElementById('h-city').value    = (t.address||{}).city||'';
-  document.getElementById('h-state').value   = (t.address||{}).state||'';
-  document.getElementById('h-country').value = '';
-  document.getElementById('h-zip').value     = (t.address||{}).zip||'';
+  document.getElementById('h-street').value    = (t.address||{}).street||'';
+  document.getElementById('h-city').value      = (t.address||{}).city||'';
+  document.getElementById('h-state').value     = (t.address||{}).state||'';
+  document.getElementById('h-country').value   = (t.address||{}).country||'';
+  document.getElementById('h-zip').value       = (t.address||{}).zip||'';
+  document.getElementById('h-facebook').value  = (t.address||{}).facebook||'';
+  document.getElementById('h-instagram').value = (t.address||{}).instagram||'';
+  document.getElementById('h-twitter').value   = (t.address||{}).twitter||'';
+  document.getElementById('h-linkedin').value  = (t.address||{}).linkedin||'';
 
   selectedDepts = t.departments||[];
   selectedZones = t.zones||[];
@@ -770,7 +803,11 @@ function saveHospital() {
       city:    document.getElementById('h-city').value.trim(),
       state:   document.getElementById('h-state').value.trim(),
       country: document.getElementById('h-country').value,
-      zip:     document.getElementById('h-zip').value.trim()
+      zip:     document.getElementById('h-zip').value.trim(),
+      facebook:  document.getElementById('h-facebook').value.trim(),
+      instagram: document.getElementById('h-instagram').value.trim(),
+      twitter:   document.getElementById('h-twitter').value.trim(),
+      linkedin:  document.getElementById('h-linkedin').value.trim()
     }
   };
 
@@ -801,7 +838,8 @@ function cancelForm() {
   ['h-name','h-slug','h-email','h-phone','h-desc','h-reg-id','h-map-url','h-facilities',
    'h-admin-name','h-admin-email','h-admin-pass','h-admin-phone',
    'h-amb-desc','h-amb-km','h-amb-plate','h-meta-title','h-meta-desc',
-   'h-street','h-city','h-state','h-zip','h-logo','h-images','h-meta-img'].forEach(function(id){
+   'h-street','h-city','h-state','h-zip','h-facebook','h-instagram','h-twitter','h-linkedin',
+   'h-logo','h-images','h-meta-img'].forEach(function(id){
     var el = document.getElementById(id); if(el) el.value='';
   });
   ['logo-preview','images-preview','meta-img-preview'].forEach(function(id){
