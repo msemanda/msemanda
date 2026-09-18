@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Categories — eHealth System</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+<style>
+/* Two-panel layout */
+.cat-layout { display:grid; grid-template-columns:1fr 1.4fr; gap:20px; align-items:flex-start; }
+@media(max-width:860px){ .cat-layout { grid-template-columns:1fr; } }
+
+/* Tree panel */
+.cat-tree-panel { background:#fff; border:1px solid var(--border); border-radius:12px; padding:20px; }
+.cat-tree-panel h2 { font-size:15px; font-weight:700; margin:0 0 18px; color:var(--dark,#2d3748); }
+.cat-tree { list-style:none; margin:0; padding:0; }
+.cat-tree ul { list-style:none; margin:0; padding:0 0 0 24px; }
+.cat-item { border:1px solid var(--border); border-radius:8px; margin-bottom:8px; background:#fff; transition:box-shadow .15s; }
+.cat-item:hover { box-shadow:0 2px 8px rgba(0,0,0,.07); }
+.cat-item-row { display:flex; align-items:center; gap:10px; padding:11px 14px; }
+.cat-drag { color:#bbb; cursor:grab; font-size:16px; line-height:1; flex-shrink:0; }
+.cat-name { flex:1; font-size:13px; font-weight:500; color:var(--dark,#2d3748); }
+.cat-name.has-parent { color:var(--teal); }
+.cat-item-actions { display:none; gap:6px; align-items:center; }
+.cat-item:hover .cat-item-actions { display:flex; }
+.cat-act-btn { background:none; border:none; padding:3px; cursor:pointer; color:var(--muted); border-radius:5px; display:flex; align-items:center; }
+.cat-act-btn:hover.edit { color:var(--teal); background:#f0fefe; }
+.cat-act-btn:hover.del  { color:var(--danger,#e53e3e); background:#fff5f5; }
+.cat-children { padding:0 0 8px 0; }
+
+/* Form panel */
+.cat-form-panel { background:#fff; border:1px solid var(--border); border-radius:12px; padding:24px; }
+.cat-form-panel h2 { font-size:15px; font-weight:700; margin:0 0 24px; color:var(--dark,#2d3748); }
+.form-row { display:grid; grid-template-columns:130px 1fr; align-items:flex-start; gap:14px 20px; margin-bottom:18px; }
+.form-row label { font-size:13px; font-weight:600; color:var(--dark,#2d3748); padding-top:9px; }
+.form-row label span { color:var(--danger,#e53e3e); }
+.form-row input[type=text], .form-row textarea, .form-row select { width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit; box-sizing:border-box; }
+.form-row textarea { resize:vertical; min-height:80px; }
+.form-row input:focus, .form-row textarea:focus, .form-row select:focus { outline:none; border-color:var(--teal); box-shadow:0 0 0 3px rgba(13,167,167,.12); }
+
+/* Slug row */
+.slug-wrap { display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.slug-prefix { background:#f7f8fa; padding:9px 10px; font-size:11px; color:var(--muted); white-space:nowrap; border-right:1px solid var(--border); display:flex; align-items:center; }
+.slug-input { border:none; padding:9px 12px; font-size:13px; font-family:inherit; flex:1; min-width:0; }
+.slug-input:focus { outline:none; }
+.slug-wrap:focus-within { border-color:var(--teal); box-shadow:0 0 0 3px rgba(13,167,167,.12); }
+
+/* Image picker */
+.img-pick { width:80px; height:80px; border:2px dashed var(--border); border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; background:#fafafa; position:relative; }
+.img-pick:hover { border-color:var(--teal); background:#f0fefe; }
+.img-pick img { width:100%; height:100%; object-fit:cover; position:absolute; inset:0; }
+.img-pick .plus { color:var(--muted); font-size:20px; line-height:1; }
+.img-pick input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+
+.form-actions { display:flex; justify-content:flex-end; gap:8px; padding-top:4px; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav id="sidebar-mount"></nav>
+  <div class="main">
+    <header class="header">
+      <button class="btn-quick-links"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Links</button>
+      <div class="header-right">
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
+        <span class="lang-badge">EN</span>
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+        <div class="user-chip"><div class="user-avatar">M</div><div class="user-info"><div class="user-name">Moses Semanda</div><div class="user-role">Administrator</div></div></div>
+      </div>
+    </header>
+    <div class="content">
+      <div class="page-title-row">
+        <h1 class="page-title">Categories</h1>
+        <button class="btn btn-teal" onclick="newCategory()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New</button>
+      </div>
+
+      <div class="cat-layout">
+        <!-- Left: Tree -->
+        <div class="cat-tree-panel">
+          <h2>Categories</h2>
+          <ul class="cat-tree" id="cat-tree"></ul>
+        </div>
+
+        <!-- Right: Form -->
+        <div class="cat-form-panel">
+          <h2 id="form-title">Add Category <span style="font-size:12px;color:var(--muted);font-weight:400;">(en)</span></h2>
+          <input type="hidden" id="edit-id">
+
+          <div class="form-row">
+            <label>Name <span>*</span></label>
+            <input type="text" id="cat-name" placeholder="Enter Name (en)" oninput="autoSlug()">
+          </div>
+
+          <div class="form-row">
+            <label>Slug <span>*</span></label>
+            <div class="slug-wrap">
+              <span class="slug-prefix">ehealth/category/</span>
+              <input type="text" class="slug-input" id="cat-slug" placeholder="Enter Slug">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Parent</label>
+            <select id="cat-parent">
+              <option value="">Select Parent</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label>Image <span>*</span></label>
+            <div>
+              <div class="img-pick" id="img-pick" onclick="document.getElementById('img-file').click()">
+                <img id="img-preview" src="" alt="" style="display:none">
+                <span class="plus" id="img-plus">+</span>
+                <input type="file" id="img-file" accept="image/*" onchange="previewImg(this)" style="display:none">
+              </div>
+              <div style="font-size:11px;color:var(--muted);margin-top:6px;">Click to upload</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Meta Title</label>
+            <input type="text" id="cat-meta-title" placeholder="Enter Meta Title">
+          </div>
+
+          <div class="form-row">
+            <label>Meta Description</label>
+            <textarea id="cat-meta-desc" placeholder="Enter Meta Description"></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-secondary" onclick="resetForm()">Reset</button>
+            <button class="btn btn-teal" onclick="saveCat()">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.3s</span></div></footer>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/sidebar.js"></script>
+<script>
+var ACTIVE_PAGE = 'categories';
+var imgData = '';
+
+/* ── Auto slug ─────────────────────────────────────────── */
+function autoSlug() {
+  if (document.getElementById('edit-id').value) return; // don't override when editing
+  var name = document.getElementById('cat-name').value;
+  document.getElementById('cat-slug').value = name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+
+/* ── Image preview ──────────────────────────────────────── */
+function previewImg(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    imgData = e.target.result;
+    var prev = document.getElementById('img-preview');
+    prev.src = imgData; prev.style.display = 'block';
+    document.getElementById('img-plus').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ── Populate parent dropdown ───────────────────────────── */
+function populateParent(excludeId) {
+  var cats = EH.getCategories();
+  var sel = document.getElementById('cat-parent');
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">Select Parent</option>';
+  cats.filter(function(c){ return c.id !== excludeId; }).forEach(function(c) {
+    var o = document.createElement('option');
+    o.value = c.id;
+    o.textContent = c.name;
+    if (c.id === cur) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+/* ── Reset form ─────────────────────────────────────────── */
+function resetForm() {
+  document.getElementById('edit-id').value = '';
+  document.getElementById('cat-name').value = '';
+  document.getElementById('cat-slug').value = '';
+  document.getElementById('cat-meta-title').value = '';
+  document.getElementById('cat-meta-desc').value = '';
+  document.getElementById('img-preview').style.display = 'none';
+  document.getElementById('img-plus').style.display = '';
+  document.getElementById('img-file').value = '';
+  imgData = '';
+  populateParent(null);
+  document.getElementById('cat-parent').value = '';
+  document.getElementById('form-title').innerHTML = 'Add Category <span style="font-size:12px;color:var(--muted);font-weight:400;">(en)</span>';
+}
+
+function newCategory() { resetForm(); }
+
+/* ── Edit ───────────────────────────────────────────────── */
+function editCat(id) {
+  var c = EH.getCategories().find(function(x){ return x.id === id; });
+  if (!c) return;
+  document.getElementById('edit-id').value = c.id;
+  document.getElementById('cat-name').value = c.name;
+  document.getElementById('cat-slug').value = c.slug || '';
+  document.getElementById('cat-meta-title').value = c.metaTitle || '';
+  document.getElementById('cat-meta-desc').value = c.metaDesc || '';
+  imgData = c.image || '';
+  var prev = document.getElementById('img-preview');
+  if (imgData) { prev.src = imgData; prev.style.display = 'block'; document.getElementById('img-plus').style.display = 'none'; }
+  else { prev.style.display = 'none'; document.getElementById('img-plus').style.display = ''; }
+  populateParent(id);
+  document.getElementById('cat-parent').value = c.parentId || '';
+  document.getElementById('form-title').innerHTML = 'Edit Category <span style="font-size:12px;color:var(--muted);font-weight:400;">(en)</span>';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ── Delete ─────────────────────────────────────────────── */
+function deleteCat(id) {
+  var c = EH.getCategories().find(function(x){ return x.id === id; });
+  if (!c) return;
+  if (!confirm('Delete "' + c.name + '"? Child categories will be moved to top level.')) return;
+  EH.deleteCategory(id);
+  renderTree();
+  populateParent(document.getElementById('edit-id').value || null);
+  ehToast('"' + c.name + '" deleted.', 'success');
+}
+
+/* ── Save ───────────────────────────────────────────────── */
+function saveCat() {
+  var name = document.getElementById('cat-name').value.trim();
+  var slug = document.getElementById('cat-slug').value.trim();
+  var parentId = document.getElementById('cat-parent').value || null;
+  var metaTitle = document.getElementById('cat-meta-title').value.trim();
+  var metaDesc = document.getElementById('cat-meta-desc').value.trim();
+  var eid = document.getElementById('edit-id').value;
+  if (!name) { ehToast('Name is required.', 'error'); return; }
+  if (!slug) { ehToast('Slug is required.', 'error'); return; }
+  var payload = { name:name, slug:slug, parentId:parentId, image:imgData, metaTitle:metaTitle, metaDesc:metaDesc };
+  if (eid) {
+    EH.updateCategory(eid, payload);
+    ehToast('"'+name+'" updated.', 'success');
+  } else {
+    EH.addCategory(payload);
+    ehToast('"'+name+'" added.', 'success');
+  }
+  resetForm();
+  renderTree();
+}
+
+/* ── Tree renderer ──────────────────────────────────────── */
+var DRAG_ICON = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14" height="14"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg>';
+var EDIT_ICON = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13" height="13"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+var DEL_ICON  = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
+
+function buildNode(cat, allCats, depth) {
+  var children = allCats.filter(function(c){ return c.parentId === cat.id; });
+  var li = document.createElement('li');
+  li.className = 'cat-item';
+  li.style.marginLeft = depth > 0 ? '0' : '';
+
+  var row = document.createElement('div');
+  row.className = 'cat-item-row';
+  row.innerHTML = '<span class="cat-drag">'+DRAG_ICON+'</span>'
+    + '<span class="cat-name'+(cat.parentId?' has-parent':'')+'">'+cat.name+'</span>'
+    + '<span class="cat-item-actions">'
+    + '<button class="cat-act-btn edit" title="Edit" onclick="editCat(\''+cat.id+'\')">'+EDIT_ICON+'</button>'
+    + '<button class="cat-act-btn del" title="Delete" onclick="deleteCat(\''+cat.id+'\')">'+DEL_ICON+'</button>'
+    + '</span>';
+  li.appendChild(row);
+
+  if (children.length) {
+    var ul = document.createElement('ul');
+    ul.className = 'cat-tree cat-children';
+    children.forEach(function(child) {
+      ul.appendChild(buildNode(child, allCats, depth + 1));
+    });
+    li.appendChild(ul);
+  }
+  return li;
+}
+
+function renderTree() {
+  var all = EH.getCategories();
+  var roots = all.filter(function(c){ return !c.parentId; });
+  var ul = document.getElementById('cat-tree');
+  ul.innerHTML = '';
+  if (!roots.length) {
+    ul.innerHTML = '<li style="padding:20px;text-align:center;color:var(--muted);font-size:13px">No categories yet. Add one using the form.</li>';
+    return;
+  }
+  roots.forEach(function(cat) {
+    ul.appendChild(buildNode(cat, all, 0));
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  EHAuth.init();
+  populateParent(null);
+  renderTree();
+});
+</script>
+</body>
+</html>

@@ -16,6 +16,17 @@
     labTests:         [],
     ambulanceBookings:[],
     mediaFiles:       [],
+    categories:       [
+      { id:'cat1', name:'Blood Tests',      slug:'blood-tests',      parentId:null, image:'', metaTitle:'', metaDesc:'', createdAt:'2026-01-01' },
+      { id:'cat2', name:'Thyroid Tests',    slug:'thyroid-tests',    parentId:null, image:'', metaTitle:'', metaDesc:'', createdAt:'2026-01-01' },
+      { id:'cat3', name:'Diabetes Tests',   slug:'diabetes-tests',   parentId:null, image:'', metaTitle:'', metaDesc:'', createdAt:'2026-01-01' },
+      { id:'cat4', name:'Liver Function',   slug:'liver-function',   parentId:'cat3', image:'', metaTitle:'', metaDesc:'', createdAt:'2026-01-01' },
+      { id:'cat5', name:'CBC and RBC test', slug:'cbc-rbc-test',     parentId:'cat4', image:'', metaTitle:'', metaDesc:'', createdAt:'2026-01-01' },
+      { id:'cat6', name:'Kidney Function',  slug:'kidney-function',  parentId:null, image:'', metaTitle:'', metaDesc:'', createdAt:'2026-01-01' },
+      { id:'cat7', name:'Heart Health',     slug:'heart-health',     parentId:null, image:'', metaTitle:'', metaDesc:'', createdAt:'2026-01-01' },
+      { id:'cat8', name:'Vitamin Tests',    slug:'vitamin-tests',    parentId:null, image:'', metaTitle:'', metaDesc:'', createdAt:'2026-01-01' },
+      { id:'cat9', name:'Allergy Tests',    slug:'allergy-tests',    parentId:null, image:'', metaTitle:'', metaDesc:'', createdAt:'2026-01-01' }
+    ],
     medicines:        [
       { id:'med1', name:'Ibuprofen 200mg',    description:'Anti-inflammatory pain relief.',      status:'active', createdAt:'2026-01-01' },
       { id:'med2', name:'Amoxicillin 500mg',  description:'Antibiotic for bacterial infections.', status:'active', createdAt:'2026-01-01' },
@@ -47,10 +58,10 @@
   };
 
   function seed() {
-    if (!g('seeded_v8')) {
-      ['seeded_v1','seeded_v2','seeded_v3','seeded_v4','seeded_v5','seeded_v6','seeded_v7'].forEach(function(k){ try { localStorage.removeItem('eh_'+k); } catch(e){} });
+    if (!g('seeded_v9')) {
+      ['seeded_v1','seeded_v2','seeded_v3','seeded_v4','seeded_v5','seeded_v6','seeded_v7','seeded_v8'].forEach(function(k){ try { localStorage.removeItem('eh_'+k); } catch(e){} });
       Object.keys(SEED).forEach(function(k) { s(k, SEED[k]); });
-      s('seeded_v8', true);
+      s('seeded_v9', true);
     }
   }
 
@@ -265,7 +276,28 @@
       if (i > -1) { list[i] = Object.assign({}, list[i], data); s('medicines', list); return list[i]; }
       return null;
     },
-    deleteMedicine: function(id) { s('medicines', this.getMedicines().filter(function(m){return m.id!==id;})); }
+    deleteMedicine: function(id) { s('medicines', this.getMedicines().filter(function(m){return m.id!==id;})); },
+
+    /* ── Categories ─────────────────────────────────────────── */
+    getCategories: function() { return g('categories') || []; },
+    addCategory: function(data) {
+      var list = this.getCategories();
+      var c = Object.assign({ id: nextId('cat'), parentId:null, image:'', metaTitle:'', metaDesc:'', createdAt: nowStr().slice(0,10) }, data);
+      list.push(c); s('categories', list); return c;
+    },
+    updateCategory: function(id, data) {
+      var list = this.getCategories();
+      var i = list.findIndex(function(c){return c.id===id;});
+      if (i > -1) { list[i] = Object.assign({}, list[i], data); s('categories', list); return list[i]; }
+      return null;
+    },
+    deleteCategory: function(id) {
+      var list = this.getCategories();
+      /* also clear parentId on children */
+      list = list.map(function(c){ return c.parentId===id ? Object.assign({},c,{parentId:null}) : c; });
+      list = list.filter(function(c){return c.id!==id;});
+      s('categories', list);
+    }
   };
 
   seed();
