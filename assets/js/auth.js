@@ -58,10 +58,6 @@
           (email.toLowerCase() === 'moses.semanda' || email.toLowerCase() === 'admin@ehealth.ug')) {
         user = { id:'u1', name:'Moses Semanda', email:'admin@ehealth.ug', avatar:'M', role:'admin', tenantId:null };
       }
-      // Generic demo: any credentials work
-      if (!user && email && password.length >= 4) {
-        user = { id:'demo', name: email.split('@')[0].replace(/[._]/g,' '), email:email, avatar:email.charAt(0).toUpperCase(), role: role||'admin', tenantId: null };
-      }
       if (user) {
         user = Object.assign({}, user, { role: role||user.role, activeContext: null });
         setSession(user);

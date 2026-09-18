@@ -47,7 +47,7 @@
     <div class="content">
       <div class="page-title-row">
         <h1 class="page-title">Specialties</h1>
-        <button class="btn btn-outline-teal"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Export</button>
+        <button class="btn btn-teal" onclick="ehOpenModal('modal-add-spec')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Specialty</button>
       </div>
       <div class="card">
         <div class="filter-bar">
@@ -79,6 +79,17 @@
     <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.4s</span></div></footer>
   </div>
 </div>
+<!-- Add Specialty Modal -->
+<div id="modal-add-spec" class="eh-modal-overlay" onclick="if(event.target===this)ehCloseModal('modal-add-spec')">
+  <div class="eh-modal">
+    <div class="eh-modal-hd"><h3>Add Specialty</h3><button class="eh-modal-close" onclick="ehCloseModal('modal-add-spec')">&#x2715;</button></div>
+    <div class="eh-modal-body">
+      <div class="mfield"><label>Name <span>*</span></label><input type="text" id="spec-name" placeholder="e.g. Cardiology"></div>
+      <div class="mfield"><label>Icon (emoji)</label><input type="text" id="spec-icon" placeholder="e.g. ❤️" maxlength="4"></div>
+    </div>
+    <div class="eh-modal-ft"><button class="btn btn-teal" onclick="submitAddSpec()">Save Specialty</button></div>
+  </div>
+</div>
 <script src="assets/js/data.js"></script>
 <script src="assets/js/auth.js"></script>
 <script>
@@ -106,6 +117,17 @@ document.querySelectorAll('.filter-tab[data-filter]').forEach(function(btn){
     btn.classList.add('active'); specFilter=btn.dataset.filter; renderSpecs();
   });
 });
+function submitAddSpec() {
+  var name = document.getElementById('spec-name').value.trim();
+  var icon = document.getElementById('spec-icon').value.trim() || '🩺';
+  if (!name) { ehToast('Specialty name is required.', 'error'); return; }
+  EH.addSpecialty({ name:name, icon:icon });
+  ehCloseModal('modal-add-spec');
+  document.getElementById('spec-name').value = '';
+  document.getElementById('spec-icon').value = '';
+  renderSpecs();
+  ehToast('"'+name+'" added successfully.', 'success');
+}
 document.addEventListener('DOMContentLoaded', function(){ EHAuth.init(); renderSpecs(); });
 </script>
 <script src="assets/js/sidebar.js"></script>

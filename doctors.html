@@ -47,16 +47,28 @@
     <div class="content">
       <div class="page-title-row">
         <h1 class="page-title">Doctors</h1>
-        <button class="btn btn-outline-teal"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Export</button>
+        <button class="btn btn-teal" onclick="ehOpenModal('modal-add-doctor')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Doctor</button>
       </div>
       <div class="doctors-grid" id="doctors-grid"></div>
     </div>
     <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.34s</span></div></footer>
   </div>
 </div>
+<!-- Add Doctor Modal -->
+<div id="modal-add-doctor" class="eh-modal-overlay" onclick="if(event.target===this)ehCloseModal('modal-add-doctor')">
+  <div class="eh-modal">
+    <div class="eh-modal-hd"><h3>Add Doctor</h3><button class="eh-modal-close" onclick="ehCloseModal('modal-add-doctor')">&#x2715;</button></div>
+    <div class="eh-modal-body">
+      <div class="mfield"><label>Full Name <span>*</span></label><input type="text" id="doc-name" placeholder="e.g. Dr. John Smith"></div>
+      <div class="mfield"><label>Email <span>*</span></label><input type="email" id="doc-email" placeholder="doctor@hospital.com"></div>
+      <div class="mfield"><label>Phone</label><input type="tel" id="doc-phone" placeholder="+256 700 000 000"></div>
+      <div class="mfield"><label>Specialty <span>*</span></label><select id="doc-specialty"><option value="">Select Specialty</option></select></div>
+    </div>
+    <div class="eh-modal-ft"><button class="btn btn-teal" onclick="submitAddDoctor()">Save Doctor</button></div>
+  </div>
+</div>
 <script src="assets/js/data.js"></script>
 <script src="assets/js/auth.js"></script>
-<script src="assets/js/admin.js"></script>
 <script>
 var ACTIVE_PAGE='doctors';
 var tenantId=null;
@@ -86,10 +98,30 @@ function renderDoctors() {
       + '</div></div>';
   }).join('');
 }
+function submitAddDoctor() {
+  var name      = document.getElementById('doc-name').value.trim();
+  var email     = document.getElementById('doc-email').value.trim();
+  var phone     = document.getElementById('doc-phone').value.trim();
+  var specialty = document.getElementById('doc-specialty').value;
+  if (!name)      { ehToast('Full name is required.', 'error'); return; }
+  if (!email)     { ehToast('Email is required.', 'error'); return; }
+  if (!specialty) { ehToast('Specialty is required.', 'error'); return; }
+  var tenant = tenantId ? EH.getTenant(tenantId) : null;
+  EH.addDoctor({ name:name, email:email, phone:phone, specialty:specialty, hospital: tenant ? tenant.name : '' }, tenantId);
+  ehCloseModal('modal-add-doctor');
+  ['doc-name','doc-email','doc-phone'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('doc-specialty').value = '';
+  renderDoctors();
+  ehToast('"'+name+'" added successfully.', 'success');
+}
 document.addEventListener('DOMContentLoaded', function(){
   var s = EHAuth.init();
   if (!s) return;
   tenantId = window.EH_TENANT || null;
+  var specSel = document.getElementById('doc-specialty');
+  EH.getSpecialties().filter(function(sp){ return sp.status==='active'; }).forEach(function(sp){
+    var o = document.createElement('option'); o.value = sp.name; o.textContent = sp.icon + ' ' + sp.name; specSel.appendChild(o);
+  });
   renderDoctors();
 });
 window.addEventListener('eh:tenantchange', function(e){ tenantId=e.detail.tenantId; renderDoctors(); });

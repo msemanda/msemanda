@@ -45,7 +45,10 @@
       </div>
     </header>
     <div class="content">
-      <div class="page-title-row"><h1 class="page-title">Departments</h1></div>
+      <div class="page-title-row">
+        <h1 class="page-title">Departments</h1>
+        <button class="btn btn-teal" onclick="ehOpenModal('modal-add-dept')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Department</button>
+      </div>
       <div class="card">
         <div class="filter-bar">
           <div class="filter-tabs">
@@ -74,6 +77,16 @@
       </div>
     </div>
     <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.3s</span></div></footer>
+  </div>
+</div>
+<!-- Add Department Modal -->
+<div id="modal-add-dept" class="eh-modal-overlay" onclick="if(event.target===this)ehCloseModal('modal-add-dept')">
+  <div class="eh-modal">
+    <div class="eh-modal-hd"><h3>Add Department</h3><button class="eh-modal-close" onclick="ehCloseModal('modal-add-dept')">&#x2715;</button></div>
+    <div class="eh-modal-body">
+      <div class="mfield"><label>Department Name <span>*</span></label><input type="text" id="dept-name" placeholder="e.g. Cardiology"></div>
+    </div>
+    <div class="eh-modal-ft"><button class="btn btn-teal" onclick="submitAddDept()">Save Department</button></div>
   </div>
 </div>
 <script src="assets/js/data.js"></script>
@@ -105,6 +118,15 @@ document.querySelectorAll('.filter-tab[data-filter]').forEach(function(btn){
     btn.classList.add('active'); deptFilter=btn.dataset.filter; renderDepts();
   });
 });
+function submitAddDept() {
+  var name = document.getElementById('dept-name').value.trim();
+  if (!name) { ehToast('Department name is required.', 'error'); return; }
+  EH.addDepartment({ name:name });
+  ehCloseModal('modal-add-dept');
+  document.getElementById('dept-name').value = '';
+  renderDepts();
+  ehToast('"'+name+'" added successfully.', 'success');
+}
 document.addEventListener('DOMContentLoaded', function(){ EHAuth.init(); renderDepts(); });
 </script>
 </body>

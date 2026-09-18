@@ -48,7 +48,7 @@
     <div class="content">
       <div class="page-title-row">
         <h1 class="page-title">Lab Tests</h1>
-        <button class="btn btn-teal"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New</button>
+        <button class="btn btn-teal" onclick="ehOpenModal('modal-add-lab')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New</button>
       </div>
       <div class="card">
         <div class="filter-bar">
@@ -82,6 +82,19 @@
     <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.78s</span></div></footer>
   </div>
 </div>
+<!-- Add Lab Test Modal -->
+<div id="modal-add-lab" class="eh-modal-overlay" onclick="if(event.target===this)ehCloseModal('modal-add-lab')">
+  <div class="eh-modal">
+    <div class="eh-modal-hd"><h3>Add Lab Test</h3><button class="eh-modal-close" onclick="ehCloseModal('modal-add-lab')">&#x2715;</button></div>
+    <div class="eh-modal-body">
+      <div class="mfield"><label>Test Name <span>*</span></label><input type="text" id="lab-name" placeholder="e.g. Complete Blood Count (CBC)"></div>
+      <div class="mfield"><label>Description</label><textarea id="lab-desc" placeholder="Brief description of this test" rows="2" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;resize:vertical;outline:none"></textarea></div>
+      <div class="mfield"><label>Pathologist</label><input type="text" id="lab-path" placeholder="e.g. Dr. Amelia Brooks"></div>
+      <div class="mfield"><label>Icon (emoji)</label><input type="text" id="lab-icon" placeholder="e.g. 🩺" maxlength="4"></div>
+    </div>
+    <div class="eh-modal-ft"><button class="btn btn-teal" onclick="submitAddLab()">Save Lab Test</button></div>
+  </div>
+</div>
 <script src="assets/js/data.js"></script>
 <script src="assets/js/auth.js"></script>
 <script>
@@ -111,6 +124,18 @@ document.querySelectorAll('.filter-tab[data-filter]').forEach(function(btn){
     btn.classList.add('active'); labFilter=btn.dataset.filter; renderLabs();
   });
 });
+function submitAddLab() {
+  var name = document.getElementById('lab-name').value.trim();
+  var desc = document.getElementById('lab-desc').value.trim();
+  var path = document.getElementById('lab-path').value.trim();
+  var icon = document.getElementById('lab-icon').value.trim() || '🔬';
+  if (!name) { ehToast('Test name is required.', 'error'); return; }
+  EH.addLabTest({ name:name, description:desc, pathologist:path, icon:icon });
+  ehCloseModal('modal-add-lab');
+  ['lab-name','lab-desc','lab-path','lab-icon'].forEach(function(id){ document.getElementById(id).value=''; });
+  renderLabs();
+  ehToast('"'+name+'" added successfully.', 'success');
+}
 document.addEventListener('DOMContentLoaded', function(){ EHAuth.init(); renderLabs(); });
 </script>
 <script src="assets/js/sidebar.js"></script>
