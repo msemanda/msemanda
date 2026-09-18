@@ -162,6 +162,8 @@
     </div>
   </div>
 </div>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/auth.js"></script>
 <script>
 var selectedRole = 'admin';
 function togglePw(btn) {
@@ -175,13 +177,18 @@ function selectRole(role, btn) {
 }
 function doLogin(e) {
   e.preventDefault();
+  var email    = document.getElementById('email').value.trim();
+  var password = document.getElementById('password').value;
+  if (!email || !password) { ehToast('Please enter email and password.', 'error'); return; }
+  var user = EHAuth.login(email, password, selectedRole);
+  if (!user) { ehToast('Invalid email or password.', 'error'); return; }
   var btn = document.getElementById('loginBtn');
   btn.textContent = 'Signing in…'; btn.disabled = true; btn.style.opacity = '.72';
-  sessionStorage.setItem('ehRole', selectedRole);
-  setTimeout(function() { window.location.href = 'index.html?role=' + selectedRole; }, 1200);
+  setTimeout(function() { window.location.href = 'index.html?role=' + (user.role || selectedRole); }, 800);
 }
-// Pre-select Admin on load
 document.addEventListener('DOMContentLoaded', function() {
+  // Redirect if already logged in
+  if (EHAuth.getSession()) { window.location.href = 'index.html'; return; }
   var first = document.querySelector('.role-btn');
   if (first) first.classList.add('active');
 });

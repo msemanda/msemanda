@@ -29,6 +29,25 @@
     }
   }
 
+  function injectLogoutDropdown() {
+    var chip = document.querySelector('.header-right .user-chip, .header .user-chip');
+    if (!chip || chip.querySelector('.user-chip-dd')) return; // already injected
+    var dd = document.createElement('div');
+    dd.className = 'user-chip-dd';
+    dd.innerHTML = '<a class="user-dd-item" href="users.html">'
+      + '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</a>'
+      + '<div class="user-dd-sep"></div>'
+      + '<a class="user-dd-item danger" href="#" onclick="EHAuth.logout();return false;">'
+      + '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a>';
+    chip.appendChild(dd);
+    chip.addEventListener('click', function(e) {
+      if (!e.target.closest('.user-chip-dd')) chip.classList.toggle('open');
+    });
+    document.addEventListener('click', function(e) {
+      if (!chip.contains(e.target)) chip.classList.remove('open');
+    }, true);
+  }
+
   window.EHAuth = {
     /* ── Login ─────────────────────────────────────────── */
     login: function(email, password, role) {
@@ -93,12 +112,11 @@
     init: function() {
       var s = this.requireAuth();
       if (!s) return null;
-      // Expose effective tenant globally
       window.EH_TENANT = s.activeContext || s.tenantId || null;
       updateHeader(s);
-      // Sync role-select on dashboard
       var rs = document.getElementById('role-select');
       if (rs && s.role) { rs.value = s.role; if (window.switchRole) switchRole(s.role); }
+      injectLogoutDropdown();
       return s;
     }
   };
