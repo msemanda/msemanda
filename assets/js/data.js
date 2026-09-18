@@ -7,7 +7,7 @@
   /* ── Seed data ─────────────────────────────────────────── */
   var SEED = {
     tenants:          [],
-    users:            [{ id:'u1', name:'Moses Semanda', email:'admin@ehealth.ug', password:'ehealth2026', role:'admin', tenantId:null, avatar:'M', status:'active', createdAt:'2026-01-01' }],
+    users:            [{ id:'u1', name:'Moses Semanda', email:'semandamoses91@gmail.com', password:'ehealth2026', role:'admin', tenantId:null, avatar:'M', status:'active', createdAt:'2026-01-01' }],
     patients:         [],
     doctors:          [],
     appointments:     [],
@@ -27,10 +27,10 @@
   };
 
   function seed() {
-    if (!g('seeded_v5')) {
-      ['seeded_v1','seeded_v2','seeded_v3','seeded_v4'].forEach(function(k){ try { localStorage.removeItem('eh_'+k); } catch(e){} });
+    if (!g('seeded_v6')) {
+      ['seeded_v1','seeded_v2','seeded_v3','seeded_v4','seeded_v5'].forEach(function(k){ try { localStorage.removeItem('eh_'+k); } catch(e){} });
       Object.keys(SEED).forEach(function(k) { s(k, SEED[k]); });
-      s('seeded_v5', true);
+      s('seeded_v6', true);
     }
   }
 

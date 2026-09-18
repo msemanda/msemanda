@@ -55,8 +55,8 @@
       if (window.EH) user = EH.findUser(email, password);
       // Demo fallback for Moses.semanda
       if (!user && password === 'ehealth2026' &&
-          (email.toLowerCase() === 'moses.semanda' || email.toLowerCase() === 'admin@ehealth.ug')) {
-        user = { id:'u1', name:'Moses Semanda', email:'admin@ehealth.ug', avatar:'M', role:'admin', tenantId:null };
+          (email.toLowerCase() === 'semandamoses91@gmail.com' || email.toLowerCase() === 'admin@ehealth.ug')) {
+        user = { id:'u1', name:'Moses Semanda', email:'semandamoses91@gmail.com', avatar:'M', role:'admin', tenantId:null };
       }
       if (user) {
         user = Object.assign({}, user, { role: role||user.role, activeContext: null });

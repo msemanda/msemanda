@@ -222,6 +222,8 @@ var ACTIVE_PAGE = 'users';
 var editingId = null;
 var currentStatus = 'active';
 var currentFilter = 'all';
+var usersTenantId = null;
+var isSuperAdmin = false;
 
 /* ── Helpers ─────────────────────────────────────────── */
 function togglePwU(id) {
@@ -253,7 +255,7 @@ var ROLE_COLORS = {'admin':'#0DA7A7','doctor':'#7C3AED','nurse':'#059669','recep
 function letterColor(role) { return ROLE_COLORS[role] || '#64748B'; }
 
 function renderUsers() {
-  var users = EH.getUsers();
+  var users = EH.getUsers(usersTenantId);
   var q   = (document.getElementById('user-search').value || '').toLowerCase();
   var rf  = (document.getElementById('role-filter').value || '').toLowerCase();
 
@@ -300,7 +302,7 @@ function renderUsers() {
 
 /* ── Edit user ───────────────────────────────────────── */
 function editUser(id) {
-  var users = EH.getUsers();
+  var users = EH.getUsers(usersTenantId);
   var u = users.find(function(x){return x.id===id;});
   if (!u) return;
   editingId = id;
@@ -318,8 +320,7 @@ function editUser(id) {
 /* ── Delete user ─────────────────────────────────────── */
 function deleteUser(id, name) {
   if (!confirm('Delete user "'+name+'"?')) return;
-  var users = EH.getUsers().filter(function(u){return u.id!==id;});
-  try { localStorage.setItem('eh_users', JSON.stringify(users)); } catch(e){}
+  EH.deleteUser(id);
   renderUsers();
   ehToast('User "'+name+'" deleted.', 'info');
 }
@@ -341,23 +342,20 @@ function saveUser() {
     if (password !== confirm){ ehToast('Passwords do not match.', 'error'); return; }
   }
 
-  var users = EH.getUsers();
-  var now   = new Date().toISOString().slice(0,10);
-  if (editingId) {
-    users = users.map(function(u) {
-      if (u.id !== editingId) return u;
-      var updated = Object.assign({}, u, { name:name, email:email, phone:phone, role:role, status:currentStatus });
-      if (password && password === confirm) updated.password = password;
-      return updated;
-    });
-    ehToast('User "'+name+'" updated.', 'success');
-  } else {
-    var dup = users.find(function(u){return u.email.toLowerCase()===email.toLowerCase();});
+  /* Determine tenant for this user — non-super-admins always create within their tenant */
+  var assignTenant = isSuperAdmin ? (usersTenantId || null) : usersTenantId;
+
+  var allUsers = EH.getUsers(null); /* check duplicates across all */
+  if (!editingId) {
+    var dup = allUsers.find(function(u){return u.email.toLowerCase()===email.toLowerCase();});
     if (dup) { ehToast('A user with this email already exists.', 'error'); return; }
-    users.unshift({ id:'u'+Date.now(), name:name, email:email, phone:phone, role:role, password:password, status:currentStatus, avatar:name.charAt(0).toUpperCase(), createdAt:now });
+    EH.addUser({ name:name, email:email, phone:phone, role:role, password:password, status:currentStatus, tenantId:assignTenant });
     ehToast('User "'+name+'" created.', 'success');
+  } else {
+    EH.updateUser(editingId, { name:name, email:email, phone:phone, role:role, status:currentStatus });
+    if (password && password === confirm) EH.updateUser(editingId, { password:password });
+    ehToast('User "'+name+'" updated.', 'success');
   }
-  try { localStorage.setItem('eh_users', JSON.stringify(users)); } catch(e){}
   cancelForm();
 }
 
@@ -392,11 +390,16 @@ function cancelForm() {
 
 /* ── Init ────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
-  EHAuth.init();
+  var sess = EHAuth.init(); if (!sess) return;
+  isSuperAdmin = EHAuth.isSuperAdmin();
+  /* Super-admin sees the active context; tenant user is locked to their own tenantId */
+  usersTenantId = isSuperAdmin ? (window.EH_TENANT || null) : sess.tenantId;
   populateRoles();
   renderUsers();
-  // If URL has ?view=add, open add form
   if (window.location.search.indexOf('view=add') >= 0) showView('add');
+});
+window.addEventListener('eh:tenantchange', function(e) {
+  if (isSuperAdmin) { usersTenantId = e.detail.tenantId; renderUsers(); }
 });
 </script>
 <script>var ACTIVE_PAGE='users';</script>
