@@ -24,6 +24,14 @@
     ],
     ambulanceBookings:[],
     mediaFiles:       [],
+    labPackages:      [
+      { id:'lp1', title:'Basic Health Package',     slug:'basic-health',     description:'Complete health checkup package',       pathologist:'Dr. Amelia Brooks',   labTests:['lt1','lt5'], price:60000, discount:10, reportIn:24, homeVisit:false, zones:['World'], tax:'gst', status:'active', image:'', metaTitle:'', metaDesc:'', createdAt:'2026-01-01' },
+      { id:'lp2', title:'Diabetes Care Package',    slug:'diabetes-care',    description:'Complete health checkup package',       pathologist:'Dr. Grace Mitchell',  labTests:['lt5','lt3'], price:45000, discount:5,  reportIn:24, homeVisit:false, zones:['World'], tax:'gst', status:'active', image:'', metaTitle:'', metaDesc:'', createdAt:'2026-01-01' },
+      { id:'lp3', title:'Thyroid Profile Package',  slug:'thyroid-profile',  description:'Tests to assess thyroid gland function', pathologist:'Dr. Grace Mitchell', labTests:['lt4','lt6'], price:55000, discount:10, reportIn:24, homeVisit:false, zones:['World'], tax:'gst', status:'active', image:'', metaTitle:'', metaDesc:'', createdAt:'2026-01-01' },
+      { id:'lp4', title:'Senior Citizen Package',   slug:'senior-citizen',   description:'Comprehensive senior wellness panel',    pathologist:'Dr. Noah Richardson', labTests:['lt1','lt2','lt3'], price:90000, discount:15, reportIn:48, homeVisit:true,  zones:['World'], tax:'gst', status:'active', image:'', metaTitle:'', metaDesc:'', createdAt:'2026-01-01' },
+      { id:'lp5', title:'Hormone Balance Package',  slug:'hormone-balance',  description:'Comprehensive hormone screening package designed to evaluate thyroid, reproductive, adrenal, and metabolic hormones. Ideal for individuals experiencing fatigue or weight changes.', pathologist:'Dr. Charlotte Hayes', labTests:['lt4','lt6'], price:80000, discount:10, reportIn:48, homeVisit:false, zones:['World'], tax:'gst', status:'active', image:'', metaTitle:'', metaDesc:'', createdAt:'2026-01-01' },
+      { id:'lp6', title:"Women's Hormone Package",  slug:'womens-hormone',   description:"A comprehensive hormonal health screening package for women designed to assess reproductive, thyroid, and adrenal hormone levels. Recommended for women experiencing irregular cycles.", pathologist:'Dr. Charlotte Hayes', labTests:['lt4','lt6','lt7'], price:95000, discount:10, reportIn:48, homeVisit:false, zones:['World'], tax:'gst', status:'active', image:'', metaTitle:'', metaDesc:'', createdAt:'2026-01-01' }
+    ],
     categories:       [
       { id:'cat1', name:'Blood Tests',      slug:'blood-tests',      parentId:null, image:'', metaTitle:'', metaDesc:'', createdAt:'2026-01-01' },
       { id:'cat2', name:'Thyroid Tests',    slug:'thyroid-tests',    parentId:null, image:'', metaTitle:'', metaDesc:'', createdAt:'2026-01-01' },
@@ -66,10 +74,10 @@
   };
 
   function seed() {
-    if (!g('seeded_v10')) {
-      ['seeded_v1','seeded_v2','seeded_v3','seeded_v4','seeded_v5','seeded_v6','seeded_v7','seeded_v8','seeded_v9'].forEach(function(k){ try { localStorage.removeItem('eh_'+k); } catch(e){} });
+    if (!g('seeded_v11')) {
+      ['seeded_v1','seeded_v2','seeded_v3','seeded_v4','seeded_v5','seeded_v6','seeded_v7','seeded_v8','seeded_v9','seeded_v10'].forEach(function(k){ try { localStorage.removeItem('eh_'+k); } catch(e){} });
       Object.keys(SEED).forEach(function(k) { s(k, SEED[k]); });
-      s('seeded_v10', true);
+      s('seeded_v11', true);
     }
   }
 
@@ -307,11 +315,25 @@
     },
     deleteCategory: function(id) {
       var list = this.getCategories();
-      /* also clear parentId on children */
       list = list.map(function(c){ return c.parentId===id ? Object.assign({},c,{parentId:null}) : c; });
       list = list.filter(function(c){return c.id!==id;});
       s('categories', list);
-    }
+    },
+
+    /* ── Lab Test Packages ───────────────────────────────────── */
+    getLabPackages: function() { return g('labPackages') || []; },
+    addLabPackage: function(data) {
+      var list = this.getLabPackages();
+      var p = Object.assign({ id: nextId('lp'), status:'active', createdAt: nowStr().slice(0,10) }, data);
+      list.push(p); s('labPackages', list); return p;
+    },
+    updateLabPackage: function(id, data) {
+      var list = this.getLabPackages();
+      var i = list.findIndex(function(p){return p.id===id;});
+      if (i > -1) { list[i] = Object.assign({}, list[i], data); s('labPackages', list); return list[i]; }
+      return null;
+    },
+    deleteLabPackage: function(id) { s('labPackages', this.getLabPackages().filter(function(p){return p.id!==id;})); }
   };
 
   seed();

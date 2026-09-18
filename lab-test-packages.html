@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab Test Packages — eHealth System</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+<style>
+.lp-tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:24px; }
+.lp-tab { background:none; border:none; padding:10px 20px; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:color .15s,border-color .15s; }
+.lp-tab.active { color:var(--teal); border-bottom-color:var(--teal); }
+.lp-tab-panel { display:none; }
+.lp-tab-panel.active { display:block; }
+
+.form-row { display:grid; grid-template-columns:180px 1fr; align-items:flex-start; gap:14px 24px; margin-bottom:20px; }
+.form-row label { font-size:13px; font-weight:600; color:var(--dark,#2d3748); padding-top:9px; }
+.form-row label span { color:var(--danger,#e53e3e); }
+.form-row input[type=text],.form-row input[type=number],.form-row textarea,.form-row select { width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box; }
+.form-row textarea { resize:vertical;min-height:90px; }
+.form-row input:focus,.form-row textarea:focus,.form-row select:focus { outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,167,167,.12); }
+
+.slug-wrap { display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden; }
+.slug-prefix { background:#f7f8fa;padding:9px 10px;font-size:11px;color:var(--muted);white-space:nowrap;border-right:1px solid var(--border);display:flex;align-items:center; }
+.slug-input { border:none;padding:9px 12px;font-size:13px;font-family:inherit;flex:1;min-width:0; }
+.slug-input:focus { outline:none; }
+.slug-wrap:focus-within { border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,167,167,.12); }
+
+.img-pick { width:80px;height:80px;border:2px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:#fafafa;position:relative; }
+.img-pick:hover { border-color:var(--teal);background:#f0fefe; }
+.img-pick img { width:100%;height:100%;object-fit:cover;position:absolute;inset:0; }
+.img-pick .plus { color:var(--muted);font-size:20px;line-height:1; }
+.img-pick input[type=file] { position:absolute;inset:0;opacity:0;cursor:pointer; }
+
+.price-group { display:flex;gap:12px; }
+.price-field { flex:1; }
+.price-field label { display:block;font-size:12px;color:var(--muted);margin-bottom:4px; }
+.input-prefix-wrap { display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden; }
+.input-prefix { background:#f7f8fa;padding:9px 10px;font-size:12px;color:var(--muted);border-right:1px solid var(--border);display:flex;align-items:center; }
+.input-prefix-wrap input { border:none;padding:9px 10px;font-size:13px;font-family:inherit;flex:1;min-width:0; }
+.input-prefix-wrap input:focus { outline:none; }
+.input-prefix-wrap:focus-within { border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,167,167,.12); }
+.report-wrap { display:flex;gap:8px;align-items:center; }
+.report-wrap input { width:110px; }
+.report-wrap .unit { font-size:13px;color:var(--muted); }
+
+.toggle-sw { position:relative;width:36px;height:20px;cursor:pointer;display:inline-block; }
+.toggle-sw input { opacity:0;width:0;height:0; }
+.toggle-sw .track { position:absolute;inset:0;background:#ccc;border-radius:20px;transition:.2s; }
+.toggle-sw input:checked + .track { background:var(--teal); }
+.toggle-sw .track::after { content:'';position:absolute;width:14px;height:14px;background:#fff;border-radius:50%;top:3px;left:3px;transition:.2s; }
+.toggle-sw input:checked + .track::after { left:19px; }
+
+.seg-btns { display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden; }
+.seg-btn { padding:7px 22px;font-size:13px;font-weight:500;border:none;background:#fff;cursor:pointer;transition:.15s;color:var(--muted); }
+.seg-btn.active { background:var(--teal);color:#fff; }
+.seg-btn:first-child { border-right:1px solid var(--border); }
+
+/* multi-select */
+.multi-sel { border:1px solid var(--border);border-radius:8px;padding:6px 8px;min-height:42px;display:flex;flex-wrap:wrap;gap:4px;cursor:text;background:#fff; }
+.multi-sel:focus-within { border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,167,167,.12); }
+.tag-chip { display:inline-flex;align-items:center;gap:4px;background:#e8f7f7;color:var(--teal);border-radius:5px;padding:3px 8px;font-size:12px;font-weight:500; }
+.tag-chip button { background:none;border:none;color:var(--teal);cursor:pointer;padding:0;font-size:14px;line-height:1; }
+.multi-dropdown { border:1px solid var(--border);border-radius:8px;margin-top:4px;background:#fff;max-height:160px;overflow-y:auto; }
+.multi-opt { padding:8px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px; }
+.multi-opt:hover { background:#f0fefe; }
+.multi-opt.selected { color:var(--teal);font-weight:600; }
+.multi-opt input[type=checkbox] { accent-color:var(--teal); }
+
+/* table */
+.lp-img { width:38px;height:38px;border-radius:8px;object-fit:cover;background:#e8f5f5;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;overflow:hidden; }
+.lp-title-cell { display:flex;align-items:center;gap:10px; }
+.lp-actions { display:flex;gap:10px;font-size:12px;margin-top:3px; }
+.lp-actions a { color:var(--teal);text-decoration:none;font-weight:500; }
+.lp-actions a.trash { color:var(--danger,#e53e3e); }
+.lp-actions a.restore { color:var(--success,#38a169); }
+.lp-actions a:hover { text-decoration:underline; }
+.bulk-bar { display:flex;align-items:center;gap:8px; }
+.bulk-select { padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit; }
+.trash-row td { opacity:.55; }
+.form-actions { display:flex;justify-content:flex-end;gap:8px;padding-top:16px;margin-top:16px;border-top:1px solid var(--border); }
+.form-section-divider { border:none;border-top:1px dashed var(--border);margin:24px 0; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav id="sidebar-mount"></nav>
+  <div class="main">
+    <header class="header">
+      <button class="btn-quick-links"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Links</button>
+      <div class="header-right">
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
+        <span class="lang-badge">EN</span>
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+        <div class="user-chip"><div class="user-avatar">M</div><div class="user-info"><div class="user-name">Moses Semanda</div><div class="user-role">Administrator</div></div></div>
+      </div>
+    </header>
+    <div class="content">
+      <div class="page-title-row">
+        <h1 class="page-title">Lab Test Packages</h1>
+        <button class="btn btn-teal" onclick="switchTab('add')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New</button>
+      </div>
+
+      <div class="lp-tabs">
+        <button class="lp-tab active" data-tab="list" onclick="switchTab('list')">All Lab Test Packages</button>
+        <button class="lp-tab" data-tab="add" onclick="switchTab('add')" id="add-tab-btn">Add Lab Test Package</button>
+      </div>
+
+      <!-- List Panel -->
+      <div class="lp-tab-panel active" id="panel-list">
+        <div class="card">
+          <div class="filter-bar">
+            <div class="filter-tabs">
+              <button class="filter-tab active" data-filter="all" onclick="setFilter(this,'all')">All <span class="tab-count" id="cnt-all"></span></button>
+              <button class="filter-tab" data-filter="active" onclick="setFilter(this,'active')">Active <span class="tab-count" id="cnt-active"></span></button>
+              <button class="filter-tab" data-filter="inactive" onclick="setFilter(this,'inactive')">DeActive <span class="tab-count" id="cnt-inactive"></span></button>
+              <button class="filter-tab" data-filter="trash" onclick="setFilter(this,'trash')">Trash <span class="tab-count" id="cnt-trash"></span></button>
+            </div>
+            <div class="filter-right">
+              <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" id="lp-search" placeholder="Search..." oninput="renderPackages()"></div>
+              <select class="per-page-select" id="per-page"><option>15</option><option>25</option><option>50</option></select>
+              <div class="bulk-bar">
+                <select class="bulk-select" id="bulk-action">
+                  <option value="">Bulk actions</option>
+                  <option value="activate">Set Active</option>
+                  <option value="deactivate">Set DeActive</option>
+                  <option value="trash">Move to Trash</option>
+                  <option value="restore">Restore</option>
+                  <option value="delete">Delete Permanently</option>
+                </select>
+                <button class="btn-apply" onclick="applyBulk()">Apply</button>
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all" onchange="toggleAll(this)"></th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Created At</th>
+              </tr></thead>
+              <tbody id="lp-tbody"></tbody>
+              <tfoot><tr>
+                <td></td>
+                <td style="padding:10px 14px;font-size:12px;font-weight:600;color:var(--muted)">Title</td>
+                <td style="padding:10px 14px;font-size:12px;font-weight:600;color:var(--muted)">Description</td>
+                <td></td>
+              </tr></tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add/Edit Panel -->
+      <div class="lp-tab-panel" id="panel-add">
+        <div class="card" style="max-width:780px;">
+          <h3 id="form-title" style="margin:0 0 24px;font-size:15px;font-weight:700;">Add Lab Test Package</h3>
+          <input type="hidden" id="edit-id">
+
+          <div class="form-row">
+            <label>Lab Package Image <span>*</span></label>
+            <div>
+              <div class="img-pick" onclick="document.getElementById('lp-img-file').click()">
+                <img id="lp-img-preview" src="" alt="" style="display:none">
+                <span class="plus" id="lp-img-plus">+</span>
+                <input type="file" id="lp-img-file" accept="image/*" onchange="previewImg(this)" style="display:none">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Title <span>*</span></label>
+            <input type="text" id="lp-title" placeholder="Enter Title" oninput="autoSlug()">
+          </div>
+
+          <div class="form-row">
+            <label>Slug</label>
+            <div class="slug-wrap">
+              <span class="slug-prefix">ehealth/lab-test-package/</span>
+              <input type="text" class="slug-input" id="lp-slug" placeholder="Enter Slug">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Description (en)</label>
+            <textarea id="lp-desc" placeholder="Enter Description (en)"></textarea>
+          </div>
+
+          <div class="form-row">
+            <label>Pathologist <span>*</span></label>
+            <select id="lp-pathologist">
+              <option value="">Select Pathologist</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label>Zones</label>
+            <div>
+              <div class="multi-sel" id="zone-tags" onclick="toggleZoneDD()"></div>
+              <div class="multi-dropdown" id="zone-dropdown" style="display:none">
+                <div class="multi-opt" onclick="toggleZone('World')"><input type="checkbox" id="zone-world">World</div>
+                <div class="multi-opt" onclick="toggleZone('East Africa')"><input type="checkbox" id="zone-ea">East Africa</div>
+                <div class="multi-opt" onclick="toggleZone('Uganda')"><input type="checkbox" id="zone-ug">Uganda</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Lab Tests</label>
+            <div>
+              <div class="multi-sel" id="lt-tags" onclick="document.getElementById('lt-dropdown').style.display='block'"></div>
+              <div class="multi-dropdown" id="lt-dropdown" style="display:none"></div>
+            </div>
+          </div>
+
+          <hr class="form-section-divider">
+
+          <div class="form-row">
+            <label>Pricing</label>
+            <div class="price-group">
+              <div class="price-field">
+                <label>Price</label>
+                <div class="input-prefix-wrap"><span class="input-prefix">UGX</span><input type="number" id="lp-price" placeholder="0" min="0" oninput="calcRate()"></div>
+              </div>
+              <div class="price-field">
+                <label>At Lab Discount</label>
+                <div class="input-prefix-wrap"><span class="input-prefix">%</span><input type="number" id="lp-discount" placeholder="0" min="0" max="100" oninput="calcRate()"></div>
+              </div>
+              <div class="price-field">
+                <label>Package Rate</label>
+                <div class="input-prefix-wrap" style="background:#f7f8fa"><span class="input-prefix">UGX</span><input type="text" id="lp-rate" placeholder="0" readonly style="background:#f7f8fa;color:var(--muted)"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Allow Home Visit</label>
+            <div style="display:flex;align-items:center;gap:10px;padding-top:2px">
+              <label class="toggle-sw"><input type="checkbox" id="lp-homevisit"><span class="track"></span></label>
+              <span id="homevisit-lbl" style="font-size:12px;color:var(--muted)">No</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Report Ready In <span>*</span></label>
+            <div class="report-wrap">
+              <input type="number" id="lp-report-hours" placeholder="24" min="1" style="width:110px">
+              <span class="unit">Hours</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Taxes <span>*</span></label>
+            <select id="lp-tax">
+              <option value="">Select Tax</option>
+              <option value="gst">GST</option>
+              <option value="vat">VAT</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+
+          <hr class="form-section-divider">
+
+          <div class="form-row">
+            <label>Meta Title</label>
+            <input type="text" id="lp-meta-title" placeholder="Enter Meta Title">
+          </div>
+
+          <div class="form-row">
+            <label>Meta Description</label>
+            <textarea id="lp-meta-desc" placeholder="Enter Meta Description" style="min-height:70px"></textarea>
+          </div>
+
+          <div class="form-row">
+            <label>Status</label>
+            <div class="seg-btns">
+              <button class="seg-btn active" id="seg-active" onclick="setSeg('active')">Active</button>
+              <button class="seg-btn" id="seg-inactive" onclick="setSeg('inactive')">DeActive</button>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-secondary" onclick="cancelForm()">Cancel</button>
+            <button class="btn btn-teal" onclick="savePackage()">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.5s</span></div></footer>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/sidebar.js"></script>
+<script>
+var ACTIVE_PAGE = 'lab-test-packages';
+var lpFilter = 'all';
+var segStatus = 'active';
+var lpImgData = '';
+var selectedZones = [];
+var selectedLTs = [];
+
+/* ── Tabs ───────────────────────────────────────────────── */
+function switchTab(tab) {
+  document.querySelectorAll('.lp-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.lp-tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelector('[data-tab="'+tab+'"]').classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+  if (tab === 'add' && !document.getElementById('edit-id').value) resetForm();
+}
+
+function cancelForm() { resetForm(); switchTab('list'); }
+
+/* ── Image preview ──────────────────────────────────────── */
+function previewImg(input) {
+  var file = input.files[0]; if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    lpImgData = e.target.result;
+    var prev = document.getElementById('lp-img-preview');
+    prev.src = lpImgData; prev.style.display = 'block';
+    document.getElementById('lp-img-plus').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ── Auto slug ──────────────────────────────────────────── */
+function autoSlug() {
+  if (document.getElementById('edit-id').value) return;
+  var t = document.getElementById('lp-title').value;
+  document.getElementById('lp-slug').value = t.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+
+/* ── Rate calc ──────────────────────────────────────────── */
+function calcRate() {
+  var price = parseFloat(document.getElementById('lp-price').value)||0;
+  var disc  = parseFloat(document.getElementById('lp-discount').value)||0;
+  var rate  = price - (price * disc / 100);
+  document.getElementById('lp-rate').value = rate > 0 ? Math.round(rate) : '';
+}
+
+/* ── Seg status ─────────────────────────────────────────── */
+function setSeg(val) {
+  segStatus = val;
+  document.getElementById('seg-active').classList.toggle('active', val === 'active');
+  document.getElementById('seg-inactive').classList.toggle('active', val === 'inactive');
+}
+
+/* ── Zones multi-select ─────────────────────────────────── */
+var ZONE_LIST = ['World','East Africa','Uganda'];
+function toggleZoneDD() { var dd=document.getElementById('zone-dropdown'); dd.style.display=dd.style.display==='none'?'block':'none'; }
+function toggleZone(z) {
+  var idx = selectedZones.indexOf(z);
+  if (idx > -1) selectedZones.splice(idx,1); else selectedZones.push(z);
+  renderZoneTags(); syncZoneCheckboxes();
+}
+function renderZoneTags() {
+  document.getElementById('zone-tags').innerHTML = selectedZones.map(function(z) {
+    return '<span class="tag-chip">'+z+'<button onclick="toggleZone(\''+z+'\');event.stopPropagation()">&#x2715;</button></span>';
+  }).join('');
+}
+function syncZoneCheckboxes() {
+  document.querySelectorAll('#zone-dropdown .multi-opt').forEach(function(opt) {
+    var z = opt.textContent.trim();
+    var cb = opt.querySelector('input[type=checkbox]');
+    if (cb) { cb.checked = selectedZones.indexOf(z) > -1; }
+    opt.classList.toggle('selected', selectedZones.indexOf(z) > -1);
+  });
+}
+
+/* ── Lab Tests multi-select ─────────────────────────────── */
+function buildLTDropdown() {
+  var lts = EH.getLabTests().filter(function(lt){ return lt.status !== 'trash'; });
+  var dd = document.getElementById('lt-dropdown');
+  dd.innerHTML = lts.map(function(lt) {
+    var name = lt.title||lt.name||lt.id;
+    var checked = selectedLTs.indexOf(lt.id) > -1;
+    return '<div class="multi-opt'+(checked?' selected':'')+'" onclick="toggleLT(\''+lt.id+'\',\''+name.replace(/'/g,'')+'\')">'
+      + '<input type="checkbox" '+(checked?'checked':'')+' onclick="event.stopPropagation();toggleLT(\''+lt.id+'\',\''+name.replace(/'/g,'')+'\')"> '+name+'</div>';
+  }).join('') || '<div class="multi-opt" style="color:var(--muted)">No lab tests found.</div>';
+}
+function toggleLT(id, name) {
+  var idx = selectedLTs.indexOf(id);
+  if (idx > -1) selectedLTs.splice(idx,1); else selectedLTs.push(id);
+  renderLTTags(); buildLTDropdown();
+}
+function renderLTTags() {
+  var lts = EH.getLabTests();
+  document.getElementById('lt-tags').innerHTML = selectedLTs.map(function(id) {
+    var lt = lts.find(function(x){return x.id===id;});
+    var n = lt ? (lt.title||lt.name) : id;
+    return '<span class="tag-chip">'+n+'<button onclick="toggleLT(\''+id+'\',\'\');event.stopPropagation()">&#x2715;</button></span>';
+  }).join('');
+}
+document.addEventListener('click', function(e) {
+  ['lt-dropdown','zone-dropdown'].forEach(function(ddId) {
+    var dd = document.getElementById(ddId);
+    var parent = ddId==='lt-dropdown' ? document.getElementById('lt-tags') : document.getElementById('zone-tags');
+    if (dd && !dd.contains(e.target) && parent && !parent.contains(e.target)) dd.style.display='none';
+  });
+});
+
+/* ── Pathologist dropdown ───────────────────────────────── */
+function populatePathologists() {
+  var defaults = ['Dr. Amelia Brooks','Dr. Lucas Bennett','Dr. Ethan Collins','Dr. Grace Mitchell','Dr. Noah Richardson','Dr. Charlotte Hayes'];
+  var sel = document.getElementById('lp-pathologist');
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">Select Pathologist</option>';
+  defaults.forEach(function(n) {
+    var o = document.createElement('option'); o.value = n; o.textContent = n;
+    if (n === cur) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+/* ── Reset form ─────────────────────────────────────────── */
+function resetForm() {
+  document.getElementById('edit-id').value = '';
+  ['lp-title','lp-slug','lp-desc','lp-meta-title','lp-meta-desc'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  ['lp-price','lp-discount','lp-rate','lp-report-hours'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('lp-tax').value = '';
+  document.getElementById('lp-homevisit').checked = false;
+  document.getElementById('homevisit-lbl').textContent = 'No';
+  lpImgData=''; selectedZones=[]; selectedLTs=[];
+  var prev=document.getElementById('lp-img-preview'); prev.style.display='none'; prev.src='';
+  document.getElementById('lp-img-plus').style.display='';
+  renderZoneTags(); syncZoneCheckboxes(); renderLTTags(); buildLTDropdown();
+  setSeg('active');
+  document.getElementById('form-title').textContent = 'Add Lab Test Package';
+  document.getElementById('add-tab-btn').textContent = 'Add Lab Test Package';
+}
+
+/* ── Edit ───────────────────────────────────────────────── */
+function editPackage(id) {
+  var p = EH.getLabPackages().find(function(x){return x.id===id;});
+  if (!p) return;
+  document.getElementById('edit-id').value = p.id;
+  document.getElementById('lp-title').value = p.title||'';
+  document.getElementById('lp-slug').value = p.slug||'';
+  document.getElementById('lp-desc').value = p.description||'';
+  document.getElementById('lp-meta-title').value = p.metaTitle||'';
+  document.getElementById('lp-meta-desc').value = p.metaDesc||'';
+  document.getElementById('lp-price').value = p.price||'';
+  document.getElementById('lp-discount').value = p.discount||'';
+  document.getElementById('lp-report-hours').value = p.reportIn||'';
+  document.getElementById('lp-tax').value = p.tax||'';
+  document.getElementById('lp-homevisit').checked = !!p.homeVisit;
+  document.getElementById('homevisit-lbl').textContent = p.homeVisit?'Yes':'No';
+  calcRate();
+  lpImgData = p.image||'';
+  var prev=document.getElementById('lp-img-preview');
+  if (lpImgData) { prev.src=lpImgData; prev.style.display='block'; document.getElementById('lp-img-plus').style.display='none'; }
+  else { prev.style.display='none'; document.getElementById('lp-img-plus').style.display=''; }
+  selectedZones = (p.zones||[]).slice(); renderZoneTags(); syncZoneCheckboxes();
+  selectedLTs = (p.labTests||[]).slice(); renderLTTags(); buildLTDropdown();
+  setSeg(p.status==='active'?'active':'inactive');
+  populatePathologists();
+  document.getElementById('lp-pathologist').value = p.pathologist||'';
+  document.getElementById('form-title').textContent = 'Edit Lab Test Package';
+  document.getElementById('add-tab-btn').textContent = 'Edit Package';
+  switchTab('add');
+}
+
+function trashPackage(id) { EH.updateLabPackage(id,{status:'trash'}); renderPackages(); ehToast('Moved to trash.','success'); }
+function restorePackage(id) { EH.updateLabPackage(id,{status:'active'}); renderPackages(); ehToast('Restored.','success'); }
+function permDeletePackage(id) {
+  if (!confirm('Permanently delete? Cannot be undone.')) return;
+  EH.deleteLabPackage(id); renderPackages(); ehToast('Deleted.','success');
+}
+
+/* ── Save ───────────────────────────────────────────────── */
+function savePackage() {
+  var title = document.getElementById('lp-title').value.trim();
+  var path  = document.getElementById('lp-pathologist').value;
+  var price = document.getElementById('lp-price').value;
+  var rep   = document.getElementById('lp-report-hours').value;
+  var eid   = document.getElementById('edit-id').value;
+  if (!title) { ehToast('Title is required.','error'); return; }
+  if (!path)  { ehToast('Pathologist is required.','error'); return; }
+  if (!price) { ehToast('Price is required.','error'); return; }
+  if (!rep)   { ehToast('Report Ready In is required.','error'); return; }
+  var payload = {
+    title:title, slug:document.getElementById('lp-slug').value.trim(),
+    description:document.getElementById('lp-desc').value.trim(),
+    pathologist:path, zones:selectedZones.slice(), labTests:selectedLTs.slice(),
+    price:parseFloat(price)||0, discount:parseFloat(document.getElementById('lp-discount').value)||0,
+    homeVisit:document.getElementById('lp-homevisit').checked,
+    reportIn:parseInt(rep)||24, tax:document.getElementById('lp-tax').value,
+    metaTitle:document.getElementById('lp-meta-title').value.trim(),
+    metaDesc:document.getElementById('lp-meta-desc').value.trim(),
+    status:segStatus, image:lpImgData
+  };
+  if (eid) { EH.updateLabPackage(eid,payload); ehToast('"'+title+'" updated.','success'); }
+  else     { EH.addLabPackage(payload);        ehToast('"'+title+'" added.','success'); }
+  cancelForm(); renderPackages();
+}
+
+/* ── Filter / Bulk ──────────────────────────────────────── */
+function setFilter(btn,f) {
+  document.querySelectorAll('.filter-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active'); lpFilter=f; renderPackages();
+}
+function toggleAll(cb) { document.querySelectorAll('.row-cb').forEach(function(c){c.checked=cb.checked;}); }
+function getSelected() { var ids=[]; document.querySelectorAll('.row-cb:checked').forEach(function(c){ids.push(c.dataset.id);}); return ids; }
+function applyBulk() {
+  var action=document.getElementById('bulk-action').value;
+  var ids=getSelected();
+  if (!action){ehToast('Select a bulk action.','error');return;}
+  if (!ids.length){ehToast('Select at least one row.','error');return;}
+  ids.forEach(function(id){
+    if(action==='activate')   EH.updateLabPackage(id,{status:'active'});
+    if(action==='deactivate') EH.updateLabPackage(id,{status:'inactive'});
+    if(action==='trash')      EH.updateLabPackage(id,{status:'trash'});
+    if(action==='restore')    EH.updateLabPackage(id,{status:'active'});
+    if(action==='delete')     EH.deleteLabPackage(id);
+  });
+  document.getElementById('sel-all').checked=false;
+  document.getElementById('bulk-action').value='';
+  renderPackages(); ehToast('Bulk action applied.','success');
+}
+
+/* ── Render list ────────────────────────────────────────── */
+function renderPackages() {
+  var all = EH.getLabPackages();
+  var q = (document.getElementById('lp-search')||{}).value||''; q=q.toLowerCase();
+  var perPage = parseInt((document.getElementById('per-page')||{}).value||15);
+  var counts={all:0,active:0,inactive:0,trash:0};
+  all.forEach(function(p){ if(p.status==='trash') counts.trash++; else{ counts.all++; if(p.status==='active') counts.active++; else counts.inactive++; } });
+  function setCount(id,n){var el=document.getElementById(id);if(el)el.textContent='('+n+')';}
+  setCount('cnt-all',counts.all); setCount('cnt-active',counts.active);
+  setCount('cnt-inactive',counts.inactive); setCount('cnt-trash',counts.trash);
+  var filtered=all.filter(function(p){
+    if(lpFilter==='trash') return p.status==='trash';
+    if(lpFilter==='active') return p.status==='active';
+    if(lpFilter==='inactive') return p.status==='inactive';
+    return p.status!=='trash';
+  });
+  if(q) filtered=filtered.filter(function(p){ return (p.title||'').toLowerCase().indexOf(q)>-1||(p.description||'').toLowerCase().indexOf(q)>-1; });
+  filtered=filtered.slice(0,perPage);
+  var tb=document.getElementById('lp-tbody');
+  if(!filtered.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted)">No packages found.</td></tr>';return;}
+  tb.innerHTML=filtered.map(function(p){
+    var isTrash=p.status==='trash';
+    var imgCell=p.image
+      ?'<div class="lp-img"><img src="'+p.image+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px"></div>'
+      :'<div class="lp-img" style="background:#e8f0fe;color:#5472d4;font-size:13px;font-weight:800">'+(p.title||'P').charAt(0)+'</div>';
+    var titleBlock='<div class="lp-title-cell">'+imgCell+'<div style="font-size:13px;font-weight:600;color:var(--dark,#2d3748)">'+(p.title||'—')+'</div></div>';
+    var actions=isTrash
+      ?'<div class="lp-actions"><a href="#" class="restore" onclick="restorePackage(\''+p.id+'\');return false">Restore</a> | <a href="#" class="trash" onclick="permDeletePackage(\''+p.id+'\');return false">Delete</a></div>'
+      :'<div class="lp-actions"><a href="#" onclick="editPackage(\''+p.id+'\');return false">Edit</a> | <a href="#" class="trash" onclick="trashPackage(\''+p.id+'\');return false">Move To Trash</a></div>';
+    var desc=p.description||'—';
+    return '<tr class="'+(isTrash?'trash-row':'')+'">'
+      +'<td><input type="checkbox" class="tbl-checkbox row-cb" data-id="'+p.id+'"></td>'
+      +'<td>'+titleBlock+'<div style="margin-top:4px">'+actions+'</div></td>'
+      +'<td style="font-size:12px;color:var(--muted);max-width:420px">'+desc+'</td>'
+      +'<td style="font-size:12px;color:var(--muted);white-space:nowrap">'+(p.createdAt||'—')+'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  EHAuth.init();
+  populatePathologists();
+  buildLTDropdown();
+  renderPackages();
+  document.getElementById('lp-homevisit').addEventListener('change', function() {
+    document.getElementById('homevisit-lbl').textContent = this.checked ? 'Yes' : 'No';
+  });
+});
+</script>
+</body>
+</html>
