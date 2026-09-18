@@ -1,0 +1,185 @@
+"use client";
+
+import React, { Suspense, useState } from "react";
+import { Input } from "@/components/ui/Input";
+import type { UserRole } from "@/types";
+import { motion, AnimatePresence } from "framer-motion";
+import { Mail, Lock, ShieldCheck, ArrowRight, Sparkles, Clock3 } from "lucide-react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Logo } from "@/components/ui/Logo";
+
+function SessionExpiredNotice() {
+    const params = useSearchParams();
+    if (params.get("reason") !== "session-expired") return null;
+    return (
+        <div className="mb-5 p-3.5 rounded-xl bg-amber-50 border border-amber-100 text-amber-700 text-xs font-semibold flex gap-2.5">
+            <Clock3 className="h-4 w-4 shrink-0 mt-0.5" />
+            <span>You were signed out — your session expired from inactivity, or you signed in on another device.</span>
+        </div>
+    );
+}
+
+function getRoleDashboard(role: UserRole): string {
+    switch (role) {
+        case "ADMIN":           return "/admin/dashboard";
+        case "PATIENT":         return "/patient/dashboard";
+        case "DOCTOR":          return "/doctor/dashboard";
+        case "PHARMACY":        return "/pharmacy/dashboard";
+        case "NURSE":           return "/nurse/dashboard";
+        case "LAB_TECH":        return "/lab/dashboard";
+        case "RADIOLOGY_TECH":  return "/radiology/dashboard";
+        case "PHYSIOTHERAPIST": return "/physiotherapy/dashboard";
+        case "DENTIST":         return "/dental/dashboard";
+        case "DIETITIAN":       return "/dietary/dashboard";
+        case "EMERGENCY_STAFF": return "/emergency/dashboard";
+        case "RECEPTIONIST":    return "/receptionist/dashboard";
+        case "CASHIER":         return "/cashier/dashboard";
+        case "CLEANER":         return "/housekeeping/dashboard";
+        case "SECURITY":        return "/security/dashboard";
+        case "OPTICIAN":
+        case "OPTICIAN_ASSISTANT": return "/optical/dashboard";
+        default:                return "/login";
+    }
+}
+
+export default function LoginPage() {
+    const [email, setEmail]       = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError]       = useState("");
+    const [loading, setLoading]   = useState(false);
+
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError("");
+
+        try {
+            const res = await fetch("/api/auth/login", {
+                method:  "POST",
+                headers: { "Content-Type": "application/json" },
+                body:    JSON.stringify({ email, password }),
+                credentials: "same-origin",
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                setError(data.error || "Invalid email or password.");
+                return;
+            }
+
+            // Full navigation (not router.push): AuthContext only fetches auth
+            // state once on mount, so a client-side route change here would land
+            // on the dashboard before context knows login succeeded, and its
+            // layout guard would immediately bounce back to /login.
+            window.location.href = getRoleDashboard(data.role as UserRole);
+        } catch {
+            setError("Network error. Please check your connection and try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div
+            className="min-h-screen bg-gray-50 flex items-center justify-center p-6"
+            style={{ backgroundImage: "radial-gradient(at 50% 0%, rgba(37,99,235,0.06) 0, transparent 60%), radial-gradient(at 100% 100%, rgba(22,163,74,0.05) 0, transparent 50%)" }}
+        >
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full max-w-md"
+            >
+                <div className="text-center mb-8">
+                    <Link href="/" className="inline-flex items-center group mb-6">
+                        <Logo size={64} className="shadow-lg group-hover:scale-105 transition-transform" />
+                    </Link>
+                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">RHD Medical Services</h1>
+                    <p className="text-gray-500 mt-2 font-medium text-sm">Sign in to your clinical workspace</p>
+                </div>
+
+                <div className="bg-white rounded-3xl shadow-premium border border-gray-100 p-8">
+                    <Suspense fallback={null}>
+                        <SessionExpiredNotice />
+                    </Suspense>
+                    <form onSubmit={handleLogin} className="space-y-4">
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Email Address</label>
+                            <div className="relative">
+                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-gray-400" />
+                                <Input
+                                    type="email"
+                                    placeholder="staff@hospital.com"
+                                    className="pl-10 font-medium"
+                                    required
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Password</label>
+                            <div className="relative">
+                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-gray-400" />
+                                <Input
+                                    type="password"
+                                    placeholder="••••••••"
+                                    className="pl-10"
+                                    required
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <AnimatePresence>
+                            {error && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="p-3.5 rounded-xl bg-red-50 border border-red-100 text-red-600 text-xs font-semibold flex gap-2.5"
+                                >
+                                    <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5" />
+                                    <span>{error}</span>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm shadow-blue-600/20"
+                        >
+                            {loading ? "Signing in…" : "Sign In"}
+                            {!loading && <ArrowRight className="h-4 w-4" />}
+                        </button>
+                    </form>
+
+                    <div className="mt-6 pt-6 border-t border-gray-50 text-center">
+                        <p className="text-sm text-gray-500">
+                            Have an invitation?{" "}
+                            <Link href="/setup" className="text-blue-600 font-bold hover:text-blue-700 transition-colors">
+                                Set up your account
+                            </Link>
+                        </p>
+                    </div>
+                </div>
+
+                <div className="mt-8 flex items-center justify-center gap-6">
+                    <div className="flex items-center gap-1.5">
+                        <ShieldCheck className="h-3.5 w-3.5 text-blue-500" />
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">HIPAA Compliant</span>
+                    </div>
+                    <div className="h-1 w-1 bg-gray-300 rounded-full" />
+                    <div className="flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-green-500" />
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Encrypted</span>
+                    </div>
+                </div>
+            </motion.div>
+        </div>
+    );
+}
