@@ -16,13 +16,14 @@
     if (roleEl) {
       var roleMap = { admin:'Administrator', hospital:'Hospital Admin', doctor:'Doctor', nurse:'Nurse', receptionist:'Receptionist', pathologist:'Pathologist', collector:'Collector', pharmacist:'Pharmacist' };
       var label = roleMap[session.role] || (session.role.charAt(0).toUpperCase() + session.role.slice(1));
-      // Append tenant name for non-super-admin
+      var isSA = (session.role === 'admin' && !session.tenantId && session.email === 'semandamoses91@gmail.com');
+      // Scoped hospital user — show hospital name
       if (session.tenantId && window.EH) {
         var t = EH.getTenant(session.tenantId);
         if (t) label += ' · ' + t.name;
       }
-      // Append context override for super-admin
-      if (!session.tenantId && session.activeContext && window.EH) {
+      // Super-admin viewing a specific hospital context
+      if (isSA && session.activeContext && window.EH) {
         var ct = EH.getTenant(session.activeContext);
         if (ct) label = 'Admin (viewing: ' + ct.name + ')';
       }
@@ -109,7 +110,16 @@
     init: function() {
       var s = this.requireAuth();
       if (!s) return null;
-      window.EH_TENANT = s.activeContext || s.tenantId || null;
+      /* Determine whether this session belongs to the super admin */
+      var superAdmin = (s.role === 'admin' && !s.tenantId && s.email === 'semandamoses91@gmail.com');
+      /* Non-super-admin sessions must never use activeContext — clear any stale value */
+      if (!superAdmin && s.activeContext) {
+        s.activeContext = null;
+        setSession(s);
+      }
+      /* Super admin: effective tenant = chosen context (or null = all)
+         Everyone else: effective tenant = their own tenantId (never overrideable) */
+      window.EH_TENANT = superAdmin ? (s.activeContext || null) : (s.tenantId || null);
       updateHeader(s);
       var rs = document.getElementById('role-select');
       if (rs && s.role) { rs.value = s.role; if (window.switchRole) switchRole(s.role); }
