@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roles &amp; Permissions — eHealth System</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+<style>
+.page-tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:22px; }
+.page-tab { padding:10px 20px; font-size:13px; font-weight:700; color:var(--muted); background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; font-family:inherit; transition:color .15s,border-color .15s; }
+.page-tab.active { color:var(--teal); border-bottom-color:var(--teal); }
+.role-list-wrap { margin-bottom:22px; }
+.role-row { display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border:1px solid var(--border); border-radius:8px; margin-bottom:8px; background:#fff; }
+.role-row-name { font-size:13px; font-weight:700; color:var(--ink); }
+.role-row-meta { font-size:11.5px; color:var(--muted); margin-top:2px; }
+.role-actions { display:flex; gap:6px; }
+.btn-icon-sm { width:30px; height:30px; border:1px solid var(--border); border-radius:6px; background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--muted); transition:border-color .15s,color .15s; }
+.btn-icon-sm:hover { border-color:var(--teal); color:var(--teal); }
+.btn-icon-sm.del:hover { border-color:var(--danger); color:var(--danger); }
+.add-role-card { background:#fff; border-radius:12px; border:1px solid var(--border); overflow:hidden; }
+.add-role-hd { padding:16px 20px; border-bottom:1px solid var(--border); font-size:15px; font-weight:800; color:var(--ink); }
+.add-role-body { padding:20px; }
+.field-row { margin-bottom:18px; }
+.field-row label { display:block; font-size:12.5px; font-weight:700; color:var(--ink); margin-bottom:6px; }
+.field-row label span { color:var(--danger); }
+.field-row input[type=text] { width:100%; max-width:460px; padding:9px 13px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; color:var(--ink); outline:none; transition:border-color .15s; }
+.field-row input[type=text]:focus { border-color:var(--teal); }
+/* Permissions box */
+.perm-box { border:1.5px solid var(--border); border-radius:10px; overflow:hidden; max-height:560px; overflow-y:auto; }
+.perm-box::-webkit-scrollbar { width:5px; }
+.perm-box::-webkit-scrollbar-thumb { background:var(--teal); border-radius:5px; }
+.perm-select-all { display:flex; align-items:center; gap:10px; padding:11px 16px; background:var(--page-bg); border-bottom:1px solid var(--border); font-size:13px; font-weight:700; color:var(--ink); }
+.perm-select-all input[type=checkbox] { width:15px; height:15px; accent-color:var(--teal); cursor:pointer; }
+.perm-row { display:flex; align-items:center; flex-wrap:wrap; gap:6px 18px; padding:10px 16px; border-bottom:1px solid var(--border); font-size:12.5px; }
+.perm-row:last-child { border-bottom:none; }
+.perm-row:hover { background:#FAFAFA; }
+.perm-module { width:180px; font-weight:700; color:var(--ink); flex-shrink:0; font-size:12px; }
+.perm-checks { display:flex; flex-wrap:wrap; gap:6px 14px; flex:1; }
+.perm-check { display:flex; align-items:center; gap:5px; cursor:pointer; user-select:none; white-space:nowrap; }
+.perm-check input[type=checkbox] { width:14px; height:14px; accent-color:var(--teal); cursor:pointer; }
+.perm-check span { font-size:12px; color:var(--ink-mid); }
+.perm-check input:checked + span { color:var(--teal); font-weight:700; }
+.form-actions { display:flex; gap:10px; margin-top:20px; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav id="sidebar-mount"></nav>
+  <div class="main">
+    <header class="header">
+      <button class="btn-quick-links"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Links</button>
+      <div class="header-right">
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
+        <span class="lang-badge">EN</span>
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+        <div class="user-chip"><div class="user-avatar">M</div><div class="user-info"><div class="user-name">Moses Semanda</div><div class="user-role">Administrator</div></div></div>
+      </div>
+    </header>
+    <div class="content">
+      <div class="page-title-row">
+        <h1 class="page-title">Roles &amp; Permissions</h1>
+        <button class="btn btn-teal" onclick="showTab('add')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Role</button>
+      </div>
+
+      <div class="page-tabs">
+        <button class="page-tab active" onclick="showTab('list')" id="tab-list">All Roles</button>
+        <button class="page-tab" onclick="showTab('add')" id="tab-add">Add Role</button>
+      </div>
+
+      <!-- Roles list -->
+      <div id="view-list">
+        <div class="role-list-wrap" id="roles-list-wrap"></div>
+      </div>
+
+      <!-- Add Role form -->
+      <div id="view-add" style="display:none">
+        <div class="add-role-card">
+          <div class="add-role-hd" id="form-heading">Add Role</div>
+          <div class="add-role-body">
+            <div class="field-row">
+              <label>Name <span>*</span></label>
+              <input type="text" id="role-name" placeholder="Enter Role Name">
+            </div>
+            <div class="field-row">
+              <label>Permissions <span>*</span></label>
+              <div class="perm-box">
+                <div class="perm-select-all">
+                  <input type="checkbox" id="select-all-perms" onchange="toggleAllPerms(this.checked)">
+                  <label for="select-all-perms" style="cursor:pointer">Select All Permissions</label>
+                </div>
+                <div id="perm-rows"></div>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-teal" onclick="saveRole()">Save Role</button>
+              <button class="btn" style="background:var(--page-bg);border:1px solid var(--border);color:var(--ink-mid)" onclick="showTab('list')">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.4s</span></div></footer>
+  </div>
+</div>
+
+<script>
+var ACTIVE_PAGE = 'roles';
+
+/* ─── Permission matrix ─────────────────────────────────── */
+var PERMS = [
+  ['Media',                       ['All','Index','Create','Edit','Trash','Restore','ForceDelete']],
+  ['Users',                       ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Roles',                       ['All','Index','Create','Edit','Delete']],
+  ['Attachments',                 ['All','Index','Create','Edit','Delete']],
+  ['Categories',                  ['All','Index','Create','Edit','Delete']],
+  ['Tags',                        ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Blogs',                       ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Faqs',                        ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Themes',                      ['All','Index','Edit']],
+  ['Pages',                       ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Testimonials',                ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Taxes',                       ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Currencies',                  ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Languages',                   ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Settings',                    ['All','Index','Edit']],
+  ['System Tools',                ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Plugins',                     ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['About System',                ['All','Index']],
+  ['Payment Methods',             ['All','Index','Edit']],
+  ['SMS Gateways',                ['All','Index','Edit']],
+  ['SMS Templates',               ['All','Index','Create','Edit','Trash','Delete']],
+  ['Email Templates',             ['All','Index','Create','Edit','Trash','Delete']],
+  ['Push Notification Templates', ['All','Index','Create','Edit','Trash','Delete']],
+  ['Landing Page',                ['All','Index','Edit']],
+  ['Appearance',                  ['All','Index','Edit','Create']],
+  ['Backups',                     ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Menus',                       ['All','Index','Create','Edit','Delete']],
+  ['Products',                    ['All','Index','Create','Edit','Restore','Trash','ForceDelete']],
+  ['Documents',                   ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Attributes',                  ['All','Index','Create','Edit','Restore','Trash','ForceDelete']],
+  ['Product Categories',          ['All','Index','Create','Edit','Restore','Trash','ForceDelete']],
+  ['Product Tags',                ['All','Index','Create','Edit','Restore','Trash','ForceDelete']],
+  ['Brands',                      ['All','Index','Create','Edit','Restore','Trash','ForceDelete']],
+  ['License Keys',                ['All','Index','Create','Edit','Trash']],
+  ['Orders',                      ['All','Index','Create','Edit']],
+  ['Shippings',                   ['All','Index','Create','Edit','Restore','Trash']],
+  ['Coupons',                     ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Points',                      ['All','Index','Credit','Debit']],
+  ['Wallets',                     ['All','Index','Credit','Debit']],
+  ['Refunds',                     ['All','Index','Create','Action']],
+  ['Reviews',                     ['All','Index','Create','Trash']],
+  ['Product Settings',            ['All','Index','Edit']],
+  ['Consumer',                    ['All','Index','Create','Edit','Trash','Restore','ForceDelete']],
+  ['Questions And Answers',       ['All','Index','Create','Edit','Trash']],
+  ['Zones',                       ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Authors',                     ['All','Index','Create','Edit','Restore','Trash','ForceDelete']],
+  ['Publications',                ['All','Index','Create','Edit','Restore','Trash','ForceDelete']],
+  ['Warranties',                  ['All','Index','Create','Edit','Restore','Trash','ForceDelete']],
+  ['Quotes',                      ['All','Index','Create','Edit','Restore','Trash','ForceDelete']],
+  ['Bundle',                      ['All','Index','Create','Edit','Restore','Trash','ForceDelete']],
+  ['Collection',                  ['All','Index','Create','Edit','Restore','Trash','ForceDelete']],
+  ['Order Status',                ['All','Index','Edit']],
+  ['Theme Options',               ['All','Index','Edit']],
+  ['Healthcare Settings',         ['All','Index','Edit']],
+  ['Onboardings',                 ['All','Index','Edit']],
+  ['Medical Services',            ['All','Index','Edit']],
+  ['Departments',                 ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Finances',                    ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Payrolls',                    ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Doctor Documents',            ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Pathologist Documents',       ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Hospital Documents',          ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Unverified Doctors',          ['All','Index']],
+  ['Unverified Hospitals',        ['All','Index']],
+  ['Unverified Pathologists',     ['All','Index']],
+  ['Specialties',                 ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Patients',                    ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Collectors',                  ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Doctors',                     ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Doctor Time Slots',           ['All','Index','Create','Edit','Destroy','Trash','Restore','Delete']],
+  ['Receptionists',               ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Appointment Status',          ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Appointments',                ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Medicines',                   ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Hospitals',                   ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Pathologists',                ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Lab Categories',              ['All','Index','Create','Edit','Restore','Trash','ForceDelete']],
+  ['Prescriptions',               ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Lab Tests',                   ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Lab Test Packages',           ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Reports',                     ['All','Index','Create']],
+  ['Body Charts',                 ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Wards',                       ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Beds',                        ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Bed Assigns',                 ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Doctor Wallets',              ['All','Index','Credit','Debit','Update Balance']],
+  ['Hospital Wallets',            ['All','Index','Credit','Debit','Update Balance']],
+  ['Receptionist Wallets',        ['All','Index','Credit','Debit','Update Balance']],
+  ['Patients Wallets',            ['All','Index','Credit','Debit','Update Balance']],
+  ['Pathologist Wallets',         ['All','Index','Credit','Debit','Update Balance']],
+  ['Banners',                     ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Ambulances',                  ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Ambulance Bookings',          ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Lab Test Bookings',           ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Family Members',              ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Check Ins',                   ['All','Index','Create','Edit','Delete']],
+  ['Calendars',                   ['All','Index']],
+  ['Video Consultations',         ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Doctor Recommendations',      ['All','Recommend']],
+  ['Concerns',                    ['All','Index','Create','Edit','Trash','Restore','Delete','Show']],
+  ['Concern Answers',             ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Doctor Withdraw Requests',    ['All','Index','Create','Edit']],
+  ['Incident Reports',            ['All','Index','Edit','Trash','Restore','Delete']],
+  ['Advertisements',              ['All','Index','Create','Edit','Restore','Trash','ForceDelete']],
+  ['Stores',                      ['All','Index','Create','Edit','Restore','Trash','ForceDelete']],
+  ['Unverified Stores',           ['All','Index','Create','Edit','Trash','Restore','Delete']],
+  ['Commission Histories',        ['All','Index']],
+  ['Withdraw Requests',           ['All','Index','Create','Action']],
+  ['Vendor Wallets',              ['All','Index','Credit','Debit']],
+  ['Vendor',                      ['All','Index','Create','Edit','Destroy','Restore','Delete']],
+  ['Vendor Packages',             ['All','Index','Create','Edit','Restore','Trash','ForceDelete']]
+];
+
+/* ─── Seed roles in localStorage ─── */
+var ROLE_KEY = 'eh_roles';
+var DEFAULT_ROLES = [
+  { id:'r1', name:'Admin',         permissions:'all', createdAt:'2026-05-27', userCount:1 },
+  { id:'r2', name:'Doctor',        permissions:'appointments,patients,prescriptions,lab_tests,video_consultations', createdAt:'2026-05-27', userCount:3 },
+  { id:'r3', name:'Nurse',         permissions:'patients,appointments,check_ins,bed_assigns', createdAt:'2026-05-27', userCount:2 },
+  { id:'r4', name:'Receptionist',  permissions:'appointments,check_ins,patients,calendars', createdAt:'2026-05-27', userCount:1 },
+  { id:'r5', name:'Pathologist',   permissions:'lab_tests,lab_test_bookings,lab_categories,reports', createdAt:'2026-05-27', userCount:1 },
+  { id:'r6', name:'Hospital',      permissions:'hospitals,departments,doctors,patients,appointments', createdAt:'2026-05-27', userCount:1 },
+  { id:'r7', name:'Collector',     permissions:'lab_test_bookings,patients,reports', createdAt:'2026-05-27', userCount:1 },
+  { id:'r8', name:'Pharmacist',    permissions:'medicines,prescriptions,patients', createdAt:'2026-05-27', userCount:1 }
+];
+
+function getRoles() {
+  try { var r = JSON.parse(localStorage.getItem(ROLE_KEY)); return r || DEFAULT_ROLES; } catch(e) { return DEFAULT_ROLES; }
+}
+function setRoles(roles) { try { localStorage.setItem(ROLE_KEY, JSON.stringify(roles)); } catch(e) {} }
+if (!localStorage.getItem(ROLE_KEY)) setRoles(DEFAULT_ROLES);
+
+var editingId = null;
+
+/* ─── Build permission rows ─── */
+function buildPermRows() {
+  var container = document.getElementById('perm-rows');
+  var html = '';
+  PERMS.forEach(function(p, idx) {
+    var module = p[0], actions = p[1];
+    var key = module.toLowerCase().replace(/\s+/g,'_');
+    html += '<div class="perm-row" data-module="'+key+'">';
+    html += '<div class="perm-module">'+module+':</div>';
+    html += '<div class="perm-checks">';
+    actions.forEach(function(act) {
+      var actKey = act.toLowerCase().replace(/\s+/g,'_');
+      var id = 'perm_'+key+'_'+actKey;
+      html += '<label class="perm-check"><input type="checkbox" id="'+id+'" data-module="'+key+'" data-action="'+actKey+'" onchange="onPermChange(this)"><span>'+act+'</span></label>';
+    });
+    html += '</div></div>';
+  });
+  container.innerHTML = html;
+}
+
+function onPermChange(cb) {
+  var module = cb.dataset.module;
+  var action = cb.dataset.action;
+  var row = cb.closest('.perm-row');
+  var allCb = row.querySelector('[data-action="all"]');
+  if (action === 'all') {
+    row.querySelectorAll('input[type=checkbox]').forEach(function(c) { c.checked = cb.checked; });
+  } else {
+    if (!cb.checked && allCb) allCb.checked = false;
+    var nonAll = Array.from(row.querySelectorAll('input[type=checkbox]:not([data-action="all"])'));
+    if (nonAll.every(function(c){return c.checked;}) && allCb) allCb.checked = true;
+  }
+  syncSelectAll();
+}
+
+function toggleAllPerms(checked) {
+  document.querySelectorAll('#perm-rows input[type=checkbox]').forEach(function(cb) { cb.checked = checked; });
+}
+
+function syncSelectAll() {
+  var all = Array.from(document.querySelectorAll('#perm-rows input[type=checkbox]'));
+  document.getElementById('select-all-perms').checked = all.length > 0 && all.every(function(c){return c.checked;});
+}
+
+function getSelectedPerms() {
+  var result = {};
+  document.querySelectorAll('#perm-rows input[type=checkbox]:checked').forEach(function(cb) {
+    var m = cb.dataset.module, a = cb.dataset.action;
+    if (!result[m]) result[m] = [];
+    result[m].push(a);
+  });
+  return result;
+}
+
+function setSelectedPerms(permsObj) {
+  document.querySelectorAll('#perm-rows input[type=checkbox]').forEach(function(cb) { cb.checked = false; });
+  if (!permsObj || permsObj === 'all') {
+    toggleAllPerms(true); return;
+  }
+  if (typeof permsObj === 'string') {
+    var mods = permsObj.split(',');
+    mods.forEach(function(m) {
+      document.querySelectorAll('[data-module="'+m.trim()+'"]').forEach(function(cb) { cb.checked = true; });
+    });
+    return;
+  }
+  Object.keys(permsObj).forEach(function(m) {
+    permsObj[m].forEach(function(a) {
+      var cb = document.querySelector('[data-module="'+m+'"][data-action="'+a+'"]');
+      if (cb) cb.checked = true;
+    });
+  });
+  syncSelectAll();
+}
+
+/* ─── Save Role ─── */
+function saveRole() {
+  var name = document.getElementById('role-name').value.trim();
+  if (!name) { ehToast('Please enter a role name.', 'error'); return; }
+  var perms = getSelectedPerms();
+  var roles = getRoles();
+  var now = new Date().toISOString().slice(0,10);
+  if (editingId) {
+    roles = roles.map(function(r) { return r.id === editingId ? Object.assign(r,{name:name,permissions:perms,updatedAt:now}) : r; });
+    ehToast('Role "'+name+'" updated successfully.', 'success');
+  } else {
+    var newRole = { id:'r'+Date.now(), name:name, permissions:perms, createdAt:now, userCount:0 };
+    roles.unshift(newRole);
+    ehToast('Role "'+name+'" created successfully.', 'success');
+  }
+  setRoles(roles);
+  editingId = null;
+  document.getElementById('role-name').value = '';
+  toggleAllPerms(false);
+  showTab('list');
+}
+
+/* ─── Edit Role ─── */
+function editRole(id) {
+  var roles = getRoles();
+  var role = roles.find(function(r){return r.id===id;});
+  if (!role) return;
+  editingId = id;
+  document.getElementById('role-name').value = role.name;
+  document.getElementById('form-heading').textContent = 'Edit Role — ' + role.name;
+  setSelectedPerms(role.permissions);
+  showTab('add');
+}
+
+/* ─── Delete Role ─── */
+function deleteRole(id, name) {
+  if (!confirm('Delete role "'+name+'"? This cannot be undone.')) return;
+  var roles = getRoles().filter(function(r){return r.id!==id;});
+  setRoles(roles);
+  renderRoleList();
+  ehToast('Role "'+name+'" deleted.', 'info');
+}
+
+/* ─── Render role list ─── */
+var ROLE_COLORS = ['#0DA7A7','#7C3AED','#059669','#DB2777','#D97706','#2563EB','#DC2626','#0891B2'];
+function renderRoleList() {
+  var roles = getRoles();
+  var wrap = document.getElementById('roles-list-wrap');
+  if (!roles.length) { wrap.innerHTML = '<p style="color:var(--muted);text-align:center;padding:40px">No roles found.</p>'; return; }
+  var html = '';
+  roles.forEach(function(r, i) {
+    var color = ROLE_COLORS[i % ROLE_COLORS.length];
+    var permCount = r.permissions === 'all' ? PERMS.length + ' modules (All)' :
+      (typeof r.permissions === 'object' ? Object.keys(r.permissions).length + ' modules' : r.permissions.split(',').length + ' modules');
+    html += '<div class="role-row">';
+    html += '<div style="display:flex;align-items:center;gap:12px">';
+    html += '<div style="width:36px;height:36px;border-radius:9px;background:'+color+';display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800;flex-shrink:0">'+r.name.charAt(0)+'</div>';
+    html += '<div><div class="role-row-name">'+r.name+'</div><div class="role-row-meta">'+permCount+' &nbsp;·&nbsp; '+r.userCount+' user(s) &nbsp;·&nbsp; Created '+r.createdAt+'</div></div>';
+    html += '</div>';
+    html += '<div class="role-actions">';
+    html += '<button class="btn-icon-sm" title="Edit" onclick="editRole(\''+r.id+'\')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
+    html += '<button class="btn-icon-sm del" title="Delete" onclick="deleteRole(\''+r.id+'\',\''+r.name+'\')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>';
+    html += '</div></div>';
+  });
+  wrap.innerHTML = html;
+}
+
+/* ─── Tab switching ─── */
+function showTab(which) {
+  var isList = which === 'list';
+  document.getElementById('view-list').style.display = isList ? '' : 'none';
+  document.getElementById('view-add').style.display  = isList ? 'none' : '';
+  document.getElementById('tab-list').classList.toggle('active', isList);
+  document.getElementById('tab-add').classList.toggle('active', !isList);
+  if (isList) { editingId = null; document.getElementById('form-heading').textContent = 'Add Role'; renderRoleList(); }
+}
+
+/* ─── Init ─── */
+buildPermRows();
+renderRoleList();
+</script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/auth.js"></script>
+<script>document.addEventListener('DOMContentLoaded', function(){ EHAuth.init(); });</script>
+<script>var ACTIVE_PAGE='roles';</script>
+<script src="assets/js/sidebar.js"></script>
+</body>
+</html>

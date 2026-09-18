@@ -804,6 +804,57 @@ select.form-control { cursor: pointer; }
 }
 .checkin-search input:focus { border-color: var(--teal); }
 
+/* ── Modal overlay ───────────────────────────────────── */
+.eh-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  display: none; align-items: center; justify-content: center;
+  z-index: 1000; padding: 16px;
+}
+.eh-modal-overlay.open { display: flex; }
+.eh-modal {
+  background: #fff; border-radius: 14px; width: 100%; max-width: 540px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.18); overflow: hidden;
+}
+.eh-modal-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 22px; border-bottom: 1px solid var(--border);
+}
+.eh-modal-hd h3 { font-size: 16px; font-weight: 800; color: var(--ink); }
+.eh-modal-close {
+  width: 30px; height: 30px; border-radius: 50%; border: none;
+  background: var(--page-bg); cursor: pointer; font-size: 18px; color: var(--muted);
+  display: flex; align-items: center; justify-content: center; transition: background .15s;
+}
+.eh-modal-close:hover { background: var(--border); }
+.eh-modal-body { padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.eh-modal-ft { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+.mfield label { display: block; font-size: 12.5px; font-weight: 700; color: var(--ink); margin-bottom: 5px; }
+.mfield label span { color: var(--danger); }
+.mfield input, .mfield select { width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 13px; color: var(--ink); background: var(--page-bg); outline: none; transition: border-color .15s; }
+.mfield input:focus, .mfield select:focus { border-color: var(--teal); background: #fff; }
+.mfield .pw-wrap-m { position: relative; }
+.mfield .pw-wrap-m input { padding-right: 38px; }
+.mfield .pw-eye { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--muted); display: flex; align-items: center; }
+.mfield .pw-eye:hover { color: var(--teal); }
+.phone-row { display: flex; gap: 8px; }
+.phone-row select { width: 130px; flex-shrink: 0; }
+.phone-row input  { flex: 1; }
+.mfield-error { font-size: 11px; color: var(--danger); margin-top: 3px; display: none; }
+
+/* ── Toast notifications ─────────────────────────────── */
+.eh-toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 2000;
+  background: #1e293b; color: #fff; padding: 12px 18px;
+  border-radius: 10px; font-size: 13px; font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0,0,0,.2); opacity: 0;
+  transform: translateY(12px); transition: opacity .25s, transform .25s;
+  pointer-events: none;
+}
+.eh-toast.show { opacity: 1; transform: translateY(0); }
+.eh-toast-success { background: #059669; }
+.eh-toast-error   { background: #DC2626; }
+.eh-toast-info    { background: var(--teal); }
+
 /* ── Responsive ──────────────────────────────────────── */
 @media (max-width: 900px) {
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
