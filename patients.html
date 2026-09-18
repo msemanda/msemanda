@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Patients — eHealth System</title>
 <link rel="stylesheet" href="assets/css/admin.css">
+<style>
+.tenant-bar { background:linear-gradient(135deg,var(--teal),#066060); color:#fff; border-radius:10px; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; font-size:13px; font-weight:700; }
+.tenant-bar span { opacity:.75; font-size:11px; font-weight:600; }
+</style>
 </head>
 <body>
 <div class="shell">
@@ -20,49 +24,175 @@
       </div>
     </header>
     <div class="content">
+      <div class="page-title-row">
+        <h1 class="page-title">Patients</h1>
+        <button class="btn btn-teal" onclick="ehOpenModal('modal-add-patient')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Patient</button>
+      </div>
+
+      <!-- Tenant context bar (visible to super-admin when viewing a tenant) -->
+      <div id="tenant-bar" style="display:none" class="tenant-bar">
+        <div><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/></svg><span id="tenant-bar-name"></span></div>
+        <span>Showing patients for this hospital only</span>
+      </div>
+
       <div class="card">
         <div class="filter-bar">
           <div class="filter-tabs">
-            <button class="filter-tab active">All <span class="tab-count">(22)</span></button>
-            <button class="filter-tab">Active <span class="tab-count">(22)</span></button>
-            <button class="filter-tab">DeActive <span class="tab-count">(0)</span></button>
-            <button class="filter-tab">Trash <span class="tab-count">(1)</span></button>
+            <button class="filter-tab active" data-filter="all">All <span class="tab-count" id="cnt-all"></span></button>
+            <button class="filter-tab" data-filter="active">Active <span class="tab-count" id="cnt-active"></span></button>
+            <button class="filter-tab" data-filter="inactive">Inactive <span class="tab-count" id="cnt-inactive"></span></button>
           </div>
           <div class="filter-right">
-            <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" placeholder="Search..."></div>
+            <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" id="pt-search" placeholder="Search patients..." oninput="renderPatients()"></div>
             <select class="per-page-select"><option>15</option><option>25</option><option>50</option></select>
-            <button class="btn-apply">Apply</button>
           </div>
         </div>
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all"></th>
-              <th>Name &#9650;</th>
-              <th>Status &#9650;</th>
-              <th>Created At &#9650;</th>
+              <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all" onchange="document.querySelectorAll('.row-cb').forEach(function(c){c.checked=this.checked;}.bind(this))"></th>
+              <th>Name ▲</th>
+              <th>Hospital</th>
+              <th>Phone</th>
+              <th>Status ▲</th>
+              <th>Created At ▲</th>
+              <th>Action</th>
             </tr></thead>
-            <tbody>
-              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar" style="background:#0DA7A7">M</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Madhuranjan Thakur</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-09-11 04:10:16 AM</td></tr>
-              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-s">S</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Srinivas</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-09-08 03:58:11 AM</td></tr>
-              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-p">P</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Priya</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-09-01 07:00:23 AM</td></tr>
-              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-l">L</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Liza Matt</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-06-03 03:56:40 AM</td></tr>
-              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar" style="background:#0DA7A7">M</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Maira Mehta</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-06-02 07:08:14 AM</td></tr>
-              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-e">T</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Test User</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-27 06:54:52 PM</td></tr>
-              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-n">H</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Harper Lewis</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-27 06:54:12 PM</td></tr>
-              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-d">D</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Daniel Clark</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-27 06:54:12 PM</td></tr>
-              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-g">A</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Amelia Lee</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-27 06:54:11 PM</td></tr>
-              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-n">H</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Henry Robinson</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-27 06:54:11 PM</td></tr>
-              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-c">C</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Charlotte Garcia</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-27 06:54:10 PM</td></tr>
-            </tbody>
-            <tfoot><tr><td colspan="4" style="padding:12px 14px;font-size:12px;color:var(--muted);">Name &#9650;</td></tr></tfoot>
+            <tbody id="patients-tbody"></tbody>
           </table>
         </div>
       </div>
     </div>
-    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.38s</span></div></footer>
+    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.4s</span></div></footer>
   </div>
 </div>
+
+<!-- Add Patient Modal -->
+<div id="modal-add-patient" class="eh-modal-overlay" onclick="if(event.target===this)ehCloseModal('modal-add-patient')">
+  <div class="eh-modal">
+    <div class="eh-modal-hd">
+      <h3>Add Patient</h3>
+      <button class="eh-modal-close" onclick="ehCloseModal('modal-add-patient')">&#x2715;</button>
+    </div>
+    <div class="eh-modal-body">
+      <div class="mfield"><label>Full Name <span>*</span></label><input type="text" id="pt-name" placeholder="Enter Full Name"></div>
+      <div class="mfield"><label>Email <span>*</span></label><input type="email" id="pt-email" placeholder="Enter Email"></div>
+      <div class="mfield"><label>Phone <span>*</span></label>
+        <div class="phone-row">
+          <select id="pt-country"><option value="+256">+256 🇺🇬</option><option value="+1">+1 🇺🇸</option><option value="+44">+44 🇬🇧</option><option value="+91">+91 🇮🇳</option><option value="+254">+254 🇰🇪</option><option value="+255">+255 🇹🇿</option><option value="+250">+250 🇷🇼</option></select>
+          <input type="tel" id="pt-phone" placeholder="Enter Phone">
+        </div>
+      </div>
+      <div class="mfield"><label>Password <span>*</span></label>
+        <div class="pw-wrap-m"><input type="password" id="pt-password" placeholder="Enter Password"><button type="button" class="pw-eye" onclick="var i=document.getElementById('pt-password');i.type=i.type==='text'?'password':'text'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      </div>
+      <div class="mfield"><label>Confirm <span>*</span></label>
+        <div class="pw-wrap-m"><input type="password" id="pt-confirm" placeholder="Enter Confirm Password"><button type="button" class="pw-eye" onclick="var i=document.getElementById('pt-confirm');i.type=i.type==='text'?'password':'text'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      </div>
+    </div>
+    <div class="eh-modal-ft">
+      <button class="btn btn-teal" onclick="submitAddPatient()">Submit</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/auth.js"></script>
+<script>
+var ACTIVE_PAGE = 'patients';
+var currentFilter = 'all';
+var tenantId = null;
+
+var PT_COLORS = ['#0DA7A7','#7C3AED','#059669','#DB2777','#D97706','#2563EB','#DC2626','#0891B2'];
+function ptColor(name) { return PT_COLORS[(name||'P').charCodeAt(0) % PT_COLORS.length]; }
+
+function renderPatients() {
+  var patients = EH.getPatients(tenantId);
+  var q = (document.getElementById('pt-search').value||'').toLowerCase();
+  var filtered = patients.filter(function(p) {
+    if (currentFilter === 'active'   && p.status !== 'active') return false;
+    if (currentFilter === 'inactive' && p.status === 'active') return false;
+    if (q && p.name.toLowerCase().indexOf(q) < 0 && (p.email||'').toLowerCase().indexOf(q) < 0) return false;
+    return true;
+  });
+
+  document.getElementById('cnt-all').textContent      = '(' + patients.length + ')';
+  document.getElementById('cnt-active').textContent   = '(' + patients.filter(function(p){return p.status==='active';}).length + ')';
+  document.getElementById('cnt-inactive').textContent = '(' + patients.filter(function(p){return p.status!=='active';}).length + ')';
+
+  var tbody = document.getElementById('patients-tbody');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">No patients found.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(function(p) {
+    var color = ptColor(p.name);
+    var tenant = p.tenantId ? EH.getTenant(p.tenantId) : null;
+    var hospName = tenant ? tenant.name : '—';
+    return '<tr>'
+      + '<td><input type="checkbox" class="tbl-checkbox row-cb"></td>'
+      + '<td><div class="user-chip-small"><div class="letter-avatar" style="background:'+color+';width:30px;height:30px;border-radius:7px;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">'+p.name.charAt(0)+'</div>'
+      + '<div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:700;font-size:13px">'+p.name+'</a><div style="font-size:11px;color:var(--muted)">'+p.email+'</div></div></div></td>'
+      + '<td style="font-size:12px;color:var(--muted)">'+hospName+'</td>'
+      + '<td style="font-size:12px;color:var(--muted)">'+(p.phone||'—')+'</td>'
+      + '<td>' + (p.status==='active'
+          ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--success)"><span style="width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block"></span>Active</span>'
+          : '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>') + '</td>'
+      + '<td style="font-size:12px;color:var(--muted)">'+p.createdAt+'</td>'
+      + '<td><button class="action-btn" style="color:var(--danger);border-color:var(--danger)" onclick="deletePatient(\''+p.id+'\',\''+p.name+'\')"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>'
+      + '</tr>';
+  }).join('');
+}
+
+function deletePatient(id, name) {
+  if (!confirm('Delete patient "'+name+'"?')) return;
+  var list = (JSON.parse(localStorage.getItem('eh_patients')||'[]')).filter(function(p){return p.id!==id;});
+  localStorage.setItem('eh_patients', JSON.stringify(list));
+  renderPatients();
+  ehToast('"'+name+'" deleted.', 'info');
+}
+
+function submitAddPatient() {
+  var name    = document.getElementById('pt-name').value.trim();
+  var email   = document.getElementById('pt-email').value.trim();
+  var country = document.getElementById('pt-country').value;
+  var phone   = country + ' ' + document.getElementById('pt-phone').value.trim();
+  var pw      = document.getElementById('pt-password').value;
+  var confirm = document.getElementById('pt-confirm').value;
+  if (!name)  { ehToast('Full name required.', 'error'); return; }
+  if (!email) { ehToast('Email required.', 'error'); return; }
+  if (!pw)    { ehToast('Password required.', 'error'); return; }
+  if (pw !== confirm) { ehToast('Passwords do not match.', 'error'); return; }
+  EH.addPatient({ name:name, email:email, phone:phone }, tenantId);
+  ehCloseModal('modal-add-patient');
+  ['pt-name','pt-email','pt-phone','pt-password','pt-confirm'].forEach(function(id){document.getElementById(id).value='';});
+  renderPatients();
+  ehToast('"'+name+'" added successfully.', 'success');
+}
+
+document.querySelectorAll('.filter-tab[data-filter]').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-tab').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderPatients();
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  EHAuth.init();
+  tenantId = window.EH_TENANT || null;
+  if (tenantId) {
+    var t = EH.getTenant(tenantId);
+    var bar = document.getElementById('tenant-bar');
+    bar.style.display = 'flex';
+    document.getElementById('tenant-bar-name').textContent = t ? t.name : tenantId;
+  }
+  renderPatients();
+});
+window.addEventListener('eh:tenantchange', function(e) { tenantId = e.detail.tenantId; renderPatients(); });
+</script>
 <script>var ACTIVE_PAGE='patients';</script>
 <script src="assets/js/sidebar.js"></script>
 </body>

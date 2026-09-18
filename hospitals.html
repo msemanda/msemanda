@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hospitals — eHealth System</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+<style>
+/* Page tabs */
+.page-tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:22px; }
+.page-tab { padding:10px 20px; font-size:13px; font-weight:700; color:var(--muted); background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; font-family:inherit; transition:color .15s,border-color .15s; }
+.page-tab.active { color:var(--teal); border-bottom-color:var(--teal); }
+/* Hospital cards grid */
+.hospital-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
+.hospital-card { background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden; transition:box-shadow .15s; }
+.hospital-card:hover { box-shadow:0 4px 16px rgba(0,0,0,.08); }
+.hc-header { padding:16px; display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--border); }
+.hc-avatar { width:46px; height:46px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; color:#fff; flex-shrink:0; }
+.hc-name { font-size:14px; font-weight:800; color:var(--ink); }
+.hc-slug { font-size:11px; color:var(--muted); margin-top:2px; font-family:monospace; }
+.hc-body { padding:14px 16px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.hc-stat { text-align:center; }
+.hc-stat-n { font-size:20px; font-weight:800; color:var(--teal); }
+.hc-stat-l { font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; font-weight:700; }
+.hc-footer { padding:10px 16px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+.hc-meta { font-size:11px; color:var(--muted); }
+.hc-actions { display:flex; gap:6px; }
+.plan-badge { display:inline-block; padding:2px 8px; border-radius:99px; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+.plan-premium { background:#FEF3C7; color:#D97706; }
+.plan-basic   { background:#E0F2FE; color:#0369A1; }
+.plan-free    { background:#F1F5F9; color:#64748B; }
+/* Add/Edit form */
+.hosp-form-wrap { background:#fff; border-radius:12px; border:1px solid var(--border); overflow:hidden; max-width:760px; }
+.hosp-form-hd { padding:16px 22px; border-bottom:1px solid var(--border); font-size:15px; font-weight:800; color:var(--ink); }
+.hosp-form-body { padding:24px 22px; display:grid; grid-template-columns:1fr 1fr; gap:16px 20px; }
+.hosp-form-body .full { grid-column:1/-1; }
+.hf-field label { display:block; font-size:12px; font-weight:700; color:var(--ink); margin-bottom:5px; }
+.hf-field label span { color:var(--danger); }
+.hf-field input, .hf-field select, .hf-field textarea { width:100%; padding:9px 13px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; color:var(--ink); background:var(--page-bg); outline:none; transition:border-color .15s; resize:vertical; }
+.hf-field input:focus, .hf-field select:focus, .hf-field textarea:focus { border-color:var(--teal); background:#fff; }
+.hf-section { grid-column:1/-1; font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding-bottom:4px; border-bottom:1px solid var(--border); }
+.status-toggle { display:inline-flex; border:1.5px solid var(--border); border-radius:8px; overflow:hidden; }
+.status-toggle button { padding:8px 20px; border:none; background:#fff; font-family:inherit; font-size:12.5px; font-weight:700; cursor:pointer; color:var(--muted); transition:background .15s,color .15s; }
+.status-toggle button.active { background:var(--teal); color:#fff; }
+.plan-toggle { display:flex; gap:8px; }
+.plan-opt { flex:1; border:1.5px solid var(--border); border-radius:7px; padding:8px 6px; text-align:center; cursor:pointer; font-size:12px; font-weight:700; color:var(--muted); transition:border-color .15s,color .15s; }
+.plan-opt.active { border-color:var(--teal); color:var(--teal); background:rgba(13,167,167,.06); }
+.form-actions { grid-column:1/-1; display:flex; gap:10px; padding-top:4px; }
+/* View hospital modal overlay */
+.tenant-view-bar { background:linear-gradient(135deg,var(--teal),#066060); color:#fff; padding:10px 20px; display:flex; align-items:center; justify-content:space-between; border-radius:10px; margin-bottom:18px; font-size:13px; font-weight:700; }
+.tenant-view-bar a { color:rgba(255,255,255,.8); text-decoration:none; font-size:12px; border:1px solid rgba(255,255,255,.3); padding:4px 12px; border-radius:6px; }
+.tenant-view-bar a:hover { background:rgba(255,255,255,.15); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav id="sidebar-mount"></nav>
+  <div class="main">
+    <header class="header">
+      <button class="btn-quick-links"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Links</button>
+      <div class="header-right">
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
+        <span class="lang-badge">EN</span>
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+        <div class="user-chip"><div class="user-avatar">M</div><div class="user-info"><div class="user-name">Moses Semanda</div><div class="user-role">Administrator</div></div></div>
+      </div>
+    </header>
+    <div class="content">
+      <div class="page-title-row">
+        <h1 class="page-title">Hospitals</h1>
+        <button class="btn btn-teal" onclick="showView('add')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Hospital</button>
+      </div>
+
+      <div class="page-tabs">
+        <button class="page-tab active" id="tab-list" onclick="showView('list')">All Hospitals</button>
+        <button class="page-tab" id="tab-add"  onclick="showView('add')">Add Hospital</button>
+      </div>
+
+      <!-- ── List ────────────────────────────────────────── -->
+      <div id="view-list">
+        <div class="filter-bar" style="margin-bottom:16px">
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all">All <span class="tab-count" id="cnt-all"></span></button>
+            <button class="filter-tab" data-filter="active">Active <span class="tab-count" id="cnt-active"></span></button>
+            <button class="filter-tab" data-filter="inactive">Inactive <span class="tab-count" id="cnt-inactive"></span></button>
+          </div>
+          <div class="filter-right">
+            <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" id="hosp-search" placeholder="Search hospitals..." oninput="renderHospitals()"></div>
+            <select class="per-page-select" id="plan-filter" onchange="renderHospitals()"><option value="">All Plans</option><option>premium</option><option>basic</option><option>free</option></select>
+          </div>
+        </div>
+        <div class="hospital-grid" id="hosp-grid"></div>
+      </div>
+
+      <!-- ── Add / Edit ──────────────────────────────────── -->
+      <div id="view-add" style="display:none">
+        <div class="hosp-form-wrap">
+          <div class="hosp-form-hd" id="form-heading">Add Hospital</div>
+          <div class="hosp-form-body">
+
+            <div class="hf-section">Hospital Information</div>
+
+            <div class="hf-field">
+              <label>Hospital Name <span>*</span></label>
+              <input type="text" id="h-name" placeholder="e.g. Sunrise Care Hospital">
+            </div>
+            <div class="hf-field">
+              <label>Slug / Short Code <span>*</span></label>
+              <input type="text" id="h-slug" placeholder="e.g. sunrise-care">
+            </div>
+            <div class="hf-field">
+              <label>Email <span>*</span></label>
+              <input type="email" id="h-email" placeholder="hospital@domain.com">
+            </div>
+            <div class="hf-field">
+              <label>Phone <span>*</span></label>
+              <input type="tel" id="h-phone" placeholder="+256 700 000 000">
+            </div>
+            <div class="hf-field full">
+              <label>Address</label>
+              <input type="text" id="h-address" placeholder="City, District, Country">
+            </div>
+
+            <div class="hf-section">Plan &amp; Status</div>
+
+            <div class="hf-field">
+              <label>Plan</label>
+              <div class="plan-toggle">
+                <div class="plan-opt active" onclick="setPlan('free',this)">Free</div>
+                <div class="plan-opt" onclick="setPlan('basic',this)">Basic</div>
+                <div class="plan-opt" onclick="setPlan('premium',this)">Premium</div>
+              </div>
+            </div>
+            <div class="hf-field">
+              <label>Status</label>
+              <div class="status-toggle">
+                <button type="button" id="hs-active" class="active" onclick="setHStatus('active')">Active</button>
+                <button type="button" id="hs-inactive" onclick="setHStatus('inactive')">Inactive</button>
+              </div>
+            </div>
+
+            <div class="hf-section">Admin Account</div>
+
+            <div class="hf-field">
+              <label>Admin Full Name <span>*</span></label>
+              <input type="text" id="h-admin-name" placeholder="Dr. Full Name">
+            </div>
+            <div class="hf-field">
+              <label>Admin Email <span>*</span></label>
+              <input type="email" id="h-admin-email" placeholder="admin@hospital.com">
+            </div>
+            <div class="hf-field">
+              <label>Admin Password <span>*</span></label>
+              <input type="password" id="h-admin-password" placeholder="Min 8 characters">
+            </div>
+            <div class="hf-field">
+              <label>Admin Phone</label>
+              <input type="tel" id="h-admin-phone" placeholder="+256 700 000 000">
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn-teal" onclick="saveHospital()">Save Hospital</button>
+              <button class="btn" style="background:var(--page-bg);border:1px solid var(--border);color:var(--ink-mid)" onclick="cancelForm()">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.4s</span></div></footer>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/auth.js"></script>
+<script>
+var ACTIVE_PAGE = 'hospitals';
+var editingId   = null;
+var currentPlan = 'free';
+var currentStat = 'active';
+var currentFilter = 'all';
+
+var HC_COLORS = ['#0DA7A7','#7C3AED','#059669','#DB2777','#D97706','#2563EB','#DC2626','#0891B2'];
+function hColor(name) { return HC_COLORS[(name||'H').charCodeAt(0) % HC_COLORS.length]; }
+
+/* ── Plan/status toggles ─────────────────────────────── */
+function setPlan(p, el) {
+  currentPlan = p;
+  document.querySelectorAll('.plan-opt').forEach(function(o){o.classList.remove('active');});
+  el.classList.add('active');
+}
+function setHStatus(s) {
+  currentStat = s;
+  document.getElementById('hs-active').classList.toggle('active',   s==='active');
+  document.getElementById('hs-inactive').classList.toggle('active', s==='inactive');
+}
+
+/* ── Render hospital cards ───────────────────────────── */
+function renderHospitals() {
+  var tenants = EH.getTenants();
+  var q  = (document.getElementById('hosp-search').value||'').toLowerCase();
+  var pf = (document.getElementById('plan-filter').value||'').toLowerCase();
+
+  var filtered = tenants.filter(function(t){
+    if (currentFilter !== 'all' && t.status !== currentFilter) return false;
+    if (q  && t.name.toLowerCase().indexOf(q)<0 && t.slug.toLowerCase().indexOf(q)<0) return false;
+    if (pf && t.plan !== pf) return false;
+    return true;
+  });
+
+  document.getElementById('cnt-all').textContent     = '(' + tenants.length + ')';
+  document.getElementById('cnt-active').textContent  = '(' + tenants.filter(function(t){return t.status==='active';}).length + ')';
+  document.getElementById('cnt-inactive').textContent= '(' + tenants.filter(function(t){return t.status!=='active';}).length + ')';
+
+  var grid = document.getElementById('hosp-grid');
+  if (!filtered.length) {
+    grid.innerHTML = '<p style="color:var(--muted);padding:40px;text-align:center;grid-column:1/-1">No hospitals found.</p>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(function(t) {
+    var stats = EH.getTenantStats(t.id);
+    var planCls = 'plan-' + (t.plan||'free');
+    var color   = hColor(t.name);
+    var statusDot = t.status==='active'
+      ? '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--success);margin-right:4px"></span>Active'
+      : '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#94A3B8;margin-right:4px"></span>Inactive';
+    return '<div class="hospital-card">'
+      + '<div class="hc-header">'
+      + '<div class="hc-avatar" style="background:'+color+'">'+t.name.charAt(0)+'</div>'
+      + '<div><div class="hc-name">'+t.name+'</div><div class="hc-slug">@'+t.slug+'</div></div>'
+      + '<span class="plan-badge '+planCls+'" style="margin-left:auto">'+t.plan+'</span>'
+      + '</div>'
+      + '<div class="hc-body">'
+      + '<div class="hc-stat"><div class="hc-stat-n">'+stats.doctors+'</div><div class="hc-stat-l">Doctors</div></div>'
+      + '<div class="hc-stat"><div class="hc-stat-n">'+stats.patients+'</div><div class="hc-stat-l">Patients</div></div>'
+      + '<div class="hc-stat"><div class="hc-stat-n">'+stats.today+'</div><div class="hc-stat-l">Today</div></div>'
+      + '<div class="hc-stat"><div class="hc-stat-n">'+stats.pending+'</div><div class="hc-stat-l">Pending</div></div>'
+      + '</div>'
+      + '<div class="hc-footer">'
+      + '<div class="hc-meta" style="font-size:11px"><span style="font-size:10px">'+statusDot+'</span><br>Admin: '+t.adminName+'<br>Created: '+t.createdAt+'</div>'
+      + '<div class="hc-actions">'
+      + '<button class="btn" style="font-size:11px;padding:5px 12px;background:rgba(13,167,167,.1);border:1px solid var(--teal);color:var(--teal)" onclick="viewHospital(\''+t.id+'\')" title="View as this hospital">View</button>'
+      + '<button class="action-btn" style="color:var(--teal);border-color:var(--teal)" onclick="editHospital(\''+t.id+'\')" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
+      + '<button class="action-btn" style="color:var(--danger);border-color:var(--danger)" onclick="deleteHospital(\''+t.id+'\',\''+t.name+'\')" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'
+      + '</div></div></div>';
+  }).join('');
+}
+
+/* ── View as hospital (set context) ─────────────────── */
+function viewHospital(tenantId) {
+  EHAuth.switchContext(tenantId);
+  ehToast('Viewing as: ' + EH.getTenant(tenantId).name, 'info');
+  setTimeout(function(){ window.location.href = 'index.html'; }, 800);
+}
+
+/* ── Edit hospital ───────────────────────────────────── */
+function editHospital(id) {
+  var t = EH.getTenant(id);
+  if (!t) return;
+  editingId = id;
+  document.getElementById('h-name').value    = t.name;
+  document.getElementById('h-slug').value    = t.slug;
+  document.getElementById('h-email').value   = t.email;
+  document.getElementById('h-phone').value   = t.phone;
+  document.getElementById('h-address').value = t.address||'';
+  document.getElementById('h-admin-name').value  = t.adminName||'';
+  document.getElementById('h-admin-email').value = t.adminEmail||'';
+  document.getElementById('h-admin-password').value = '';
+  document.getElementById('h-admin-phone').value = t.adminPhone||'';
+  currentPlan = t.plan||'free';
+  document.querySelectorAll('.plan-opt').forEach(function(o){o.classList.toggle('active', o.textContent.toLowerCase()===currentPlan);});
+  setHStatus(t.status||'active');
+  document.getElementById('form-heading').textContent = 'Edit Hospital — ' + t.name;
+  showView('add');
+}
+
+/* ── Delete hospital ─────────────────────────────────── */
+function deleteHospital(id, name) {
+  if (!confirm('Delete "'+name+'"? All tenant data (patients, appointments, doctors, users) for this hospital will be removed.')) return;
+  EH.deleteTenant(id);
+  // Remove users, patients, appointments, doctors scoped to this tenant
+  ['users','patients','doctors','appointments'].forEach(function(col) {
+    var list = (JSON.parse(localStorage.getItem('eh_'+col))||[]).filter(function(r){ return r.tenantId !== id; });
+    localStorage.setItem('eh_'+col, JSON.stringify(list));
+  });
+  renderHospitals();
+  ehToast('"'+name+'" deleted.', 'info');
+}
+
+/* ── Save hospital ───────────────────────────────────── */
+function saveHospital() {
+  var name      = document.getElementById('h-name').value.trim();
+  var slug      = document.getElementById('h-slug').value.trim().toLowerCase().replace(/\s+/g,'-');
+  var email     = document.getElementById('h-email').value.trim();
+  var phone     = document.getElementById('h-phone').value.trim();
+  var address   = document.getElementById('h-address').value.trim();
+  var adminName = document.getElementById('h-admin-name').value.trim();
+  var adminEmail= document.getElementById('h-admin-email').value.trim();
+  var adminPass = document.getElementById('h-admin-password').value;
+  var adminPhone= document.getElementById('h-admin-phone').value.trim();
+
+  if (!name)  { ehToast('Hospital Name is required.', 'error'); return; }
+  if (!slug)  { ehToast('Slug is required.', 'error'); return; }
+  if (!email) { ehToast('Email is required.', 'error'); return; }
+  if (!editingId && (!adminName || !adminEmail || !adminPass)) {
+    ehToast('Admin Name, Email and Password are required.', 'error'); return;
+  }
+
+  var data = { name:name, slug:slug, email:email, phone:phone, address:address,
+               plan:currentPlan, status:currentStat,
+               adminName:adminName, adminEmail:adminEmail, adminPhone:adminPhone };
+
+  if (editingId) {
+    EH.updateTenant(editingId, data);
+    // Update admin user if password provided
+    if (adminPass) {
+      var users = JSON.parse(localStorage.getItem('eh_users')||'[]');
+      users = users.map(function(u){ return (u.tenantId===editingId && u.role==='hospital') ? Object.assign(u,{name:adminName,email:adminEmail,password:adminPass}) : u; });
+      localStorage.setItem('eh_users', JSON.stringify(users));
+    }
+    ehToast('"'+name+'" updated.', 'success');
+  } else {
+    var t = EH.addTenant(data);
+    // Auto-create hospital admin user
+    EH.addUser({ name:adminName, email:adminEmail, password:adminPass, phone:adminPhone, role:'hospital', tenantId:t.id, avatar:adminName.charAt(0).toUpperCase(), status:'active' });
+    ehToast('"'+name+'" created with admin account.', 'success');
+  }
+
+  cancelForm();
+}
+
+/* ── Filter tabs ─────────────────────────────────────── */
+document.querySelectorAll('.filter-tab[data-filter]').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-tab').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderHospitals();
+  });
+});
+
+/* ── View switching ──────────────────────────────────── */
+function showView(v) {
+  var isList = v==='list';
+  document.getElementById('view-list').style.display = isList ? '' : 'none';
+  document.getElementById('view-add').style.display  = isList ? 'none' : '';
+  document.getElementById('tab-list').classList.toggle('active', isList);
+  document.getElementById('tab-add').classList.toggle('active',  !isList);
+  if (isList) { editingId=null; document.getElementById('form-heading').textContent='Add Hospital'; renderHospitals(); }
+}
+function cancelForm() {
+  ['h-name','h-slug','h-email','h-phone','h-address','h-admin-name','h-admin-email','h-admin-password','h-admin-phone'].forEach(function(id){document.getElementById(id).value='';});
+  currentPlan='free'; currentStat='active';
+  document.querySelectorAll('.plan-opt').forEach(function(o,i){o.classList.toggle('active',i===0);});
+  setHStatus('active');
+  document.getElementById('form-heading').textContent='Add Hospital';
+  editingId=null;
+  showView('list');
+}
+
+/* ── Auto slug from name ─────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+  EHAuth.init();
+  renderHospitals();
+  document.getElementById('h-name').addEventListener('input', function() {
+    if (!editingId) document.getElementById('h-slug').value = this.value.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+  });
+  if (window.location.search.indexOf('view=add') >= 0) showView('add');
+});
+</script>
+<script>var ACTIVE_PAGE='hospitals';</script>
+<script src="assets/js/sidebar.js"></script>
+</body>
+</html>
