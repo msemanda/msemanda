@@ -5,40 +5,62 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Specialties — eHealth System</title>
 <link rel="stylesheet" href="assets/css/admin.css">
+<style>
+.sp-tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:24px; }
+.sp-tab { background:none; border:none; padding:10px 20px; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:color .15s,border-color .15s; }
+.sp-tab.active { color:var(--teal); border-bottom-color:var(--teal); }
+.sp-tab-panel { display:none; }
+.sp-tab-panel.active { display:block; }
+
+/* Form layout */
+.form-row { display:grid; grid-template-columns:160px 1fr; align-items:flex-start; gap:16px 24px; margin-bottom:20px; }
+.form-row label { font-size:13px; font-weight:600; color:var(--dark,#2d3748); padding-top:9px; }
+.form-row label span { color:var(--danger,#e53e3e); }
+.form-row input[type=text], .form-row textarea { width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit; box-sizing:border-box; }
+.form-row textarea { resize:vertical; min-height:90px; }
+.form-row input:focus, .form-row textarea:focus { outline:none; border-color:var(--teal); box-shadow:0 0 0 3px rgba(13,167,167,.12); }
+
+/* Image picker */
+.img-pick { width:90px; height:90px; border:2px dashed var(--border); border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:22px; overflow:hidden; background:#fafafa; position:relative; flex-shrink:0; }
+.img-pick:hover { border-color:var(--teal); background:#f0fefe; }
+.img-pick img { width:100%; height:100%; object-fit:cover; position:absolute; inset:0; }
+.img-pick .plus { color:var(--muted); font-size:20px; line-height:1; }
+.img-pick input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+
+/* Status segmented buttons */
+.seg-btns { display:inline-flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.seg-btn { padding:7px 22px; font-size:13px; font-weight:500; border:none; background:#fff; cursor:pointer; transition:background .15s,color .15s; color:var(--muted); }
+.seg-btn.active { background:var(--teal); color:#fff; }
+.seg-btn:first-child { border-right:1px solid var(--border); }
+
+/* Table styles */
+.sp-img { width:32px; height:32px; border-radius:8px; object-fit:cover; background:#e8f5f5; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; overflow:hidden; }
+.sp-name-cell { display:flex; align-items:center; gap:10px; }
+.sp-actions { display:flex; gap:10px; font-size:12px; margin-top:3px; }
+.sp-actions a { color:var(--teal); text-decoration:none; font-weight:500; }
+.sp-actions a.trash { color:var(--danger,#e53e3e); }
+.sp-actions a.restore { color:var(--success,#38a169); }
+.sp-actions a:hover { text-decoration:underline; }
+.toggle-sw { position:relative; width:36px; height:20px; cursor:pointer; display:inline-block; }
+.toggle-sw input { opacity:0; width:0; height:0; }
+.toggle-sw .track { position:absolute; inset:0; background:#ccc; border-radius:20px; transition:.2s; }
+.toggle-sw input:checked + .track { background:var(--teal); }
+.toggle-sw .track::after { content:''; position:absolute; width:14px; height:14px; background:#fff; border-radius:50%; top:3px; left:3px; transition:.2s; }
+.toggle-sw input:checked + .track::after { left:19px; }
+.form-actions { display:flex; justify-content:flex-end; padding-top:8px; gap:8px; }
+.bulk-bar { display:flex; align-items:center; gap:8px; }
+.bulk-select { padding:6px 10px; border:1px solid var(--border); border-radius:8px; font-size:12px; font-family:inherit; }
+.trash-row td { opacity:.55; }
+</style>
 </head>
 <body>
 <div class="shell">
-  <nav class="sidebar">
-    <a class="sidebar-logo" href="index.html"><div class="logo-icon"><svg viewBox="0 0 24 24" fill="white"><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="4" y="10" width="16" height="4" rx="1"/></svg></div><div class="logo-text">eHealth<span>Hospital Management</span></div></a>
-    <div class="sidebar-search"><span class="s-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" placeholder="Search..."></div>
-    <div class="nav-section-label">Home</div>
-    <a class="nav-item" href="index.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</span></a>
-    <a class="nav-item" href="medical-services.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Medical Services</span></a>
-    <div class="nav-section-label">Appointment Management</div>
-    <a class="nav-item" href="appointments.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Appointments</span></a>
-    <a class="nav-item" href="ambulance-bookings.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="9" width="22" height="11" rx="1"/><circle cx="7" cy="20" r="2"/><circle cx="17" cy="20" r="2"/></svg>All Ambulance Bookings</span></a>
-    <div class="nav-section-label">Hospital Management</div>
-    <a class="nav-item" href="departments.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Departments</span></a>
-    <div class="nav-item active" data-toggle="sub-spec">
-      <span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>Specialties</span>
-      <svg class="nav-chevron open" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
-    </div>
-    <div class="nav-sub" id="sub-spec">
-      <a class="nav-sub-item active" href="specialties.html">All Specialties</a>
-    </div>
-    <a class="nav-item" href="lab-tests.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18"/></svg>Lab Tests</span></a>
-    <div class="nav-section-label">User Management</div>
-    <a class="nav-item" href="doctors.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Doctors</span></a>
-    <a class="nav-item" href="patients.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Patients</span></a>
-    <div class="nav-section-label">Promotion Management</div>
-    <a class="nav-item" href="#"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>Coupons</span></a>
-  </nav>
-
+  <nav id="sidebar-mount"></nav>
   <div class="main">
     <header class="header">
       <button class="btn-quick-links"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Links</button>
       <div class="header-right">
-        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
         <span class="lang-badge">EN</span>
         <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
         <div class="user-chip"><div class="user-avatar">M</div><div class="user-info"><div class="user-name">Moses Semanda</div><div class="user-role">Administrator</div></div></div>
@@ -47,89 +69,317 @@
     <div class="content">
       <div class="page-title-row">
         <h1 class="page-title">Specialties</h1>
-        <button class="btn btn-teal" onclick="ehOpenModal('modal-add-spec')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Specialty</button>
+        <button class="btn btn-teal" onclick="switchTab('add')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New</button>
       </div>
-      <div class="card">
-        <div class="filter-bar">
-          <div class="filter-tabs">
-            <button class="filter-tab active" data-filter="all">All <span class="tab-count" id="spec-cnt-all"></span></button>
-            <button class="filter-tab" data-filter="active">Active <span class="tab-count" id="spec-cnt-active"></span></button>
-            <button class="filter-tab" data-filter="inactive">DeActive <span class="tab-count" id="spec-cnt-inactive"></span></button>
+
+      <!-- Tabs -->
+      <div class="sp-tabs">
+        <button class="sp-tab active" data-tab="list" onclick="switchTab('list')">All Specialties</button>
+        <button class="sp-tab" data-tab="add" onclick="switchTab('add')" id="add-tab-btn">Add Specialty</button>
+      </div>
+
+      <!-- List Panel -->
+      <div class="sp-tab-panel active" id="panel-list">
+        <div class="card">
+          <div class="filter-bar">
+            <div class="filter-tabs">
+              <button class="filter-tab active" data-filter="all" onclick="setFilter(this,'all')">All <span class="tab-count" id="cnt-all"></span></button>
+              <button class="filter-tab" data-filter="active" onclick="setFilter(this,'active')">Active <span class="tab-count" id="cnt-active"></span></button>
+              <button class="filter-tab" data-filter="inactive" onclick="setFilter(this,'inactive')">DeActive <span class="tab-count" id="cnt-inactive"></span></button>
+              <button class="filter-tab" data-filter="trash" onclick="setFilter(this,'trash')">Trash <span class="tab-count" id="cnt-trash"></span></button>
+            </div>
+            <div class="filter-right">
+              <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" id="sp-search" placeholder="Search..." oninput="renderSpecs()"></div>
+              <select class="per-page-select" id="per-page"><option>15</option><option>25</option><option>50</option></select>
+              <div class="bulk-bar">
+                <select class="bulk-select" id="bulk-action">
+                  <option value="">Bulk actions</option>
+                  <option value="activate">Set Active</option>
+                  <option value="deactivate">Set DeActive</option>
+                  <option value="trash">Move to Trash</option>
+                  <option value="restore">Restore</option>
+                  <option value="delete">Delete Permanently</option>
+                </select>
+                <button class="btn-apply" onclick="applyBulk()">Apply</button>
+              </div>
+            </div>
           </div>
-          <div class="filter-right">
-            <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" placeholder="Search..."></div>
-            <select class="per-page-select"><option>15</option><option>25</option></select>
-            <button class="btn-apply">Apply</button>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all" onchange="toggleAll(this)"></th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Created At</th>
+              </tr></thead>
+              <tbody id="spec-tbody"></tbody>
+            </table>
           </div>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all"></th>
-              <th>Name &#9650;</th>
-              <th>Status &#9650;</th>
-              <th>Created At &#9650;</th>
-            </tr></thead>
-            <tbody id="spec-tbody"></tbody>
-            <tfoot><tr><td colspan="4" style="padding:12px 14px;font-size:12px;color:var(--muted);">Name &#9650;</td></tr></tfoot>
-          </table>
+      </div>
+
+      <!-- Add/Edit Panel -->
+      <div class="sp-tab-panel" id="panel-add">
+        <div class="card" style="max-width:680px;">
+          <h3 id="form-title" style="margin:0 0 24px;font-size:15px;font-weight:700;">Add Specialty <span style="font-size:12px;color:var(--muted);font-weight:400;">(en)</span></h3>
+          <input type="hidden" id="edit-id">
+
+          <div class="form-row">
+            <label>Image <span>*</span></label>
+            <div>
+              <div class="img-pick" id="img-pick" onclick="document.getElementById('img-file').click()">
+                <img id="img-preview" src="" alt="" style="display:none">
+                <span class="plus" id="img-plus">+</span>
+                <input type="file" id="img-file" accept="image/*" onchange="previewImg(this)" style="display:none">
+              </div>
+              <div style="font-size:11px;color:var(--muted);margin-top:6px;">Click to upload image</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Name <span>*</span></label>
+            <input type="text" id="spec-name" placeholder="Enter Name (en)">
+          </div>
+
+          <div class="form-row">
+            <label>Description</label>
+            <textarea id="spec-desc" placeholder="Enter Description (en)"></textarea>
+          </div>
+
+          <div class="form-row">
+            <label>Status</label>
+            <div class="seg-btns">
+              <button class="seg-btn active" id="seg-active" onclick="setSeg('active')">Active</button>
+              <button class="seg-btn" id="seg-inactive" onclick="setSeg('inactive')">DeActive</button>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-secondary" onclick="switchTab('list')">Cancel</button>
+            <button class="btn btn-teal" onclick="saveSpec()">Save</button>
+          </div>
         </div>
       </div>
     </div>
     <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.4s</span></div></footer>
   </div>
 </div>
-<!-- Add Specialty Modal -->
-<div id="modal-add-spec" class="eh-modal-overlay" onclick="if(event.target===this)ehCloseModal('modal-add-spec')">
-  <div class="eh-modal">
-    <div class="eh-modal-hd"><h3>Add Specialty</h3><button class="eh-modal-close" onclick="ehCloseModal('modal-add-spec')">&#x2715;</button></div>
-    <div class="eh-modal-body">
-      <div class="mfield"><label>Name <span>*</span></label><input type="text" id="spec-name" placeholder="e.g. Cardiology"></div>
-      <div class="mfield"><label>Icon (emoji)</label><input type="text" id="spec-icon" placeholder="e.g. ❤️" maxlength="4"></div>
-    </div>
-    <div class="eh-modal-ft"><button class="btn btn-teal" onclick="submitAddSpec()">Save Specialty</button></div>
-  </div>
-</div>
+
 <script src="assets/js/data.js"></script>
 <script src="assets/js/auth.js"></script>
+<script src="assets/js/sidebar.js"></script>
 <script>
-var ACTIVE_PAGE='specialties';
-var specFilter='all';
+var ACTIVE_PAGE = 'specialties';
+var specFilter = 'all';
+var segStatus = 'active';
+var imgData = '';
+
+function switchTab(tab) {
+  document.querySelectorAll('.sp-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.sp-tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelector('[data-tab="'+tab+'"]').classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+  if (tab === 'add' && !document.getElementById('edit-id').value) resetForm();
+}
+
+function resetForm() {
+  document.getElementById('edit-id').value = '';
+  document.getElementById('spec-name').value = '';
+  document.getElementById('spec-desc').value = '';
+  document.getElementById('img-preview').style.display = 'none';
+  document.getElementById('img-plus').style.display = '';
+  document.getElementById('img-file').value = '';
+  imgData = '';
+  setSeg('active');
+  document.getElementById('form-title').innerHTML = 'Add Specialty <span style="font-size:12px;color:var(--muted);font-weight:400;">(en)</span>';
+}
+
+function previewImg(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    imgData = e.target.result;
+    var prev = document.getElementById('img-preview');
+    prev.src = imgData;
+    prev.style.display = 'block';
+    document.getElementById('img-plus').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function setSeg(val) {
+  segStatus = val;
+  document.getElementById('seg-active').classList.toggle('active', val === 'active');
+  document.getElementById('seg-inactive').classList.toggle('active', val === 'inactive');
+}
+
+function setFilter(btn, f) {
+  document.querySelectorAll('.filter-tab').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  specFilter = f;
+  renderSpecs();
+}
+
+function toggleAll(cb) {
+  document.querySelectorAll('.row-cb').forEach(function(c){ c.checked = cb.checked; });
+}
+
+function getSelected() {
+  var ids = [];
+  document.querySelectorAll('.row-cb:checked').forEach(function(c){ ids.push(c.dataset.id); });
+  return ids;
+}
+
+function applyBulk() {
+  var action = document.getElementById('bulk-action').value;
+  var ids = getSelected();
+  if (!action) { ehToast('Select a bulk action.', 'error'); return; }
+  if (!ids.length) { ehToast('Select at least one row.', 'error'); return; }
+  ids.forEach(function(id) {
+    if (action === 'activate')   EH.updateSpecialty(id, { status:'active' });
+    if (action === 'deactivate') EH.updateSpecialty(id, { status:'inactive' });
+    if (action === 'trash')      EH.updateSpecialty(id, { status:'trash' });
+    if (action === 'restore')    EH.updateSpecialty(id, { status:'active' });
+    if (action === 'delete')     EH.deleteSpecialty(id);
+  });
+  document.getElementById('sel-all').checked = false;
+  document.getElementById('bulk-action').value = '';
+  renderSpecs();
+  ehToast('Bulk action applied.', 'success');
+}
+
+function editSpec(id) {
+  var sp = EH.getSpecialties().find(function(x){ return x.id === id; });
+  if (!sp) return;
+  document.getElementById('edit-id').value = sp.id;
+  document.getElementById('spec-name').value = sp.name;
+  document.getElementById('spec-desc').value = sp.description || '';
+  setSeg(sp.status === 'active' ? 'active' : 'inactive');
+  imgData = sp.image || '';
+  var prev = document.getElementById('img-preview');
+  if (imgData) { prev.src = imgData; prev.style.display = 'block'; document.getElementById('img-plus').style.display = 'none'; }
+  else { prev.style.display = 'none'; document.getElementById('img-plus').style.display = ''; }
+  document.getElementById('form-title').innerHTML = 'Edit Specialty <span style="font-size:12px;color:var(--muted);font-weight:400;">(en)</span>';
+  switchTab('add');
+  document.querySelector('[data-tab="add"]').textContent = 'Edit Specialty';
+}
+
+function trashSpec(id) {
+  EH.updateSpecialty(id, { status:'trash' });
+  renderSpecs();
+  ehToast('Moved to trash.', 'success');
+}
+
+function restoreSpec(id) {
+  EH.updateSpecialty(id, { status:'active' });
+  renderSpecs();
+  ehToast('Specialty restored.', 'success');
+}
+
+function permDeleteSpec(id) {
+  if (!confirm('Permanently delete this specialty? This cannot be undone.')) return;
+  EH.deleteSpecialty(id);
+  renderSpecs();
+  ehToast('Specialty deleted.', 'success');
+}
+
+function toggleStatus(id, checked) {
+  EH.updateSpecialty(id, { status: checked ? 'active' : 'inactive' });
+  renderSpecs();
+}
+
+function saveSpec() {
+  var name = document.getElementById('spec-name').value.trim();
+  var desc = document.getElementById('spec-desc').value.trim();
+  var eid = document.getElementById('edit-id').value;
+  if (!name) { ehToast('Specialty name is required.', 'error'); return; }
+  var payload = { name:name, description:desc, status:segStatus, image:imgData };
+  if (eid) {
+    EH.updateSpecialty(eid, payload);
+    ehToast('"'+name+'" updated.', 'success');
+  } else {
+    EH.addSpecialty(payload);
+    ehToast('"'+name+'" added.', 'success');
+  }
+  resetForm();
+  document.querySelector('[data-tab="add"]').textContent = 'Add Specialty';
+  switchTab('list');
+  renderSpecs();
+}
+
 function renderSpecs() {
   var all = EH.getSpecialties();
-  var filtered = all.filter(function(s){ return specFilter==='all'||(specFilter==='active'&&s.status==='active')||(specFilter==='inactive'&&s.status!=='active'); });
-  var el=document.getElementById('spec-cnt-all'); if(el) el.textContent='('+all.length+')';
-  el=document.getElementById('spec-cnt-active'); if(el) el.textContent='('+all.filter(function(s){return s.status==='active';}).length+')';
-  el=document.getElementById('spec-cnt-inactive'); if(el) el.textContent='('+all.filter(function(s){return s.status!=='active';}).length+')';
-  var tb=document.getElementById('spec-tbody');
-  if(!filtered.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted)">No specialties found.</td></tr>';return;}
-  var lockIcon='<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-  tb.innerHTML=filtered.map(function(s){
-    return '<tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td>'
-      +'<td><div class="user-chip-small"><div class="spec-icon">'+s.icon+'</div><span>'+s.name+'</span></div></td>'
-      +'<td>'+(s.status==='active'?'<span style="color:var(--success);font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block"></span>Active</span>':'<span class="lock-icon">'+lockIcon+'</span>')+'</td>'
-      +'<td style="font-size:12px;color:var(--muted)">'+s.createdAt+'</td></tr>';
+  var q = (document.getElementById('sp-search')||{}).value || '';
+  q = q.toLowerCase();
+  var perPage = parseInt((document.getElementById('per-page')||{}).value || 15);
+
+  var counts = { all:0, active:0, inactive:0, trash:0 };
+  all.forEach(function(sp) {
+    if (sp.status === 'trash') counts.trash++;
+    else { counts.all++; if (sp.status === 'active') counts.active++; else counts.inactive++; }
+  });
+  function setCount(id, n) { var el=document.getElementById(id); if(el) el.textContent='('+n+')'; }
+  setCount('cnt-all', counts.all);
+  setCount('cnt-active', counts.active);
+  setCount('cnt-inactive', counts.inactive);
+  setCount('cnt-trash', counts.trash);
+
+  var filtered = all.filter(function(sp) {
+    if (specFilter === 'trash') return sp.status === 'trash';
+    if (specFilter === 'active') return sp.status === 'active';
+    if (specFilter === 'inactive') return sp.status === 'inactive';
+    return sp.status !== 'trash';
+  });
+  if (q) filtered = filtered.filter(function(sp){ return (sp.name||'').toLowerCase().indexOf(q) > -1 || (sp.description||'').toLowerCase().indexOf(q) > -1; });
+  filtered = filtered.slice(0, perPage);
+
+  var tb = document.getElementById('spec-tbody');
+  if (!filtered.length) {
+    tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted)">No specialties found.</td></tr>';
+    return;
+  }
+
+  tb.innerHTML = filtered.map(function(sp) {
+    var isTrash = sp.status === 'trash';
+    var isActive = sp.status === 'active';
+
+    var imgCell;
+    if (sp.image) {
+      imgCell = '<div class="sp-img"><img src="'+sp.image+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px"></div>';
+    } else {
+      var bg = sp.bg || '#e8f5f5';
+      imgCell = '<div class="sp-img" style="background:'+bg+';border-radius:8px">'+(sp.icon||sp.name.charAt(0))+'</div>';
+    }
+
+    var nameBlock = '<div class="sp-name-cell">' + imgCell
+      + '<div><div style="font-size:13px;font-weight:600;color:var(--teal)">' + sp.name + '</div>'
+      + (sp.description ? '<div style="font-size:11px;color:var(--muted);margin-top:1px">'+sp.description+'</div>' : '')
+      + '</div></div>';
+
+    var actions;
+    if (isTrash) {
+      actions = '<div class="sp-actions"><a href="#" class="restore" onclick="restoreSpec(\''+sp.id+'\');return false">Restore</a> | <a href="#" class="trash" onclick="permDeleteSpec(\''+sp.id+'\');return false">Delete</a></div>';
+    } else {
+      actions = '<div class="sp-actions"><a href="#" onclick="editSpec(\''+sp.id+'\');return false">Edit</a> | <a href="#" class="trash" onclick="trashSpec(\''+sp.id+'\');return false">Move To Trash</a></div>';
+    }
+
+    var toggleHtml = isTrash ? '' :
+      '<label class="toggle-sw"><input type="checkbox"'+(isActive?' checked':'')+' onchange="toggleStatus(\''+sp.id+'\',this.checked)"><span class="track"></span></label>';
+
+    return '<tr class="'+(isTrash?'trash-row':'')+'">'
+      + '<td><input type="checkbox" class="tbl-checkbox row-cb" data-id="'+sp.id+'"></td>'
+      + '<td>' + nameBlock + '<div style="margin-top:4px">' + actions + '</div></td>'
+      + '<td style="white-space:nowrap">' + toggleHtml + ' <span style="font-size:11px;color:var(--muted)">'+(isTrash?'Trash':isActive?'Active':'DeActive')+'</span></td>'
+      + '<td style="font-size:12px;color:var(--muted)">'+(sp.createdAt||'—')+'</td>'
+      + '</tr>';
   }).join('');
 }
-document.querySelectorAll('.filter-tab[data-filter]').forEach(function(btn){
-  btn.addEventListener('click',function(){
-    document.querySelectorAll('.filter-tab').forEach(function(b){b.classList.remove('active');});
-    btn.classList.add('active'); specFilter=btn.dataset.filter; renderSpecs();
-  });
-});
-function submitAddSpec() {
-  var name = document.getElementById('spec-name').value.trim();
-  var icon = document.getElementById('spec-icon').value.trim() || '🩺';
-  if (!name) { ehToast('Specialty name is required.', 'error'); return; }
-  EH.addSpecialty({ name:name, icon:icon });
-  ehCloseModal('modal-add-spec');
-  document.getElementById('spec-name').value = '';
-  document.getElementById('spec-icon').value = '';
+
+document.addEventListener('DOMContentLoaded', function() {
+  EHAuth.init();
   renderSpecs();
-  ehToast('"'+name+'" added successfully.', 'success');
-}
-document.addEventListener('DOMContentLoaded', function(){ EHAuth.init(); renderSpecs(); });
+});
 </script>
-<script src="assets/js/sidebar.js"></script>
 </body>
 </html>

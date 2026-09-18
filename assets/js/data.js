@@ -184,6 +184,12 @@
       var sp = Object.assign({ id: nextId('sp'), status:'active', createdAt: nowStr() }, data);
       list.push(sp); s('specialties', list); return sp;
     },
+    updateSpecialty: function(id, data) {
+      var list = this.getSpecialties();
+      var i = list.findIndex(function(sp){return sp.id===id;});
+      if (i > -1) { list[i] = Object.assign({}, list[i], data); s('specialties', list); return list[i]; }
+      return null;
+    },
     deleteSpecialty: function(id) { s('specialties', this.getSpecialties().filter(function(sp){return sp.id!==id;})); },
 
     /* ── Lab Tests ───────────────────────────────────────── */
