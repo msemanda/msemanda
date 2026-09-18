@@ -34,7 +34,7 @@
     if (!chip || chip.querySelector('.user-chip-dd')) return; // already injected
     var dd = document.createElement('div');
     dd.className = 'user-chip-dd';
-    dd.innerHTML = '<a class="user-dd-item" href="users.html">'
+    dd.innerHTML = '<a class="user-dd-item" href="edit-profile.html">'
       + '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</a>'
       + '<div class="user-dd-sep"></div>'
       + '<a class="user-dd-item danger" href="#" onclick="EHAuth.logout();return false;">'
