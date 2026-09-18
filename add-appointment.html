@@ -6,32 +6,45 @@
 <title>Add Appointment — eHealth System</title>
 <link rel="stylesheet" href="assets/css/admin.css">
 <style>
-.wizard-steps { display:flex; align-items:center; gap:8px; padding:14px 20px; border-bottom:1px solid var(--border); }
-.wizard-step { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; border:2px solid var(--border); color:var(--muted); }
-.wizard-step.active { border-color:var(--teal); background:var(--teal); color:#fff; }
-.wizard-step.done { border-color:var(--teal); color:var(--teal); }
-.wizard-line { flex:1; height:2px; background:var(--border); max-width:60px; }
-.wizard-label { font-size:11px; color:var(--muted); white-space:nowrap; }
-.zone-search { display:flex; gap:10px; padding:16px 20px; border-bottom:1px solid var(--border); align-items:center; flex-wrap:wrap; }
-.zone-search .form-control { max-width:260px; }
-.specialty-scroll { display:flex; gap:12px; overflow-x:auto; padding:20px; border-bottom:1px solid var(--border); }
+.appt-layout { display:grid; grid-template-columns:1fr 340px; gap:16px; align-items:start; }
+@media(max-width:900px){ .appt-layout { grid-template-columns:1fr; } }
+.zone-search { display:flex; gap:12px; padding:16px 18px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+.zone-search > div { flex:1; min-width:180px; }
+.specialty-scroll { display:flex; gap:12px; overflow-x:auto; padding:16px 18px; border-bottom:1px solid var(--border); }
 .specialty-scroll::-webkit-scrollbar { height:4px; }
-.specialty-scroll::-webkit-scrollbar-track { background:#F3F4F6; }
 .specialty-scroll::-webkit-scrollbar-thumb { background:var(--teal); border-radius:4px; }
-.specialty-scroll .specialty-card { min-width:110px; flex-shrink:0; }
-.no-doctors { text-align:center; padding:60px 20px; color:var(--muted); font-size:14px; }
-.coupon-row { display:flex; gap:8px; margin-top:8px; }
-.coupon-row input { flex:1; padding:8px 12px; border:1px solid var(--border); border-radius:7px; font-size:13px; font-family:inherit; outline:none; }
-.coupon-row input:focus { border-color:var(--teal); }
-.fee-box { background:#F0FAFA; border-radius:8px; padding:14px; margin:14px 0; }
-.total-row { display:flex; justify-content:space-between; margin-top:10px; border-top:1px solid var(--teal-light); padding-top:10px; font-weight:800; font-size:14px; color:var(--teal); }
-.pay-radio { display:flex; gap:10px; }
-.pay-radio-opt { flex:1; border:1.5px solid var(--border); border-radius:7px; padding:10px 8px; text-align:center; cursor:pointer; font-size:12.5px; font-weight:600; color:var(--ink-mid); transition:border-color .15s; display:flex; align-items:center; gap:8px; justify-content:center; }
+.specialty-card { min-width:110px; flex-shrink:0; border:1.5px solid var(--border); border-radius:10px; padding:14px 10px; text-align:center; cursor:pointer; transition:border-color .15s,background .15s; background:#fff; }
+.specialty-card:hover { border-color:var(--teal); }
+.specialty-card.selected { border-color:var(--teal); background:var(--teal-light); }
+.sc-icon { font-size:26px; margin-bottom:6px; }
+.sc-name { font-size:11.5px; font-weight:700; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sc-count { font-size:11px; color:var(--muted); margin-top:2px; }
+.doctor-list { padding:16px 18px; display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; min-height:120px; }
+.doctor-card { border:1.5px solid var(--border); border-radius:10px; padding:14px 12px; cursor:pointer; display:flex; align-items:center; gap:10px; transition:border-color .15s; }
+.doctor-card:hover { border-color:var(--teal); }
+.doctor-card.selected { border-color:var(--teal); background:var(--teal-light); }
+.doc-avatar { width:38px; height:38px; border-radius:9px; background:var(--teal); color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800; flex-shrink:0; }
+.doc-name { font-size:13px; font-weight:700; color:var(--ink); }
+.doc-spec { font-size:11px; color:var(--muted); }
+.no-doctors { text-align:center; padding:40px 20px; color:var(--muted); font-size:13px; grid-column:1/-1; }
+.time-slots { display:flex; flex-wrap:wrap; gap:7px; }
+.time-slot { padding:7px 12px; border:1.5px solid var(--border); border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; color:var(--ink-mid); transition:border-color .15s,background .15s; }
+.time-slot:hover { border-color:var(--teal); }
+.time-slot.selected { border-color:var(--teal); background:var(--teal); color:#fff; }
+.time-slot.booked { background:#F3F4F6; color:var(--muted); cursor:not-allowed; border-color:var(--border); text-decoration:line-through; }
+.pay-radio { display:flex; gap:10px; margin-bottom:10px; }
+.pay-radio-opt { flex:1; border:1.5px solid var(--border); border-radius:7px; padding:9px 8px; text-align:center; cursor:pointer; font-size:12.5px; font-weight:600; color:var(--ink-mid); transition:border-color .15s; display:flex; align-items:center; gap:8px; justify-content:center; }
 .pay-radio-opt.selected { border-color:var(--teal); color:var(--teal); background:var(--teal-light); }
-input[type=radio].pay-radio-input { accent-color:var(--teal); }
-.wallet-info { font-size:12px; color:var(--muted); margin-bottom:12px; }
+.fee-box { background:#F0FAFA; border-radius:8px; padding:14px; margin:12px 0; }
+.fee-row { display:flex; justify-content:space-between; font-size:12.5px; color:var(--ink-mid); margin-bottom:6px; }
+.total-row { display:flex; justify-content:space-between; margin-top:10px; border-top:1px solid var(--teal-light); padding-top:10px; font-weight:800; font-size:14px; color:var(--teal); }
+.coupon-row { display:flex; gap:8px; margin-top:8px; }
+.coupon-row input { flex:1; padding:7px 11px; border:1px solid var(--border); border-radius:7px; font-size:12px; font-family:inherit; outline:none; }
+.coupon-row input:focus { border-color:var(--teal); }
+.wallet-info { font-size:12px; color:var(--muted); margin-bottom:10px; }
 .btn-book { width:100%; padding:11px; background:var(--teal); color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; margin-top:14px; transition:opacity .15s; }
 .btn-book:hover { opacity:.88; }
+.selected-doc-bar { background:var(--teal-light); border-top:1px solid var(--border); padding:10px 18px; font-size:12.5px; color:var(--teal); font-weight:600; display:none; }
 </style>
 </head>
 <body>
@@ -48,60 +61,42 @@ input[type=radio].pay-radio-input { accent-color:var(--teal); }
       </div>
     </header>
     <div class="content">
+      <div class="page-title-row"><h1 class="page-title">Add Appointment</h1></div>
       <div class="appt-layout">
-        <!-- Left: specialty picker -->
-        <div>
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <div class="card-title">Add Appointment</div>
-              </div>
-              <div style="display:flex;gap:8px">
-                <button class="action-btn" title="Previous"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
-                <button class="action-btn" title="Next"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
-              </div>
-            </div>
-            <!-- Wizard steps -->
-            <div class="wizard-steps">
-              <div class="wizard-step active">1</div>
-              <div class="wizard-line"></div>
-              <span class="wizard-label">Landing Page</span>
-              <div class="wizard-line"></div>
-              <div class="wizard-step">2</div>
-              <div class="wizard-line"></div>
-              <span class="wizard-label">Settings</span>
-            </div>
-            <!-- Doctor & Zone search -->
-            <div class="zone-search">
-              <div style="flex:1;min-width:200px">
-                <label class="form-label">Doctor</label>
-                <input type="text" class="form-control" placeholder="Search...">
-              </div>
-              <div style="flex:1;min-width:200px">
-                <label class="form-label">Zone <span style="color:var(--danger)">*</span></label>
-                <select class="form-control">
-                  <option value="">Select Zones</option>
-                  <option>Kampala Central</option>
-                  <option>Wakiso</option>
-                  <option>Mukono</option>
-                </select>
-              </div>
-            </div>
-            <!-- Specialty cards horizontal scroll -->
-            <div class="specialty-scroll" id="specialty-scroll"></div>
-            <!-- Doctor list placeholder -->
-            <div class="no-doctors">
-              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" stroke="currentColor" style="opacity:.3;margin-bottom:10px" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              <div>No doctors found for this specialty.</div>
+
+        <!-- Left: specialty + doctor picker -->
+        <div class="card" style="overflow:hidden;padding:0">
+          <div class="card-header" style="padding:14px 18px">
+            <div class="card-title">Add Appointment</div>
+            <div style="display:flex;gap:6px">
+              <button class="action-btn" onclick="scrollSpec(-1)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+              <button class="action-btn" onclick="scrollSpec(1)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
             </div>
           </div>
+          <div class="zone-search">
+            <div>
+              <label class="form-label">Doctor</label>
+              <input type="text" class="form-control" id="doc-search" placeholder="Search..." oninput="renderDoctors()">
+            </div>
+            <div>
+              <label class="form-label">Zone</label>
+              <select class="form-control" id="zone-filter" onchange="renderDoctors()">
+                <option value="">Select Zones</option>
+                <option>Kampala Central</option><option>Wakiso</option><option>Mukono</option>
+                <option>Entebbe</option><option>Jinja</option>
+              </select>
+            </div>
+          </div>
+          <div class="specialty-scroll" id="specialty-scroll"></div>
+          <div id="selected-doc-bar" class="selected-doc-bar"></div>
+          <div class="doctor-list" id="doctor-list"></div>
         </div>
 
-        <!-- Right: booking sidebar -->
+        <!-- Right: booking panel -->
         <div class="booking-sidebar">
           <div class="booking-sidebar-header">
             New Appointment Booking
-            <div style="float:right;font-size:12px;font-weight:400;opacity:.9">+ Add Patient</div>
+            <a href="patients.html" style="float:right;font-size:12px;font-weight:400;opacity:.9;color:#fff;text-decoration:none">+ Add Patient</a>
           </div>
           <div class="booking-sidebar-body">
             <div class="form-group">
@@ -110,33 +105,23 @@ input[type=radio].pay-radio-input { accent-color:var(--teal); }
             </div>
             <div class="form-group">
               <label class="form-label">Date <span style="color:#f87171">*</span></label>
-              <input type="date" class="form-control" value="2026-09-18">
+              <input type="date" class="form-control" id="appt-date">
             </div>
             <div class="form-group">
               <label class="form-label">Type <span style="color:#f87171">*</span></label>
-              <select class="form-control"><option value="">No services available</option><option>clinic_visit</option><option>video_consultation</option><option>home_visit</option></select>
+              <select class="form-control" id="appt-type"><option value="">Select Type</option></select>
             </div>
             <div class="form-group">
               <label class="form-label">Time Slots <span style="color:#f87171">*</span></label>
-              <div class="time-slots">
-                <div class="time-slot selected">09:00 AM</div>
-                <div class="time-slot">09:30 AM</div>
-                <div class="time-slot">10:00 AM</div>
-                <div class="time-slot">10:30 AM</div>
-                <div class="time-slot booked">11:00 AM</div>
-                <div class="time-slot">11:30 AM</div>
-                <div class="time-slot">02:00 PM</div>
-                <div class="time-slot">02:30 PM</div>
-                <div class="time-slot">03:00 PM</div>
-              </div>
+              <div class="time-slots" id="appt-slots"></div>
             </div>
             <div class="form-group">
-              <div class="pay-radio">
-                <div class="pay-radio-opt selected">
-                  <input type="radio" class="pay-radio-input" name="pay" checked> Cash
+              <div class="pay-radio" id="pay-radio">
+                <div class="pay-radio-opt selected" onclick="selectPay(this,'cash')">
+                  <input type="radio" name="pay" checked style="accent-color:var(--teal)"> Cash
                 </div>
-                <div class="pay-radio-opt">
-                  <input type="radio" class="pay-radio-input" name="pay"> Online
+                <div class="pay-radio-opt" onclick="selectPay(this,'online')">
+                  <input type="radio" name="pay" style="accent-color:var(--teal)"> Online
                 </div>
               </div>
             </div>
@@ -148,11 +133,11 @@ input[type=radio].pay-radio-input { accent-color:var(--teal); }
               <div class="fee-row"><span>Coupon Discount :</span><span style="color:var(--danger)">- $0.00</span></div>
               <div class="coupon-row">
                 <input type="text" placeholder="Enter Coupon Code Here">
-                <button class="btn btn-teal" style="padding:8px 14px;font-size:12px">Apply</button>
+                <button class="btn btn-teal" style="padding:7px 12px;font-size:12px">Apply</button>
               </div>
               <div class="total-row"><span>Total Amount :</span><span>$0.00</span></div>
             </div>
-            <button class="btn-book">Book Appointment</button>
+            <button class="btn-book" onclick="bookAppointment()">Book Appointment</button>
           </div>
         </div>
       </div>
@@ -160,46 +145,192 @@ input[type=radio].pay-radio-input { accent-color:var(--teal); }
     <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.5s</span></div></footer>
   </div>
 </div>
+
 <script src="assets/js/data.js"></script>
 <script src="assets/js/auth.js"></script>
 <script>
-var ACTIVE_PAGE='add-appointment';
-var tenantId=null;
-var selectedSpecialty=null;
-function renderApptForm() {
-  var patients = EH.getPatients(tenantId);
-  var sel = document.getElementById('appt-patient');
-  if (sel) {
-    sel.innerHTML = '<option value="">Select Patient</option>'
-      + patients.map(function(p){ return '<option value="'+p.id+'">'+p.name+'</option>'; }).join('');
-  }
+var ACTIVE_PAGE = 'add-appointment';
+var tenantId = null;
+var selectedSpecialty = null;
+var selectedDoctor = null;
+var selectedSlot = null;
+var payMethod = 'cash';
+
+/* ── Specialty scroll arrows ─────────────────────── */
+function scrollSpec(dir) {
+  var el = document.getElementById('specialty-scroll');
+  if (el) el.scrollBy({ left: dir * 150, behavior: 'smooth' });
+}
+
+/* ── Render specialty cards ──────────────────────── */
+function renderSpecialties() {
   var specs = EH.getSpecialties().filter(function(s){ return s.status==='active'; });
   var doctors = EH.getDoctors(tenantId);
   var scroll = document.getElementById('specialty-scroll');
-  if (scroll) {
-    if (!selectedSpecialty && specs.length) selectedSpecialty = specs[0].id;
-    scroll.innerHTML = specs.map(function(s) {
-      var cnt = doctors.filter(function(d){ return d.specialty===s.name; }).length;
-      return '<div class="specialty-card'+(s.id===selectedSpecialty?' selected':'')+'" data-sid="'+s.id+'" data-sname="'+s.name+'">'
-        + '<div class="sc-icon">'+s.icon+'</div>'
-        + '<div class="sc-name">'+s.name+'</div>'
-        + '<div class="sc-count">'+cnt+' doctor'+(cnt!==1?'s':'')+'</div>'
-        + '</div>';
-    }).join('');
-    scroll.querySelectorAll('.specialty-card').forEach(function(card) {
-      card.addEventListener('click', function() {
-        selectedSpecialty = card.dataset.sid;
-        renderApptForm();
-      });
-    });
+  if (!scroll) return;
+  if (!specs.length) {
+    scroll.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px">No specialties added yet. <a href="specialties.html" style="color:var(--teal)">Add one</a>.</div>';
+    return;
   }
+  if (!selectedSpecialty) selectedSpecialty = specs[0].id;
+  scroll.innerHTML = specs.map(function(s) {
+    var cnt = doctors.filter(function(d){ return d.specialty===s.name; }).length;
+    return '<div class="specialty-card'+(s.id===selectedSpecialty?' selected':'')+'" data-sid="'+s.id+'" data-sname="'+s.name+'">'
+      + '<div class="sc-icon">'+s.icon+'</div>'
+      + '<div class="sc-name">'+s.name+'</div>'
+      + '<div class="sc-count">'+cnt+' doctor'+(cnt!==1?'s':'')+'</div>'
+      + '</div>';
+  }).join('');
+  scroll.querySelectorAll('.specialty-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      selectedSpecialty = card.dataset.sid;
+      selectedDoctor = null;
+      renderSpecialties();
+      renderDoctors();
+      updateDocBar();
+    });
+  });
 }
+
+/* ── Render doctor list ──────────────────────────── */
+function renderDoctors() {
+  var specs = EH.getSpecialties();
+  var spec = specs.find(function(s){ return s.id===selectedSpecialty; });
+  var doctors = EH.getDoctors(tenantId);
+  var q = (document.getElementById('doc-search').value||'').toLowerCase();
+  if (spec) doctors = doctors.filter(function(d){ return d.specialty===spec.name; });
+  if (q) doctors = doctors.filter(function(d){ return d.name.toLowerCase().indexOf(q)>=0; });
+  var list = document.getElementById('doctor-list');
+  if (!list) return;
+  if (!doctors.length) {
+    list.innerHTML = '<div class="no-doctors"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="none" stroke="currentColor" style="opacity:.25;display:block;margin:0 auto 10px" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>No doctors found for this specialty.</div>';
+    return;
+  }
+  var COLORS=['#0DA7A7','#7C3AED','#059669','#DB2777','#D97706','#2563EB'];
+  list.innerHTML = doctors.map(function(d,i){
+    var col=COLORS[i%COLORS.length];
+    return '<div class="doctor-card'+(d.id===selectedDoctor?' selected':'')+'" data-did="'+d.id+'" data-dname="'+d.name+'" data-dspec="'+(d.specialty||'')+'">'
+      +'<div class="doc-avatar" style="background:'+col+'">'+d.name.charAt(0)+'</div>'
+      +'<div><div class="doc-name">'+d.name+'</div><div class="doc-spec">'+(d.specialty||'General')+'</div></div>'
+      +'</div>';
+  }).join('');
+  list.querySelectorAll('.doctor-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      selectedDoctor = card.dataset.did;
+      list.querySelectorAll('.doctor-card').forEach(function(c){c.classList.remove('selected');});
+      card.classList.add('selected');
+      updateDocBar();
+    });
+  });
+}
+
+function updateDocBar() {
+  var bar = document.getElementById('selected-doc-bar');
+  if (!selectedDoctor) { bar.style.display='none'; return; }
+  var d = EH.getDoctors(tenantId).find(function(x){return x.id===selectedDoctor;});
+  if (!d) { bar.style.display='none'; return; }
+  bar.style.display='';
+  bar.textContent='Selected: Dr. '+d.name+(d.specialty?' · '+d.specialty:'');
+}
+
+/* ── Populate patient dropdown ───────────────────── */
+function populatePatients() {
+  var sel = document.getElementById('appt-patient');
+  var patients = EH.getPatients(tenantId);
+  sel.innerHTML = '<option value="">Select Patient</option>'
+    + patients.map(function(p){ return '<option value="'+p.id+'">'+p.name+'</option>'; }).join('');
+}
+
+/* ── Populate Type from services ─────────────────── */
+function populateTypes() {
+  var sel = document.getElementById('appt-type');
+  var svcs = EH.getServices().filter(function(s){ return s.status==='active'; });
+  if (!svcs.length) { sel.innerHTML='<option value="">No services available</option>'; return; }
+  sel.innerHTML = '<option value="">Select Type</option>'
+    + svcs.map(function(s){ return '<option value="'+s.name+'">'+s.icon+' '+s.name+'</option>'; }).join('');
+}
+
+/* ── Build time slots ────────────────────────────── */
+function buildSlots() {
+  var wrap = document.getElementById('appt-slots');
+  var times = [];
+  for (var h=9; h<=17; h++) {
+    ['00','30'].forEach(function(m){ if(!(h===17&&m==='30')) times.push((h>12?h-12:h)+':'+m+' '+(h<12?'AM':'PM')); });
+  }
+  wrap.innerHTML = times.map(function(t){
+    return '<div class="time-slot" data-t="'+t+'" onclick="selectSlot(this)">'+t+'</div>';
+  }).join('');
+  selectedSlot = null;
+}
+
+function selectSlot(el) {
+  if (el.classList.contains('booked')) return;
+  document.querySelectorAll('.time-slot').forEach(function(s){s.classList.remove('selected');});
+  el.classList.add('selected');
+  selectedSlot = el.dataset.t;
+}
+
+function selectPay(el, val) {
+  document.querySelectorAll('.pay-radio-opt').forEach(function(o){o.classList.remove('selected');});
+  el.classList.add('selected');
+  payMethod = val;
+}
+
+/* ── Book appointment ────────────────────────────── */
+function bookAppointment() {
+  var patientId = document.getElementById('appt-patient').value;
+  var date      = document.getElementById('appt-date').value;
+  var type      = document.getElementById('appt-type').value;
+  if (!patientId) { ehToast('Please select a patient.','error'); return; }
+  if (!date)      { ehToast('Please select a date.','error'); return; }
+  if (!type)      { ehToast('Please select appointment type.','error'); return; }
+  if (!selectedSlot){ ehToast('Please select a time slot.','error'); return; }
+
+  var patients = EH.getPatients(tenantId);
+  var patient  = patients.find(function(p){return p.id===patientId;});
+  var doctorName='';
+  if (selectedDoctor) {
+    var doc = EH.getDoctors(tenantId).find(function(d){return d.id===selectedDoctor;});
+    if (doc) doctorName = doc.name;
+  }
+  var isVirtual = type.toLowerCase().indexOf('video')>=0 || type.toLowerCase().indexOf('virtual')>=0;
+  EH.addAppointment({
+    patient: patient ? patient.name : '',
+    patientId: patientId,
+    patientEmail: patient ? (patient.email||'') : '',
+    doctor: doctorName || 'TBD',
+    doctorId: selectedDoctor || '',
+    date: date,
+    time: selectedSlot,
+    type: isVirtual ? 'Virtual' : 'In-Person',
+    service: type,
+    payMethod: payMethod,
+    hospital: (window.EH_TENANT && EH.getTenant(window.EH_TENANT)) ? EH.getTenant(window.EH_TENANT).name : 'Main Hospital',
+    status: 'pending'
+  }, tenantId);
+  ehToast('Appointment booked successfully!','success');
+  setTimeout(function(){ window.location.href='appointments.html'; }, 900);
+}
+
+/* ── Init ────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
   var s = EHAuth.init(); if (!s) return;
   tenantId = window.EH_TENANT || null;
-  renderApptForm();
+  /* Default date to today */
+  var today = new Date().toISOString().slice(0,10);
+  document.getElementById('appt-date').value = today;
+  populatePatients();
+  populateTypes();
+  buildSlots();
+  renderSpecialties();
+  renderDoctors();
 });
-window.addEventListener('eh:tenantchange', function(e){ tenantId=e.detail.tenantId; renderApptForm(); });
+window.addEventListener('eh:tenantchange', function(e){
+  tenantId = e.detail.tenantId;
+  populatePatients();
+  renderSpecialties();
+  renderDoctors();
+});
 </script>
 <script src="assets/js/sidebar.js"></script>
 </body>
