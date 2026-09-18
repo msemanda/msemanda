@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Users — eHealth System</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+<style>
+/* Two-column form layout */
+.user-form-wrap { background:#fff; border-radius:12px; border:1px solid var(--border); overflow:hidden; max-width:900px; }
+.user-form-hd { padding:18px 24px; border-bottom:1px solid var(--border); font-size:15px; font-weight:800; color:var(--ink); }
+.user-form-body { padding:28px 24px; display:flex; flex-direction:column; gap:0; }
+.form-field-row { display:grid; grid-template-columns:180px 1fr; align-items:flex-start; gap:16px; padding:14px 0; border-bottom:1px solid var(--border); }
+.form-field-row:last-child { border-bottom:none; }
+.ffl { font-size:13px; font-weight:700; color:var(--ink); padding-top:9px; }
+.ffl span { color:var(--danger); }
+.ffr { display:flex; flex-direction:column; gap:5px; }
+.ffr input, .ffr select { width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; color:var(--ink); background:var(--page-bg); outline:none; transition:border-color .15s; }
+.ffr input:focus, .ffr select:focus { border-color:var(--teal); background:#fff; }
+.ffr .hint { font-size:11.5px; color:var(--muted); }
+.ffr .hint a { color:var(--teal); font-weight:700; text-decoration:none; }
+/* Phone row */
+.phone-split { display:grid; grid-template-columns:130px 1fr; gap:8px; }
+/* Password eye */
+.pw-wrap-u { position:relative; }
+.pw-wrap-u input { padding-right:40px; }
+.pw-eye-u { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--muted); display:flex; align-items:center; transition:color .15s; }
+.pw-eye-u:hover { color:var(--teal); }
+/* Status toggle */
+.status-toggle { display:inline-flex; border:1.5px solid var(--border); border-radius:8px; overflow:hidden; }
+.status-toggle button { padding:9px 22px; border:none; background:#fff; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:background .15s,color .15s; color:var(--muted); }
+.status-toggle button.active { background:var(--teal); color:#fff; }
+/* Notification checkbox */
+.notif-row { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-mid); }
+.notif-row input { width:15px; height:15px; accent-color:var(--teal); cursor:pointer; }
+.notif-row a { color:var(--teal); text-decoration:none; font-weight:600; }
+/* Users table */
+.badge-role { display:inline-block; padding:2px 10px; border-radius:99px; font-size:11px; font-weight:700; background:#E0F2FE; color:#0369A1; }
+.u-status-dot { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; }
+.u-status-dot::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--success); display:inline-block; }
+.u-status-dot.inactive::before { background:#94A3B8; }
+/* Page tabs */
+.page-tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:22px; }
+.page-tab { padding:10px 20px; font-size:13px; font-weight:700; color:var(--muted); background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; font-family:inherit; transition:color .15s,border-color .15s; }
+.page-tab.active { color:var(--teal); border-bottom-color:var(--teal); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav id="sidebar-mount"></nav>
+  <div class="main">
+    <header class="header">
+      <button class="btn-quick-links"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Links</button>
+      <div class="header-right">
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
+        <span class="lang-badge">EN</span>
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+        <div class="user-chip"><div class="user-avatar">M</div><div class="user-info"><div class="user-name">Moses Semanda</div><div class="user-role">Administrator</div></div></div>
+      </div>
+    </header>
+    <div class="content">
+      <div class="page-title-row">
+        <h1 class="page-title">Users</h1>
+        <button class="btn btn-teal" onclick="showView('add')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add User</button>
+      </div>
+
+      <div class="page-tabs">
+        <button class="page-tab active" id="tab-list" onclick="showView('list')">All Users</button>
+        <button class="page-tab" id="tab-add"  onclick="showView('add')">Add User</button>
+      </div>
+
+      <!-- ── List view ─────────────────────────────────────── -->
+      <div id="view-list">
+        <div class="card">
+          <div class="filter-bar">
+            <div class="filter-tabs">
+              <button class="filter-tab active" data-filter="all">All <span class="tab-count" id="cnt-all">(0)</span></button>
+              <button class="filter-tab" data-filter="active">Active <span class="tab-count" id="cnt-active">(0)</span></button>
+              <button class="filter-tab" data-filter="inactive">Inactive <span class="tab-count" id="cnt-inactive">(0)</span></button>
+            </div>
+            <div class="filter-right">
+              <div class="search-input-wrap">
+                <span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+                <input type="text" id="user-search" placeholder="Search users..." oninput="renderUsers()">
+              </div>
+              <select class="per-page-select" id="role-filter" onchange="renderUsers()">
+                <option value="">All Roles</option>
+                <option>admin</option><option>doctor</option><option>nurse</option>
+                <option>receptionist</option><option>pathologist</option>
+                <option>hospital</option><option>collector</option><option>pharmacist</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all" onchange="document.querySelectorAll('.row-cb').forEach(function(c){c.checked=this.checked;}.bind(this))"></th>
+                <th>Name ▲</th>
+                <th>Email ▲</th>
+                <th>Role ▲</th>
+                <th>Status ▲</th>
+                <th>Created At ▲</th>
+                <th>Action</th>
+              </tr></thead>
+              <tbody id="users-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Add / Edit view ───────────────────────────────── -->
+      <div id="view-add" style="display:none">
+        <div class="user-form-wrap">
+          <div class="user-form-hd" id="form-title">Add User</div>
+          <div class="user-form-body">
+
+            <div class="form-field-row">
+              <div class="ffl">Full Name <span>*</span></div>
+              <div class="ffr">
+                <input type="text" id="u-name" placeholder="Enter Full Name">
+              </div>
+            </div>
+
+            <div class="form-field-row">
+              <div class="ffl">Email <span>*</span></div>
+              <div class="ffr">
+                <input type="email" id="u-email" placeholder="Enter Email">
+              </div>
+            </div>
+
+            <div class="form-field-row">
+              <div class="ffl">Phone <span>*</span></div>
+              <div class="ffr">
+                <div class="phone-split">
+                  <select id="u-country">
+                    <option value="+256">+256 🇺🇬</option>
+                    <option value="+1">+1 🇺🇸</option>
+                    <option value="+44">+44 🇬🇧</option>
+                    <option value="+91">+91 🇮🇳</option>
+                    <option value="+254">+254 🇰🇪</option>
+                    <option value="+255">+255 🇹🇿</option>
+                    <option value="+250">+250 🇷🇼</option>
+                    <option value="+27">+27 🇿🇦</option>
+                  </select>
+                  <input type="tel" id="u-phone" placeholder="Enter Phone">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-field-row">
+              <div class="ffl">Role <span>*</span></div>
+              <div class="ffr">
+                <select id="u-role">
+                  <option value="">Select Role</option>
+                </select>
+                <div class="hint">*To add new role, simply click <a href="roles.html">here</a></div>
+              </div>
+            </div>
+
+            <div class="form-field-row">
+              <div class="ffl">Password <span>*</span></div>
+              <div class="ffr">
+                <div class="pw-wrap-u">
+                  <input type="password" id="u-password" placeholder="Enter Password">
+                  <button type="button" class="pw-eye-u" onclick="togglePwU('u-password')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-field-row">
+              <div class="ffl">Confirm <span>*</span></div>
+              <div class="ffr">
+                <div class="pw-wrap-u">
+                  <input type="password" id="u-confirm" placeholder="Enter Confirm Password">
+                  <button type="button" class="pw-eye-u" onclick="togglePwU('u-confirm')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-field-row">
+              <div class="ffl">Notification</div>
+              <div class="ffr">
+                <label class="notif-row">
+                  <input type="checkbox" id="u-notify">
+                  Send the new user an <a href="#">email</a> about their account.
+                </label>
+              </div>
+            </div>
+
+            <div class="form-field-row">
+              <div class="ffl">Status</div>
+              <div class="ffr">
+                <div class="status-toggle">
+                  <button type="button" id="status-active" class="active" onclick="setStatus('active')">Active</button>
+                  <button type="button" id="status-inactive" onclick="setStatus('inactive')">Deactive</button>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;padding-top:8px">
+              <button class="btn btn-teal" onclick="saveUser()">Save</button>
+              <button class="btn" style="background:var(--page-bg);border:1px solid var(--border);color:var(--ink-mid)" onclick="cancelForm()">Cancel</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.3s</span></div></footer>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/auth.js"></script>
+<script>
+var ACTIVE_PAGE = 'users';
+var editingId = null;
+var currentStatus = 'active';
+var currentFilter = 'all';
+
+/* ── Helpers ─────────────────────────────────────────── */
+function togglePwU(id) {
+  var inp = document.getElementById(id);
+  inp.type = inp.type === 'text' ? 'password' : 'text';
+}
+function setStatus(s) {
+  currentStatus = s;
+  document.getElementById('status-active').classList.toggle('active', s === 'active');
+  document.getElementById('status-inactive').classList.toggle('active', s === 'inactive');
+}
+
+/* ── Role dropdown (from localStorage roles) ─────────── */
+function populateRoles() {
+  var sel = document.getElementById('u-role');
+  var roles = [];
+  try { roles = JSON.parse(localStorage.getItem('eh_roles')) || []; } catch(e){}
+  sel.innerHTML = '<option value="">Select Role</option>';
+  roles.forEach(function(r) {
+    var opt = document.createElement('option');
+    opt.value = r.name.toLowerCase();
+    opt.textContent = r.name;
+    sel.appendChild(opt);
+  });
+}
+
+/* ── Render users table ──────────────────────────────── */
+var ROLE_COLORS = {'admin':'#0DA7A7','doctor':'#7C3AED','nurse':'#059669','receptionist':'#2563EB','pathologist':'#D97706','hospital':'#DB2777','collector':'#DC2626','pharmacist':'#0891B2'};
+function letterColor(role) { return ROLE_COLORS[role] || '#64748B'; }
+
+function renderUsers() {
+  var users = EH.getUsers();
+  var q   = (document.getElementById('user-search').value || '').toLowerCase();
+  var rf  = (document.getElementById('role-filter').value || '').toLowerCase();
+
+  var filtered = users.filter(function(u) {
+    if (currentFilter === 'active'   && u.status === 'inactive') return false;
+    if (currentFilter === 'inactive' && u.status !== 'inactive') return false;
+    if (q  && u.name.toLowerCase().indexOf(q) < 0 && u.email.toLowerCase().indexOf(q) < 0) return false;
+    if (rf && u.role !== rf) return false;
+    return true;
+  });
+
+  var all      = users.length;
+  var active   = users.filter(function(u){return u.status !== 'inactive';}).length;
+  var inactive = users.filter(function(u){return u.status === 'inactive';}).length;
+  document.getElementById('cnt-all').textContent     = '(' + all + ')';
+  document.getElementById('cnt-active').textContent  = '(' + active + ')';
+  document.getElementById('cnt-inactive').textContent= '(' + inactive + ')';
+
+  var tbody = document.getElementById('users-tbody');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">No users found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(function(u) {
+    var color = letterColor(u.role);
+    var statusHtml = u.status === 'inactive'
+      ? '<span class="u-status-dot inactive" style="color:var(--muted)">Inactive</span>'
+      : '<span class="u-status-dot" style="color:var(--success)">Active</span>';
+    return '<tr>'
+      + '<td><input type="checkbox" class="tbl-checkbox row-cb"></td>'
+      + '<td><div class="user-chip-small"><div class="letter-avatar" style="background:'+color+';color:#fff;width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">'+(u.avatar||u.name.charAt(0))+'</div>'
+      + '<div><div style="font-weight:700;font-size:13px">'+u.name+'</div></div></div></td>'
+      + '<td style="font-size:12px;color:var(--muted)">'+u.email+'</td>'
+      + '<td><span class="badge-role" style="background:'+color+'22;color:'+color+'">'+u.role+'</span></td>'
+      + '<td>'+statusHtml+'</td>'
+      + '<td style="font-size:12px;color:var(--muted)">'+(u.createdAt||'2026-05-27')+'</td>'
+      + '<td><div style="display:flex;gap:6px">'
+      + '<button class="action-btn" title="Edit" onclick="editUser(\''+u.id+'\')" style="border-color:var(--teal);color:var(--teal)"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
+      + '<button class="action-btn del" title="Delete" onclick="deleteUser(\''+u.id+'\',\''+u.name+'\')" style="color:var(--danger);border-color:var(--danger)"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>'
+      + '</div></td>'
+      + '</tr>';
+  }).join('');
+}
+
+/* ── Edit user ───────────────────────────────────────── */
+function editUser(id) {
+  var users = EH.getUsers();
+  var u = users.find(function(x){return x.id===id;});
+  if (!u) return;
+  editingId = id;
+  document.getElementById('u-name').value    = u.name;
+  document.getElementById('u-email').value   = u.email;
+  document.getElementById('u-phone').value   = (u.phone||'').replace(/^\+\d+\s*/,'');
+  document.getElementById('u-role').value    = u.role||'';
+  document.getElementById('u-password').value= '';
+  document.getElementById('u-confirm').value = '';
+  setStatus(u.status||'active');
+  document.getElementById('form-title').textContent = 'Edit User — ' + u.name;
+  showView('add');
+}
+
+/* ── Delete user ─────────────────────────────────────── */
+function deleteUser(id, name) {
+  if (!confirm('Delete user "'+name+'"?')) return;
+  var users = EH.getUsers().filter(function(u){return u.id!==id;});
+  try { localStorage.setItem('eh_users', JSON.stringify(users)); } catch(e){}
+  renderUsers();
+  ehToast('User "'+name+'" deleted.', 'info');
+}
+
+/* ── Save user ───────────────────────────────────────── */
+function saveUser() {
+  var name     = document.getElementById('u-name').value.trim();
+  var email    = document.getElementById('u-email').value.trim();
+  var phone    = document.getElementById('u-country').value + ' ' + document.getElementById('u-phone').value.trim();
+  var role     = document.getElementById('u-role').value;
+  var password = document.getElementById('u-password').value;
+  var confirm  = document.getElementById('u-confirm').value;
+
+  if (!name)     { ehToast('Full Name is required.', 'error'); return; }
+  if (!email)    { ehToast('Email is required.', 'error'); return; }
+  if (!role)     { ehToast('Please select a role.', 'error'); return; }
+  if (!editingId) {
+    if (!password)          { ehToast('Password is required.', 'error'); return; }
+    if (password !== confirm){ ehToast('Passwords do not match.', 'error'); return; }
+  }
+
+  var users = EH.getUsers();
+  var now   = new Date().toISOString().slice(0,10);
+  if (editingId) {
+    users = users.map(function(u) {
+      if (u.id !== editingId) return u;
+      var updated = Object.assign({}, u, { name:name, email:email, phone:phone, role:role, status:currentStatus });
+      if (password && password === confirm) updated.password = password;
+      return updated;
+    });
+    ehToast('User "'+name+'" updated.', 'success');
+  } else {
+    var dup = users.find(function(u){return u.email.toLowerCase()===email.toLowerCase();});
+    if (dup) { ehToast('A user with this email already exists.', 'error'); return; }
+    users.unshift({ id:'u'+Date.now(), name:name, email:email, phone:phone, role:role, password:password, status:currentStatus, avatar:name.charAt(0).toUpperCase(), createdAt:now });
+    ehToast('User "'+name+'" created.', 'success');
+  }
+  try { localStorage.setItem('eh_users', JSON.stringify(users)); } catch(e){}
+  cancelForm();
+}
+
+/* ── Filter tabs ─────────────────────────────────────── */
+document.querySelectorAll('.filter-tab[data-filter]').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-tab').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderUsers();
+  });
+});
+
+/* ── View switching ──────────────────────────────────── */
+function showView(v) {
+  var isList = v === 'list';
+  document.getElementById('view-list').style.display = isList ? '' : 'none';
+  document.getElementById('view-add').style.display  = isList ? 'none' : '';
+  document.getElementById('tab-list').classList.toggle('active', isList);
+  document.getElementById('tab-add').classList.toggle('active', !isList);
+  if (isList) { editingId=null; renderUsers(); }
+}
+function cancelForm() {
+  editingId = null;
+  document.getElementById('u-name').value=''; document.getElementById('u-email').value='';
+  document.getElementById('u-phone').value=''; document.getElementById('u-role').value='';
+  document.getElementById('u-password').value=''; document.getElementById('u-confirm').value='';
+  setStatus('active');
+  document.getElementById('form-title').textContent = 'Add User';
+  showView('list');
+}
+
+/* ── Init ────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+  EHAuth.init();
+  populateRoles();
+  renderUsers();
+  // If URL has ?view=add, open add form
+  if (window.location.search.indexOf('view=add') >= 0) showView('add');
+});
+</script>
+<script>var ACTIVE_PAGE='users';</script>
+<script src="assets/js/sidebar.js"></script>
+</body>
+</html>

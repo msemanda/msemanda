@@ -63,12 +63,13 @@
     store: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
   };
 
-  var apptOpen = ['appointments','add-appointment','checkin'].indexOf(p) >= 0;
-  var deptOpen = p === 'departments';
-  var specOpen = p === 'specialties';
-  var labOpen  = p === 'lab-tests';
-  var docOpen  = p === 'doctors';
-  var patOpen  = p === 'patients';
+  var apptOpen  = ['appointments','add-appointment','checkin'].indexOf(p) >= 0;
+  var deptOpen  = p === 'departments';
+  var specOpen  = p === 'specialties';
+  var labOpen   = p === 'lab-tests';
+  var docOpen   = p === 'doctors';
+  var patOpen   = p === 'patients';
+  var userOpen  = ['users','roles'].indexOf(p) >= 0;
 
   var html = '\
 <a class="sidebar-logo" href="index.html">\
@@ -111,7 +112,11 @@
   + grp('sub-ambs', 'Ambulances', I.amb, '', sub('#', 'All Ambulances', ''), false)
   + a('#', 'Documents', I.doc, '')
   + '<div class="nav-section-label">User Management</div>'
-  + grp('sub-users', 'Users', I.users, '', sub('#', 'All Users', ''), false)
+  + grp('sub-users', 'Users', I.users, 'users',
+      sub('users.html', 'All Users', 'users')
+      + sub('users.html?view=add', 'Add User', '')
+      + sub('roles.html', 'Role &amp; Permissions', 'roles'),
+    userOpen)
   + grp('sub-hosp', 'Hospitals', I.hosp, '', sub('#', 'All Hospitals', ''), false)
   + grp('sub-doc', 'Doctors', I.users, 'doctors',
       sub('doctors.html', 'All Doctors', 'doctors'),
