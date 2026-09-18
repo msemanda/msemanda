@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doctors — eHealth System</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+<div class="shell">
+  <nav class="sidebar">
+    <a class="sidebar-logo" href="index.html"><div class="logo-icon"><svg viewBox="0 0 24 24" fill="white"><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="4" y="10" width="16" height="4" rx="1"/></svg></div><div class="logo-text">eHealth<span>Hospital Management</span></div></a>
+    <div class="sidebar-search"><span class="s-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" placeholder="Search..."></div>
+    <div class="nav-section-label">Home</div>
+    <a class="nav-item" href="index.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</span></a>
+    <a class="nav-item" href="medical-services.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Medical Services</span></a>
+    <div class="nav-section-label">Appointment Management</div>
+    <a class="nav-item" href="appointments.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Appointments</span></a>
+    <a class="nav-item" href="ambulance-bookings.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="9" width="22" height="11" rx="1"/><circle cx="7" cy="20" r="2"/><circle cx="17" cy="20" r="2"/></svg>All Ambulance Bookings</span></a>
+    <div class="nav-section-label">Hospital Management</div>
+    <a class="nav-item" href="departments.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Departments</span></a>
+    <a class="nav-item" href="specialties.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2"/></svg>Specialties</span></a>
+    <a class="nav-item" href="lab-tests.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18"/></svg>Lab Tests</span></a>
+    <div class="nav-section-label">User Management</div>
+    <div class="nav-item active" data-toggle="sub-doc">
+      <span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Doctors</span>
+      <svg class="nav-chevron open" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+    </div>
+    <div class="nav-sub" id="sub-doc">
+      <a class="nav-sub-item active" href="doctors.html">All Doctors</a>
+    </div>
+    <a class="nav-item" href="patients.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Patients</span></a>
+    <div class="nav-section-label">Promotion Management</div>
+    <a class="nav-item" href="#"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>Coupons</span></a>
+  </nav>
+
+  <div class="main">
+    <header class="header">
+      <button class="btn-quick-links"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Links</button>
+      <div class="header-right">
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
+        <span class="lang-badge">EN</span>
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+        <div class="user-chip"><div class="user-avatar">M</div><div class="user-info"><div class="user-name">Moses Semanda</div><div class="user-role">Administrator</div></div></div>
+      </div>
+    </header>
+    <div class="content">
+      <div class="page-title-row">
+        <h1 class="page-title">Doctors</h1>
+        <button class="btn btn-outline-teal"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Export</button>
+      </div>
+      <div class="doctors-grid">
+        <div class="doctor-card">
+          <div class="doctor-card-top">
+            <div class="doctor-avatar" style="background:#E0F2FE;font-size:28px">👨‍⚕️</div>
+            <div class="doctor-info">
+              <div class="doctor-name">Dr. Ethan Walker <span class="online-dot"></span></div>
+              <div class="doctor-deg">MBBS, MD ... <span class="star-icon">★</span></div>
+              <div class="doctor-hospital"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>MapleCare Medical Center</div>
+            </div>
+            <button class="doctor-menu">⋮</button>
+          </div>
+          <div class="doctor-stats">
+            <div><div class="ds-num">5</div><div class="ds-label">Appointment</div></div>
+            <div><div class="ds-num">$0</div><div class="ds-label">Balance</div></div>
+            <div><div class="ds-num">0</div><div class="ds-label">Withdraw</div></div>
+          </div>
+        </div>
+        <div class="doctor-card">
+          <div class="doctor-card-top">
+            <div class="doctor-avatar" style="background:#FCE7F3;font-size:28px">👩‍⚕️</div>
+            <div class="doctor-info">
+              <div class="doctor-name">Dr. Olivia Bennett <span class="online-dot"></span></div>
+              <div class="doctor-deg">MBBS, MS ... <span class="star-icon">★</span></div>
+              <div class="doctor-hospital"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>NorthBridge Hospital</div>
+            </div>
+            <button class="doctor-menu">⋮</button>
+          </div>
+          <div class="doctor-stats">
+            <div><div class="ds-num">1</div><div class="ds-label">Appointment</div></div>
+            <div><div class="ds-num">$0</div><div class="ds-label">Balance</div></div>
+            <div><div class="ds-num">0</div><div class="ds-label">Withdraw</div></div>
+          </div>
+        </div>
+        <div class="doctor-card">
+          <div class="doctor-card-top">
+            <div class="doctor-avatar" style="background:#D1FAE5;font-size:28px">👨‍⚕️</div>
+            <div class="doctor-info">
+              <div class="doctor-name">Dr. Noah Carter <span class="online-dot"></span></div>
+              <div class="doctor-deg">MBBS, MD ... <span class="star-icon">★</span></div>
+              <div class="doctor-hospital"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>N/A</div>
+            </div>
+            <button class="doctor-menu">⋮</button>
+          </div>
+          <div class="doctor-stats">
+            <div><div class="ds-num">0</div><div class="ds-label">Appointment</div></div>
+            <div><div class="ds-num">$0</div><div class="ds-label">Balance</div></div>
+            <div><div class="ds-num">0</div><div class="ds-label">Withdraw</div></div>
+          </div>
+        </div>
+        <div class="doctor-card">
+          <div class="doctor-card-top">
+            <div class="doctor-avatar" style="background:#FEF3C7;font-size:28px">👩‍⚕️</div>
+            <div class="doctor-info">
+              <div class="doctor-name">Dr. Sophia Reed <span class="online-dot"></span></div>
+              <div class="doctor-deg">MBBS, MD P... <span class="star-icon">★</span></div>
+              <div class="doctor-hospital"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Silver Oak Medical Institute</div>
+            </div>
+            <button class="doctor-menu">⋮</button>
+          </div>
+          <div class="doctor-stats">
+            <div><div class="ds-num">10</div><div class="ds-label">Appointment</div></div>
+            <div><div class="ds-num">$0</div><div class="ds-label">Balance</div></div>
+            <div><div class="ds-num">0</div><div class="ds-label">Withdraw</div></div>
+          </div>
+        </div>
+        <div class="doctor-card">
+          <div class="doctor-card-top">
+            <div class="doctor-avatar" style="background:#EDE9FE;font-size:28px">👩‍⚕️</div>
+            <div class="doctor-info">
+              <div class="doctor-name">Dr. Ava Richardson <span class="online-dot"></span></div>
+              <div class="doctor-deg">MBBS, MD ... <span class="star-icon">★</span></div>
+              <div class="doctor-hospital"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>BlueCross General Hospital</div>
+            </div>
+            <button class="doctor-menu">⋮</button>
+          </div>
+          <div class="doctor-stats">
+            <div><div class="ds-num">3</div><div class="ds-label">Appointment</div></div>
+            <div><div class="ds-num">$0</div><div class="ds-label">Balance</div></div>
+            <div><div class="ds-num">0</div><div class="ds-label">Withdraw</div></div>
+          </div>
+        </div>
+        <div class="doctor-card">
+          <div class="doctor-card-top">
+            <div class="doctor-avatar" style="background:#DBEAFE;font-size:28px">👨‍⚕️</div>
+            <div class="doctor-info">
+              <div class="doctor-name">Dr. Benjamin Clark <span class="online-dot"></span></div>
+              <div class="doctor-deg">MBBS, MD E... <span class="star-icon">★</span></div>
+              <div class="doctor-hospital"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Sunrise Care Hospital</div>
+            </div>
+            <button class="doctor-menu">⋮</button>
+          </div>
+          <div class="doctor-stats">
+            <div><div class="ds-num">0</div><div class="ds-label">Appointment</div></div>
+            <div><div class="ds-num">$0</div><div class="ds-label">Balance</div></div>
+            <div><div class="ds-num">0</div><div class="ds-label">Withdraw</div></div>
+          </div>
+        </div>
+        <div class="doctor-card">
+          <div class="doctor-card-top">
+            <div class="doctor-avatar" style="background:#FCE7F3;font-size:28px">👩‍⚕️</div>
+            <div class="doctor-info">
+              <div class="doctor-name">Dr. Emma Collins <span class="online-dot"></span></div>
+              <div class="doctor-deg">MBBS, MD ... <span class="star-icon">★</span></div>
+              <div class="doctor-hospital"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Harmony Health Center</div>
+            </div>
+            <button class="doctor-menu">⋮</button>
+          </div>
+          <div class="doctor-stats">
+            <div><div class="ds-num">1</div><div class="ds-label">Appointment</div></div>
+            <div><div class="ds-num">$0</div><div class="ds-label">Balance</div></div>
+            <div><div class="ds-num">0</div><div class="ds-label">Withdraw</div></div>
+          </div>
+        </div>
+        <div class="doctor-card">
+          <div class="doctor-card-top">
+            <div class="doctor-avatar" style="background:#D1FAE5;font-size:28px">👨‍⚕️</div>
+            <div class="doctor-info">
+              <div class="doctor-name">Dr. John Mention <span class="online-dot"></span></div>
+              <div class="doctor-deg">MBBS, MD (... <span class="star-icon">★</span></div>
+              <div class="doctor-hospital"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Sunrise Care Hospital</div>
+            </div>
+            <button class="doctor-menu">⋮</button>
+          </div>
+          <div class="doctor-stats">
+            <div><div class="ds-num">5</div><div class="ds-label">Appointment</div></div>
+            <div><div class="ds-num">$0</div><div class="ds-label">Balance</div></div>
+            <div><div class="ds-num">0</div><div class="ds-label">Withdraw</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.34s</span></div></footer>
+  </div>
+</div>
+<script src="assets/js/admin.js"></script>
+</body>
+</html>

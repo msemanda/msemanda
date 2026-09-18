@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — eHealth System</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+<div class="shell">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <a class="sidebar-logo" href="index.html">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/><rect x="10" y="7" width="4" height="10" rx="1" ry="1"/><rect x="7" y="10" width="10" height="4" rx="1" ry="1"/></svg>
+      </div>
+      <div class="logo-text">eHealth<span>Hospital Management</span></div>
+    </a>
+    <div class="sidebar-search">
+      <span class="s-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+      <input type="text" placeholder="Search...">
+    </div>
+
+    <div class="nav-section-label">Home</div>
+    <a class="nav-item active" href="index.html">
+      <span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</span>
+    </a>
+    <a class="nav-item" href="medical-services.html">
+      <span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Medical Services</span>
+    </a>
+
+    <div class="nav-section-label">Appointment Management</div>
+    <div class="nav-item" data-toggle="sub-appt">
+      <span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Appointments</span>
+      <svg class="nav-chevron open" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+    </div>
+    <div class="nav-sub" id="sub-appt">
+      <a class="nav-sub-item" href="appointments.html">All Appointments</a>
+      <a class="nav-sub-item" href="add-appointment.html">Add Appointment</a>
+      <a class="nav-sub-item" href="checkin.html">Patient Check-In</a>
+    </div>
+    <a class="nav-item" href="ambulance-bookings.html">
+      <span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="9" width="22" height="11" rx="1"/><path d="M23 20v2H1v-2M5 9V5a2 2 0 0 1 2-2h6l4 4v2"/><circle cx="7" cy="20" r="2"/><circle cx="17" cy="20" r="2"/></svg>All Ambulance Bookings</span>
+    </a>
+
+    <div class="nav-section-label">Hospital Management</div>
+    <div class="nav-item" data-toggle="sub-dept">
+      <span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Departments</span>
+      <svg class="nav-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+    </div>
+    <div class="nav-sub" id="sub-dept" style="display:none">
+      <a class="nav-sub-item" href="departments.html">All Departments</a>
+    </div>
+    <div class="nav-item" data-toggle="sub-spec">
+      <span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>Specialties</span>
+      <svg class="nav-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+    </div>
+    <div class="nav-sub" id="sub-spec" style="display:none">
+      <a class="nav-sub-item" href="specialties.html">All Specialties</a>
+    </div>
+    <div class="nav-item" data-toggle="sub-lab">
+      <span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg>Lab Tests</span>
+      <svg class="nav-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+    </div>
+    <div class="nav-sub" id="sub-lab" style="display:none">
+      <a class="nav-sub-item" href="lab-tests.html">All Lab Tests</a>
+      <a class="nav-sub-item" href="lab-tests.html">Lab Test Packages</a>
+    </div>
+
+    <div class="nav-section-label">User Management</div>
+    <div class="nav-item" data-toggle="sub-doc">
+      <span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Doctors</span>
+      <svg class="nav-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+    </div>
+    <div class="nav-sub" id="sub-doc" style="display:none">
+      <a class="nav-sub-item" href="doctors.html">All Doctors</a>
+    </div>
+    <div class="nav-item" data-toggle="sub-pat">
+      <span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Patients</span>
+      <svg class="nav-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+    </div>
+    <div class="nav-sub" id="sub-pat" style="display:none">
+      <a class="nav-sub-item" href="#">All Patients</a>
+    </div>
+    <div class="nav-item" data-toggle="sub-path">
+      <span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M12 8v8"/></svg>Pathologists</span>
+      <svg class="nav-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+    </div>
+    <div class="nav-sub" id="sub-path" style="display:none">
+      <a class="nav-sub-item" href="#">All Pathologists</a>
+    </div>
+    <div class="nav-item" data-toggle="sub-col">
+      <span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Collectors</span>
+      <svg class="nav-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+    </div>
+    <div class="nav-sub" id="sub-col" style="display:none">
+      <a class="nav-sub-item" href="#">All Collectors</a>
+    </div>
+
+    <div class="nav-section-label">Promotion Management</div>
+    <a class="nav-item" href="#">
+      <span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>Coupons</span>
+    </a>
+  </nav>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Header -->
+    <header class="header">
+      <button class="btn-quick-links">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Quick Links
+      </button>
+      <div class="header-right">
+        <button class="header-icon-btn" title="Refresh"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
+        <button class="header-icon-btn" title="Language"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></button>
+        <span class="lang-badge">EN</span>
+        <button class="header-icon-btn" title="Dark mode"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+        <button class="header-icon-btn" title="Notifications"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
+        <div class="user-chip">
+          <div class="user-avatar">M</div>
+          <div class="user-info">
+            <div class="user-name">Moses Semanda</div>
+            <div class="user-role">Administrator</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content">
+      <div class="page-title-row">
+        <h1 class="page-title">Dashboard</h1>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="stat-body"><div class="stat-num">48</div><div class="stat-label">Total Doctors</div></div>
+          <div class="stat-badge">+5.2%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="stat-body"><div class="stat-num">2,847</div><div class="stat-label">Total Patients</div></div>
+          <div class="stat-badge">+12.1%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+          <div class="stat-body"><div class="stat-num">1,264</div><div class="stat-label">Total Appointments</div></div>
+          <div class="stat-badge">+8.4%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="1" y="9" width="22" height="11" rx="1"/><path d="M5 9V5a2 2 0 0 1 2-2h6l4 4v2"/><circle cx="7" cy="20" r="2"/><circle cx="17" cy="20" r="2"/></svg></div>
+          <div class="stat-body"><div class="stat-num">341</div><div class="stat-label">Ambulance Bookings</div></div>
+          <div class="stat-badge">+2.7%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="stat-body"><div class="stat-num">$94,280</div><div class="stat-label">Total Earnings</div></div>
+          <div class="stat-badge">+18.3%</div>
+        </div>
+      </div>
+
+      <!-- Charts + Recent Doctors -->
+      <div class="grid-2">
+        <!-- Donut Chart -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Appointment Status Overview</span>
+          </div>
+          <div class="card-body donut-wrap">
+            <svg class="donut-svg" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="48" fill="none" stroke="#F3F4F6" stroke-width="18"/>
+              <circle cx="60" cy="60" r="48" fill="none" stroke="#0DA7A7" stroke-width="18" stroke-dasharray="120 182" stroke-dashoffset="0" stroke-linecap="round"/>
+              <circle cx="60" cy="60" r="48" fill="none" stroke="#22C55E" stroke-width="18" stroke-dasharray="60 242" stroke-dashoffset="-120" stroke-linecap="round"/>
+              <circle cx="60" cy="60" r="48" fill="none" stroke="#EF4444" stroke-width="18" stroke-dasharray="30 272" stroke-dashoffset="-180" stroke-linecap="round"/>
+              <circle cx="60" cy="60" r="48" fill="none" stroke="#F59E0B" stroke-width="18" stroke-dasharray="20 282" stroke-dashoffset="-210" stroke-linecap="round"/>
+              <circle cx="60" cy="60" r="48" fill="none" stroke="#8B5CF6" stroke-width="18" stroke-dasharray="72 230" stroke-dashoffset="-230" stroke-linecap="round"/>
+              <text x="60" y="56" text-anchor="middle" font-size="16" font-weight="800" fill="#1F2937">1,264</text>
+              <text x="60" y="70" text-anchor="middle" font-size="9" fill="#9CA3AF">Total</text>
+            </svg>
+            <div class="donut-legend">
+              <div class="legend-item"><span class="legend-dot" style="background:#0DA7A7"></span>Pending (398)</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#22C55E"></span>Completed (201)</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#EF4444"></span>Rejected (98)</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#F59E0B"></span>Cancelled (66)</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#8B5CF6"></span>Rescheduled (244)</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#3B82F6"></span>Visited (257)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Doctors -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Recent Doctors</span>
+            <a href="doctors.html" class="btn btn-outline-teal" style="font-size:12px;padding:5px 12px;">View All</a>
+          </div>
+          <div class="card-body table-wrap">
+            <table>
+              <thead><tr>
+                <th>Doctor</th>
+                <th>Speciality</th>
+                <th>Appointments</th>
+              </tr></thead>
+              <tbody>
+                <tr>
+                  <td><div class="user-chip-small"><div class="mini-avatar">E</div><div><div class="uc-name">Dr. Ethan Walker</div><div class="uc-email">MapleCare Medical Center</div></div></div></td>
+                  <td>Cardiology</td>
+                  <td>5</td>
+                </tr>
+                <tr>
+                  <td><div class="user-chip-small"><div class="mini-avatar orange">O</div><div><div class="uc-name">Dr. Olivia Bennett</div><div class="uc-email">NorthBridge Hospital</div></div></div></td>
+                  <td>Pediatrics</td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><div class="user-chip-small"><div class="mini-avatar green">S</div><div><div class="uc-name">Dr. Sophia Reed</div><div class="uc-email">Silver Oak Medical</div></div></div></td>
+                  <td>Dermatology</td>
+                  <td>10</td>
+                </tr>
+                <tr>
+                  <td><div class="user-chip-small"><div class="mini-avatar purple">A</div><div><div class="uc-name">Dr. Ava Richardson</div><div class="uc-email">BlueCross General</div></div></div></td>
+                  <td>Neurology</td>
+                  <td>3</td>
+                </tr>
+                <tr>
+                  <td><div class="user-chip-small"><div class="mini-avatar blue">B</div><div><div class="uc-name">Dr. Benjamin Clark</div><div class="uc-email">Sunrise Care Hospital</div></div></div></td>
+                  <td>Orthopedics</td>
+                  <td>0</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Appointments & Ambulance -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Recent Appointments</span>
+            <a href="appointments.html" class="btn btn-outline-teal" style="font-size:12px;padding:5px 12px;">View All</a>
+          </div>
+          <div class="card-body table-wrap">
+            <table>
+              <thead><tr><th>No.</th><th>Patient</th><th>Doctor</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><span class="num-pill">#10245</span></td>
+                  <td>John Katende</td>
+                  <td>Dr. Sophia Reed</td>
+                  <td><span class="badge badge-pending">Pending</span></td>
+                </tr>
+                <tr>
+                  <td><span class="num-pill">#10244</span></td>
+                  <td>Aisha Namukasa</td>
+                  <td>Dr. Ethan Walker</td>
+                  <td><span class="badge badge-confirmed">Confirmed</span></td>
+                </tr>
+                <tr>
+                  <td><span class="num-pill">#10243</span></td>
+                  <td>Peter Wasswa</td>
+                  <td>Dr. Ava Richardson</td>
+                  <td><span class="badge badge-completed">Completed</span></td>
+                </tr>
+                <tr>
+                  <td><span class="num-pill">#10242</span></td>
+                  <td>Grace Nakato</td>
+                  <td>Dr. Olivia Bennett</td>
+                  <td><span class="badge badge-visited">Visited</span></td>
+                </tr>
+                <tr>
+                  <td><span class="num-pill">#10241</span></td>
+                  <td>David Mugisha</td>
+                  <td>Dr. Benjamin Clark</td>
+                  <td><span class="badge badge-rescheduled">Rescheduled</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Recent Ambulance Bookings</span>
+            <a href="ambulance-bookings.html" class="btn btn-outline-teal" style="font-size:12px;padding:5px 12px;">View All</a>
+          </div>
+          <div class="card-body table-wrap">
+            <table>
+              <thead><tr><th>Booking No.</th><th>Patient</th><th>Total</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><span class="num-pill">#10002</span></td>
+                  <td>Michael Brown</td>
+                  <td>$15.94</td>
+                  <td><span class="badge badge-pending">Pending</span></td>
+                </tr>
+                <tr>
+                  <td><span class="num-pill">#10001</span></td>
+                  <td>Sarah Nakabuye</td>
+                  <td>$17.20</td>
+                  <td><span class="badge badge-confirmed">Confirmed</span></td>
+                </tr>
+                <tr>
+                  <td><span class="num-pill">#10000</span></td>
+                  <td>James Ochieng</td>
+                  <td>$28.90</td>
+                  <td><span class="badge badge-pending">Pending</span></td>
+                </tr>
+                <tr>
+                  <td><span class="num-pill">#09999</span></td>
+                  <td>Rita Nalwoga</td>
+                  <td>$22.50</td>
+                  <td><span class="badge badge-completed">Completed</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <span>Copyright 2026 &copy; <a href="#">eHealth System</a></span>
+      <div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.3s</span></div>
+    </footer>
+  </div>
+</div>
+<script src="assets/js/admin.js"></script>
+</body>
+</html>
