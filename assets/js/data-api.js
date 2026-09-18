@@ -29,7 +29,7 @@
   var SEED = {
     users: [{ id:'u1', name:'Moses Semanda', email:'semandamoses91@gmail.com', password:'ehealth2026', role:'admin', tenantId:null, avatar:'M', status:'active', createdAt:'2026-01-01' }],
     tenants:[], patients:[], doctors:[], appointments:[], departments:[], specialties:[],
-    ambulanceBookings:[], mediaFiles:[],
+    ambulanceBookings:[], mediaFiles:[], wards:[],
     roles: [
       { id:'r1', name:'Admin',        permissions:'all', createdAt:'2026-01-01', userCount:0 },
       { id:'r2', name:'Doctor',       permissions:'appointments,patients,prescriptions,lab_tests,video_consultations', createdAt:'2026-01-01', userCount:0 },
@@ -224,6 +224,12 @@
     addCategory:     function(data) { var list=this.getCategories(); var c=Object.assign({id:nextId('cat'),parentId:null,image:'',metaTitle:'',metaDesc:'',createdAt:nowStr().slice(0,10)},data); list.push(c); _set('categories',list); return c; },
     updateCategory:  function(id,data) { var list=this.getCategories(); var i=list.findIndex(function(x){return x.id===id;}); if(i>-1){list[i]=Object.assign({},list[i],data); _set('categories',list); return list[i];} return null; },
     deleteCategory:  function(id) { var list=this.getCategories().map(function(c){ return c.parentId===id ? Object.assign({},c,{parentId:null}) : c; }).filter(function(c){return c.id!==id;}); _set('categories',list); },
+
+    /* ── Wards ─────────────────────────────────────────── */
+    getWards:   function(tenantId) { return filterByTenant(_get('wards'), tenantId); },
+    addWard:    function(data, tid) { var list=_get('wards'); var w=Object.assign({id:nextId('w'),tenantId:tid||null,status:'active',beds:[],createdAt:nowStr().slice(0,10)},data); list.push(w); _set('wards',list); return w; },
+    updateWard: function(id,data) { var list=_get('wards'); var i=list.findIndex(function(x){return x.id===id;}); if(i>-1){list[i]=Object.assign({},list[i],data); _set('wards',list); return list[i];} return null; },
+    deleteWard: function(id) { _set('wards',_get('wards').filter(function(x){return x.id!==id;})); },
 
     /* ── Migration helper ──────────────────────────────── */
     migrateToTenant: function(tenantId) {
