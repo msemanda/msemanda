@@ -64,7 +64,7 @@ input:checked + .toggle-slider:before { transform:translateX(17px); }
     <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.7s</span></div></footer>
   </div>
 </div>
-<script src="assets/js/data.js"></script>
+<script src="assets/js/data-api.js"></script>
 <script src="assets/js/auth.js"></script>
 <script>
 var ACTIVE_PAGE='medical-services';
@@ -103,7 +103,7 @@ document.querySelectorAll('.filter-tab[data-filter]').forEach(function(btn){
     btn.classList.add('active'); svcFilter=btn.dataset.filter; renderServices();
   });
 });
-document.addEventListener('DOMContentLoaded',function(){ EHAuth.init(); renderServices(); });
+document.addEventListener('eh:ready',function(){ EHAuth.init(); renderServices(); });
 </script>
 <script src="assets/js/sidebar.js"></script>
 </body>

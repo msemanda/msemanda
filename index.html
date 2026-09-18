@@ -603,7 +603,7 @@ function switchRole(role) {
   document.addEventListener('DOMContentLoaded', function() { switchRole(role); });
 })();
 </script>
-<script src="assets/js/data.js"></script>
+<script src="assets/js/data-api.js"></script>
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/sidebar.js"></script>
 <script>
@@ -652,7 +652,7 @@ function renderDashStats() {
     }
   }
 }
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('eh:ready', function() {
   var s = EHAuth.init(); if (!s) return;
   dashTenantId = window.EH_TENANT || null;
   renderDashStats();

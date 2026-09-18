@@ -103,7 +103,7 @@
   </div>
 </div>
 
-<script src="assets/js/data.js"></script>
+<script src="assets/js/data-api.js"></script>
 <script src="assets/js/auth.js"></script>
 <script>
 var ACTIVE_PAGE = 'roles';
@@ -376,7 +376,7 @@ function showTab(which) {
 }
 
 /* ─── Init ─── */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('eh:ready', function() {
   EHAuth.init();
   buildPermRows();
   renderRoleList();

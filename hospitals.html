@@ -171,7 +171,7 @@
   </div>
 </div>
 
-<script src="assets/js/data.js"></script>
+<script src="assets/js/data-api.js"></script>
 <script src="assets/js/auth.js"></script>
 <script>
 var ACTIVE_PAGE = 'hospitals';
@@ -378,7 +378,7 @@ function cancelForm() {
 }
 
 /* ── Auto slug from name ─────────────────────────────── */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('eh:ready', function() {
   EHAuth.init();
   renderHospitals();
   document.getElementById('h-name').addEventListener('input', function() {
