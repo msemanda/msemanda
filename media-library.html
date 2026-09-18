@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Media Library — eHealth System</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+<style>
+.upload-zone { border:2px dashed var(--border); border-radius:10px; text-align:center; padding:40px 20px; margin:20px; cursor:pointer; transition:border-color .15s; position:relative; }
+.upload-zone:hover { border-color:var(--teal); background:var(--teal-light); }
+.upload-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.upload-icon { color:var(--teal); margin-bottom:10px; }
+.upload-icon svg { width:40px; height:40px; }
+.upload-text { font-size:14px; font-weight:600; color:var(--ink-mid); margin-bottom:10px; }
+.btn-select { border:1px solid var(--teal); color:var(--teal); background:none; border-radius:6px; padding:6px 16px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; }
+.view-toggle { display:flex; gap:4px; border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+.view-btn { background:none; border:none; padding:7px 10px; cursor:pointer; color:var(--muted); }
+.view-btn.active { background:var(--teal-light); color:var(--teal); }
+.media-filter-bar { display:flex; align-items:center; gap:10px; padding:14px 20px; border-bottom:1px solid var(--border); }
+.media-type-select { border:1px solid var(--border); border-radius:6px; padding:7px 10px; font-family:inherit; font-size:13px; color:var(--ink); background:#F9FAFB; outline:none; cursor:pointer; }
+.media-thumb { width:36px; height:36px; border-radius:6px; background:#F3F4F6; overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:18px; }
+.media-thumb img { width:100%; height:100%; object-fit:cover; }
+.media-name { font-size:13px; font-weight:600; color:var(--ink); }
+.media-actions { display:flex; gap:10px; margin-top:3px; }
+.media-actions a { font-size:11.5px; color:var(--teal); text-decoration:none; }
+.media-actions a.del { color:var(--danger); }
+.upload-close { position:absolute; top:10px; right:12px; background:none; border:none; font-size:18px; color:var(--muted); cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav id="sidebar-mount"></nav>
+  <div class="main">
+    <header class="header">
+      <button class="btn-quick-links"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Links</button>
+      <div class="header-right">
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
+        <span class="lang-badge">EN</span>
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+        <div class="user-chip"><div class="user-avatar">M</div><div class="user-info"><div class="user-name">Moses Semanda</div><div class="user-role">Administrator</div></div></div>
+      </div>
+    </header>
+    <div class="content">
+      <div class="page-title-row">
+        <h1 class="page-title">Media Library</h1>
+        <button class="btn btn-teal"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New</button>
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="upload-zone" id="drop-zone">
+          <button class="upload-close" id="close-upload" onclick="document.getElementById('drop-zone').style.display='none'">×</button>
+          <input type="file" multiple accept="image/*,video/*">
+          <div class="upload-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+          <div class="upload-text">Drop files to upload</div>
+          <button class="btn-select" onclick="event.stopPropagation()">Select Files</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="media-filter-bar">
+          <div class="view-toggle">
+            <button class="view-btn active"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></button>
+            <button class="view-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
+          </div>
+          <select class="media-type-select"><option>All Media</option><option>Images</option><option>Videos</option><option>PDFs</option></select>
+          <button class="btn-apply">Apply</button>
+          <div style="margin-left:auto">
+            <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" placeholder="Search..."></div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all"></th>
+              <th>File &#9650;</th>
+              <th>Uploaded By &#9650;</th>
+              <th>Type &#9650;</th>
+              <th>Created At &#9650;</th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
+                <td>
+                  <div class="user-chip-small">
+                    <div class="media-thumb">🖼️</div>
+                    <div>
+                      <div class="media-name">Women</div>
+                      <div class="media-actions">
+                        <a href="#">Copy URL</a>
+                        <a href="#">Download</a>
+                        <a href="#" class="del">Delete Permanently</a>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>Administrator</td>
+                <td>image/png</td>
+                <td>2026-06-06 08:48:56 AM</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
+                <td>
+                  <div class="user-chip-small">
+                    <div class="media-thumb">🖼️</div>
+                    <div>
+                      <div class="media-name">Hormone</div>
+                      <div class="media-actions">
+                        <a href="#">Copy URL</a>
+                        <a href="#">Download</a>
+                        <a href="#" class="del">Delete Permanently</a>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>Administrator</td>
+                <td>image/png</td>
+                <td>2026-06-06 08:48:50 AM</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
+                <td>
+                  <div class="user-chip-small">
+                    <div class="media-thumb">🖼️</div>
+                    <div>
+                      <div class="media-name">Hormone</div>
+                      <div class="media-actions">
+                        <a href="#">Copy URL</a>
+                        <a href="#">Download</a>
+                        <a href="#" class="del">Delete Permanently</a>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>Administrator</td>
+                <td>image/png</td>
+                <td>2026-06-06 08:46:59 AM</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="tbl-checkbox row-cb"></td>
+                <td>
+                  <div class="user-chip-small">
+                    <div class="media-thumb">📄</div>
+                    <div>
+                      <div class="media-name">Report Q2 2026</div>
+                      <div class="media-actions">
+                        <a href="#">Copy URL</a>
+                        <a href="#">Download</a>
+                        <a href="#" class="del">Delete Permanently</a>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>Administrator</td>
+                <td>application/pdf</td>
+                <td>2026-05-30 11:20:00 AM</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.69s</span></div></footer>
+  </div>
+</div>
+<script>var ACTIVE_PAGE='media';</script>
+<script src="assets/js/sidebar.js"></script>
+</body>
+</html>

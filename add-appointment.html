@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Appointment — eHealth System</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+<style>
+.wizard-steps { display:flex; align-items:center; gap:8px; padding:14px 20px; border-bottom:1px solid var(--border); }
+.wizard-step { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; border:2px solid var(--border); color:var(--muted); }
+.wizard-step.active { border-color:var(--teal); background:var(--teal); color:#fff; }
+.wizard-step.done { border-color:var(--teal); color:var(--teal); }
+.wizard-line { flex:1; height:2px; background:var(--border); max-width:60px; }
+.wizard-label { font-size:11px; color:var(--muted); white-space:nowrap; }
+.zone-search { display:flex; gap:10px; padding:16px 20px; border-bottom:1px solid var(--border); align-items:center; flex-wrap:wrap; }
+.zone-search .form-control { max-width:260px; }
+.specialty-scroll { display:flex; gap:12px; overflow-x:auto; padding:20px; border-bottom:1px solid var(--border); }
+.specialty-scroll::-webkit-scrollbar { height:4px; }
+.specialty-scroll::-webkit-scrollbar-track { background:#F3F4F6; }
+.specialty-scroll::-webkit-scrollbar-thumb { background:var(--teal); border-radius:4px; }
+.specialty-scroll .specialty-card { min-width:110px; flex-shrink:0; }
+.no-doctors { text-align:center; padding:60px 20px; color:var(--muted); font-size:14px; }
+.coupon-row { display:flex; gap:8px; margin-top:8px; }
+.coupon-row input { flex:1; padding:8px 12px; border:1px solid var(--border); border-radius:7px; font-size:13px; font-family:inherit; outline:none; }
+.coupon-row input:focus { border-color:var(--teal); }
+.fee-box { background:#F0FAFA; border-radius:8px; padding:14px; margin:14px 0; }
+.total-row { display:flex; justify-content:space-between; margin-top:10px; border-top:1px solid var(--teal-light); padding-top:10px; font-weight:800; font-size:14px; color:var(--teal); }
+.pay-radio { display:flex; gap:10px; }
+.pay-radio-opt { flex:1; border:1.5px solid var(--border); border-radius:7px; padding:10px 8px; text-align:center; cursor:pointer; font-size:12.5px; font-weight:600; color:var(--ink-mid); transition:border-color .15s; display:flex; align-items:center; gap:8px; justify-content:center; }
+.pay-radio-opt.selected { border-color:var(--teal); color:var(--teal); background:var(--teal-light); }
+input[type=radio].pay-radio-input { accent-color:var(--teal); }
+.wallet-info { font-size:12px; color:var(--muted); margin-bottom:12px; }
+.btn-book { width:100%; padding:11px; background:var(--teal); color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; margin-top:14px; transition:opacity .15s; }
+.btn-book:hover { opacity:.88; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav id="sidebar-mount"></nav>
+  <div class="main">
+    <header class="header">
+      <button class="btn-quick-links"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Links</button>
+      <div class="header-right">
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
+        <span class="lang-badge">EN</span>
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+        <div class="user-chip"><div class="user-avatar">M</div><div class="user-info"><div class="user-name">Moses Semanda</div><div class="user-role">Administrator</div></div></div>
+      </div>
+    </header>
+    <div class="content">
+      <div class="appt-layout">
+        <!-- Left: specialty picker -->
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Add Appointment</div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="action-btn" title="Previous"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+                <button class="action-btn" title="Next"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+              </div>
+            </div>
+            <!-- Wizard steps -->
+            <div class="wizard-steps">
+              <div class="wizard-step active">1</div>
+              <div class="wizard-line"></div>
+              <span class="wizard-label">Landing Page</span>
+              <div class="wizard-line"></div>
+              <div class="wizard-step">2</div>
+              <div class="wizard-line"></div>
+              <span class="wizard-label">Settings</span>
+            </div>
+            <!-- Doctor & Zone search -->
+            <div class="zone-search">
+              <div style="flex:1;min-width:200px">
+                <label class="form-label">Doctor</label>
+                <input type="text" class="form-control" placeholder="Search...">
+              </div>
+              <div style="flex:1;min-width:200px">
+                <label class="form-label">Zone <span style="color:var(--danger)">*</span></label>
+                <select class="form-control">
+                  <option value="">Select Zones</option>
+                  <option>Kampala Central</option>
+                  <option>Wakiso</option>
+                  <option>Mukono</option>
+                </select>
+              </div>
+            </div>
+            <!-- Specialty cards horizontal scroll -->
+            <div class="specialty-scroll">
+              <div class="specialty-card selected">
+                <div class="sc-icon">🩺</div>
+                <div class="sc-name">General Ph...</div>
+                <div class="sc-count">4 doctors</div>
+              </div>
+              <div class="specialty-card">
+                <div class="sc-icon">👶</div>
+                <div class="sc-name">Pediatrics</div>
+                <div class="sc-count">3 doctors</div>
+              </div>
+              <div class="specialty-card">
+                <div class="sc-icon">🦴</div>
+                <div class="sc-name">Orthopedics</div>
+                <div class="sc-count">2 doctors</div>
+              </div>
+              <div class="specialty-card">
+                <div class="sc-icon">🤰</div>
+                <div class="sc-name">Gynaecolo...</div>
+                <div class="sc-count">2 doctors</div>
+              </div>
+              <div class="specialty-card">
+                <div class="sc-icon">❤️</div>
+                <div class="sc-name">Cardiology</div>
+                <div class="sc-count">3 doctors</div>
+              </div>
+              <div class="specialty-card">
+                <div class="sc-icon">💊</div>
+                <div class="sc-name">Sexual Heal...</div>
+                <div class="sc-count">1 doctor</div>
+              </div>
+              <div class="specialty-card">
+                <div class="sc-icon">🧠</div>
+                <div class="sc-name">Mental Welln...</div>
+                <div class="sc-count">2 doctors</div>
+              </div>
+              <div class="specialty-card">
+                <div class="sc-icon">🦷</div>
+                <div class="sc-name">Dentistry</div>
+                <div class="sc-count">1 doctor</div>
+              </div>
+            </div>
+            <!-- Doctor list placeholder -->
+            <div class="no-doctors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" stroke="currentColor" style="opacity:.3;margin-bottom:10px" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <div>No doctors found for this specialty.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: booking sidebar -->
+        <div class="booking-sidebar">
+          <div class="booking-sidebar-header">
+            New Appointment Booking
+            <div style="float:right;font-size:12px;font-weight:400;opacity:.9">+ Add Patient</div>
+          </div>
+          <div class="booking-sidebar-body">
+            <div class="form-group">
+              <label class="form-label">Patient <span style="color:#f87171">*</span></label>
+              <select class="form-control"><option value="">Select Patient</option><option>John Katende</option><option>Aisha Namukasa</option><option>Peter Wasswa</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date <span style="color:#f87171">*</span></label>
+              <input type="date" class="form-control" value="2026-09-18">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Type <span style="color:#f87171">*</span></label>
+              <select class="form-control"><option value="">No services available</option><option>clinic_visit</option><option>video_consultation</option><option>home_visit</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Time Slots <span style="color:#f87171">*</span></label>
+              <div class="time-slots">
+                <div class="time-slot selected">09:00 AM</div>
+                <div class="time-slot">09:30 AM</div>
+                <div class="time-slot">10:00 AM</div>
+                <div class="time-slot">10:30 AM</div>
+                <div class="time-slot booked">11:00 AM</div>
+                <div class="time-slot">11:30 AM</div>
+                <div class="time-slot">02:00 PM</div>
+                <div class="time-slot">02:30 PM</div>
+                <div class="time-slot">03:00 PM</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="pay-radio">
+                <div class="pay-radio-opt selected">
+                  <input type="radio" class="pay-radio-input" name="pay" checked> Cash
+                </div>
+                <div class="pay-radio-opt">
+                  <input type="radio" class="pay-radio-input" name="pay"> Online
+                </div>
+              </div>
+            </div>
+            <div class="wallet-info">Wallet: $0</div>
+            <div class="fee-box">
+              <div class="fee-row"><span>Appointment Fee :</span><span>$0.00</span></div>
+              <div class="fee-row"><span>Platform Fee :</span><span>$0.00</span></div>
+              <div class="fee-row"><span>Total Tax :</span><span>$0.00</span></div>
+              <div class="fee-row"><span>Coupon Discount :</span><span style="color:var(--danger)">- $0.00</span></div>
+              <div class="coupon-row">
+                <input type="text" placeholder="Enter Coupon Code Here">
+                <button class="btn btn-teal" style="padding:8px 14px;font-size:12px">Apply</button>
+              </div>
+              <div class="total-row"><span>Total Amount :</span><span>$0.00</span></div>
+            </div>
+            <button class="btn-book">Book Appointment</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.5s</span></div></footer>
+  </div>
+</div>
+<script>var ACTIVE_PAGE='add-appointment';</script>
+<script src="assets/js/sidebar.js"></script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patients — eHealth System</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+<div class="shell">
+  <nav id="sidebar-mount"></nav>
+  <div class="main">
+    <header class="header">
+      <button class="btn-quick-links"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Links</button>
+      <div class="header-right">
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
+        <span class="lang-badge">EN</span>
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+        <div class="user-chip"><div class="user-avatar">M</div><div class="user-info"><div class="user-name">Moses Semanda</div><div class="user-role">Administrator</div></div></div>
+      </div>
+    </header>
+    <div class="content">
+      <div class="card">
+        <div class="filter-bar">
+          <div class="filter-tabs">
+            <button class="filter-tab active">All <span class="tab-count">(22)</span></button>
+            <button class="filter-tab">Active <span class="tab-count">(22)</span></button>
+            <button class="filter-tab">DeActive <span class="tab-count">(0)</span></button>
+            <button class="filter-tab">Trash <span class="tab-count">(1)</span></button>
+          </div>
+          <div class="filter-right">
+            <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" placeholder="Search..."></div>
+            <select class="per-page-select"><option>15</option><option>25</option><option>50</option></select>
+            <button class="btn-apply">Apply</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all"></th>
+              <th>Name &#9650;</th>
+              <th>Status &#9650;</th>
+              <th>Created At &#9650;</th>
+            </tr></thead>
+            <tbody>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar" style="background:#0DA7A7">M</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Madhuranjan Thakur</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-09-11 04:10:16 AM</td></tr>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-s">S</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Srinivas</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-09-08 03:58:11 AM</td></tr>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-p">P</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Priya</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-09-01 07:00:23 AM</td></tr>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-l">L</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Liza Matt</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-06-03 03:56:40 AM</td></tr>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar" style="background:#0DA7A7">M</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Maira Mehta</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-06-02 07:08:14 AM</td></tr>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-e">T</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Test User</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-27 06:54:52 PM</td></tr>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-n">H</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Harper Lewis</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-27 06:54:12 PM</td></tr>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-d">D</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Daniel Clark</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-27 06:54:12 PM</td></tr>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-g">A</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Amelia Lee</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-27 06:54:11 PM</td></tr>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-n">H</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Henry Robinson</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-27 06:54:11 PM</td></tr>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="letter-avatar la-c">C</div><a href="#" style="color:var(--teal);text-decoration:none;font-weight:600">Charlotte Garcia</a></div></td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-27 06:54:10 PM</td></tr>
+            </tbody>
+            <tfoot><tr><td colspan="4" style="padding:12px 14px;font-size:12px;color:var(--muted);">Name &#9650;</td></tr></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.38s</span></div></footer>
+  </div>
+</div>
+<script>var ACTIVE_PAGE='patients';</script>
+<script src="assets/js/sidebar.js"></script>
+</body>
+</html>

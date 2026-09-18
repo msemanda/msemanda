@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab Tests — eHealth System</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+<div class="shell">
+  <nav class="sidebar">
+    <a class="sidebar-logo" href="index.html"><div class="logo-icon"><svg viewBox="0 0 24 24" fill="white"><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="4" y="10" width="16" height="4" rx="1"/></svg></div><div class="logo-text">eHealth<span>Hospital Management</span></div></a>
+    <div class="sidebar-search"><span class="s-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" placeholder="Search..."></div>
+    <div class="nav-section-label">Home</div>
+    <a class="nav-item" href="index.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</span></a>
+    <a class="nav-item" href="medical-services.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Medical Services</span></a>
+    <div class="nav-section-label">Appointment Management</div>
+    <a class="nav-item" href="appointments.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Appointments</span></a>
+    <a class="nav-item" href="ambulance-bookings.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="9" width="22" height="11" rx="1"/><circle cx="7" cy="20" r="2"/><circle cx="17" cy="20" r="2"/></svg>All Ambulance Bookings</span></a>
+    <div class="nav-section-label">Hospital Management</div>
+    <a class="nav-item" href="departments.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Departments</span></a>
+    <a class="nav-item" href="specialties.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2"/></svg>Specialties</span></a>
+    <div class="nav-item active" data-toggle="sub-lab">
+      <span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg>Lab Tests</span>
+      <svg class="nav-chevron open" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+    </div>
+    <div class="nav-sub" id="sub-lab">
+      <a class="nav-sub-item active" href="lab-tests.html">All Lab Tests</a>
+      <a class="nav-sub-item" href="lab-tests.html">Lab Test Packages</a>
+    </div>
+    <div class="nav-section-label">User Management</div>
+    <a class="nav-item" href="doctors.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Doctors</span></a>
+    <a class="nav-item" href="patients.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Patients</span></a>
+    <div class="nav-section-label">Promotion Management</div>
+    <a class="nav-item" href="#"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>Coupons</span></a>
+  </nav>
+
+  <div class="main">
+    <header class="header">
+      <button class="btn-quick-links"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Links</button>
+      <div class="header-right">
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
+        <span class="lang-badge">EN</span>
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+        <div class="user-chip"><div class="user-avatar">M</div><div class="user-info"><div class="user-name">Moses Semanda</div><div class="user-role">Administrator</div></div></div>
+      </div>
+    </header>
+    <div class="content">
+      <div class="page-title-row">
+        <h1 class="page-title">Lab Tests</h1>
+        <button class="btn btn-teal"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New</button>
+      </div>
+      <div class="card">
+        <div class="filter-bar">
+          <div class="filter-tabs">
+            <button class="filter-tab active">All <span class="tab-count">(7)</span></button>
+            <button class="filter-tab">Active <span class="tab-count">(7)</span></button>
+            <button class="filter-tab">DeActive <span class="tab-count">(0)</span></button>
+            <button class="filter-tab">Trash <span class="tab-count">(0)</span></button>
+          </div>
+          <div class="filter-right">
+            <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" placeholder="Search..."></div>
+            <select class="per-page-select"><option>15</option><option>25</option></select>
+            <button class="btn-apply">Apply</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all"></th>
+              <th>Title &#9650;</th>
+              <th>Description &#9650;</th>
+              <th>Pathologist</th>
+              <th>Status &#9650;</th>
+              <th>Created At &#9650;</th>
+            </tr></thead>
+            <tbody>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="lab-icon">🔬</div><span style="font-weight:600">Allergy Test</span></div></td><td style="color:var(--teal);max-width:300px">Identifies allergic reactions to specific substance</td><td>Pathologist user</td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-06-03 12:10:10 PM</td></tr>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="lab-icon">🩸</div><span style="font-weight:600">Vitamin D Test</span></div></td><td style="color:var(--teal);max-width:300px">Determines Vitamin D levels important for bone and immune health.</td><td style="color:var(--teal)">Dr. Noah Richardson</td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-29 04:40:14 AM</td></tr>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="lab-icon">🫀</div><span style="font-weight:600">Blood Sugar Test</span></div></td><td style="color:var(--teal);max-width:300px">Measures glucose levels to diagnose and monitor diabetes conditions.</td><td style="color:var(--teal)">Dr. Grace Mitchell</td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-29 04:37:05 AM</td></tr>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="lab-icon">⚡</div><span style="font-weight:600">Thyroid Function Test (TFT)</span></div></td><td style="color:var(--teal);max-width:300px">Detects thyroid hormone imbalances affecting metabolism and energy levels.</td><td style="color:var(--teal)">Dr. Grace Mitchell</td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-29 04:33:19 AM</td></tr>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="lab-icon">💉</div><span style="font-weight:600">Lipid Profile Test</span></div></td><td style="color:var(--teal);max-width:300px">Measures cholesterol and triglyceride levels to assess heart disease risk.</td><td style="color:var(--teal)">Dr. Ethan Collins</td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-29 04:30:47 AM</td></tr>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="lab-icon">🫁</div><span style="font-weight:600">Liver Function Test (LFT)</span></div></td><td style="max-width:300px">Measures liver enzymes and proteins to assess liver health and detect liver diseases.</td><td style="color:var(--teal)">Dr. Lucas Bennett</td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-29 04:21:34 AM</td></tr>
+              <tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td><td><div class="user-chip-small"><div class="lab-icon">🩺</div><span style="font-weight:600">Complete Blood Count (CBC)</span></div></td><td style="max-width:300px">Comprehensive blood test used to evaluate overall health and detect infections or anemia.</td><td style="color:var(--teal)">Dr. Amelia Brooks</td><td><span class="lock-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></td><td>2026-05-29 04:18:06 AM</td></tr>
+            </tbody>
+            <tfoot><tr><td colspan="6" style="padding:12px 14px;font-size:12px;color:var(--muted);">Title &#9650;</td></tr></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.78s</span></div></footer>
+  </div>
+</div>
+<script src="assets/js/admin.js"></script>
+</body>
+</html>
