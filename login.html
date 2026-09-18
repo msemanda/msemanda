@@ -44,35 +44,38 @@
   .stat-n { font-size: 1.5rem; font-weight: 800; color: #fff; line-height: 1; font-variant-numeric: tabular-nums; }
   .stat-l { font-size: .68rem; font-weight: 600; color: rgba(255,255,255,.5); margin-top: 4px; letter-spacing: .03em; }
   .right { flex: 0 0 48%; max-width: 580px; background: var(--page-bg); display: flex; align-items: center; justify-content: center; padding: 2.5rem 2rem; }
-  .card { width: 100%; max-width: 400px; background: var(--card-bg); border-radius: 20px; padding: 2.25rem 2rem; box-shadow: 0 4px 32px rgba(43,53,64,.1); }
+  .card { width: 100%; max-width: 400px; background: var(--card-bg); border-radius: 20px; padding: 2rem 1.875rem 1.75rem; box-shadow: 0 4px 32px rgba(43,53,64,.1); }
   .card-brand { display: flex; align-items: center; justify-content: center; gap: .6rem; margin-bottom: 1.5rem; }
   .card-mark { width: 38px; height: 38px; background: var(--teal); border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(13,167,167,.3); }
-  .card-name { font-size: 1.1rem; font-weight: 800; color: var(--ink); letter-spacing: -.01em; }
+  .card-name { font-size: 1.15rem; font-weight: 800; color: var(--ink); letter-spacing: -.01em; }
   .card-name span { color: var(--teal); }
-  .card-divider { height: 1px; background: var(--border); margin-bottom: 1.5rem; }
-  .card-heading { font-size: 1.35rem; font-weight: 800; color: var(--ink); margin-bottom: .3rem; letter-spacing: -.01em; }
-  .card-sub { font-size: .85rem; color: var(--muted); margin-bottom: 1.625rem; }
-  .field { margin-bottom: 1rem; }
-  .field-lbl { display: block; font-size: .825rem; font-weight: 700; color: var(--ink); margin-bottom: .45rem; }
-  .input-wrap { position: relative; }
-  .input-ico { position: absolute; left: .875rem; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; display: flex; align-items: center; }
-  .input-wrap input { width: 100%; padding: .72rem .875rem .72rem 2.6rem; background: var(--input-bg); border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; font-size: .9rem; font-weight: 500; color: var(--ink); outline: none; transition: border-color .15s, box-shadow .15s, background .15s; }
-  .input-wrap input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(13,167,167,.12); background: var(--white); }
-  .pw-wrap { position: relative; }
-  .pw-wrap > input { padding-right: 2.6rem; }
-  .pw-btn { position: absolute; right: .75rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--muted); display: flex; align-items: center; padding: .25rem; transition: color .15s; }
-  .pw-btn:hover { color: var(--teal); }
-  .form-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 1rem 0 1.5rem; }
-  .chk-label { display: flex; align-items: center; gap: .5rem; font-size: .825rem; font-weight: 600; color: var(--ink-mid); cursor: pointer; user-select: none; }
-  .chk-label input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--teal); cursor: pointer; flex-shrink: 0; }
-  .forgot-lnk { font-size: .825rem; font-weight: 700; color: var(--teal); text-decoration: none; white-space: nowrap; }
-  .forgot-lnk:hover { text-decoration: underline; }
-  .btn-go { width: 100%; padding: .82rem 1.5rem; background: linear-gradient(135deg, #0FBFBF 0%, #0DA7A7 40%, #0A8A8A 100%); color: #fff; font-family: inherit; font-size: .95rem; font-weight: 800; letter-spacing: .03em; border: none; border-radius: 10px; cursor: pointer; transition: opacity .15s, transform .1s, box-shadow .15s; box-shadow: 0 6px 20px rgba(13,167,167,.38); }
-  .btn-go:hover { opacity: .9; box-shadow: 0 8px 26px rgba(13,167,167,.46); }
+  .welcome-block { border-left: 4px solid var(--teal); padding-left: .875rem; margin-bottom: 1.5rem; }
+  .card-heading { font-size: 1.2rem; font-weight: 800; color: var(--ink); margin-bottom: .25rem; letter-spacing: -.01em; }
+  .card-sub { font-size: .82rem; color: var(--teal); font-weight: 500; }
+  .field { margin-bottom: .875rem; }
+  .input-wrap { position: relative; display: flex; align-items: center; background: var(--input-bg); border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; transition: border-color .15s, box-shadow .15s; }
+  .input-wrap:focus-within { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(13,167,167,.12); background: var(--white); }
+  .input-ico { padding: 0 .625rem 0 .875rem; color: var(--muted); display: flex; align-items: center; flex-shrink: 0; }
+  .input-divider { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
+  .input-wrap input { flex: 1; padding: .72rem .875rem; background: transparent; border: none; font-family: inherit; font-size: .88rem; font-weight: 500; color: var(--ink); outline: none; }
+  .pw-toggle { padding: 0 .75rem; background: none; border: none; cursor: pointer; color: var(--muted); display: flex; align-items: center; transition: color .15s; flex-shrink: 0; }
+  .pw-toggle:hover { color: var(--teal); }
+  .form-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: .875rem 0 1.25rem; }
+  .chk-label { display: flex; align-items: center; gap: .5rem; font-size: .82rem; font-weight: 600; color: var(--ink-mid); cursor: pointer; user-select: none; }
+  .chk-label input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--teal); cursor: pointer; flex-shrink: 0; }
+  .forgot-lnk { font-size: .82rem; font-weight: 700; color: var(--ink); text-decoration: none; white-space: nowrap; }
+  .forgot-lnk:hover { color: var(--teal); }
+  .btn-go { width: 100%; padding: .82rem 1.5rem; background: var(--teal); color: #fff; font-family: inherit; font-size: .95rem; font-weight: 800; border: none; border-radius: 10px; cursor: pointer; transition: opacity .15s, transform .1s; box-shadow: 0 4px 16px rgba(13,167,167,.35); }
+  .btn-go:hover { opacity: .9; }
   .btn-go:active { transform: translateY(1px); }
-  .version-badge { display: inline-flex; align-items: center; gap: .35rem; background: var(--page-bg); border: 1px solid var(--border); border-radius: 999px; padding: .2rem .65rem; font-size: .68rem; font-weight: 700; color: var(--muted); margin-bottom: 1rem; letter-spacing: .04em; }
-  .version-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
-  .card-footer { text-align: center; font-size: .78rem; color: var(--muted); line-height: 1.6; margin-top: 1.25rem; }
+  .roles-divider { display: flex; align-items: center; gap: .75rem; margin: 1.25rem 0 .875rem; }
+  .roles-divider::before, .roles-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .roles-divider span { font-size: .72rem; font-weight: 700; color: var(--muted); white-space: nowrap; letter-spacing: .04em; }
+  .roles-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .role-btn { padding: .52rem .5rem; border: 1.5px solid var(--teal); border-radius: 8px; background: #fff; color: var(--teal); font-family: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; text-align: center; transition: background .15s, color .15s, border-color .15s; }
+  .role-btn:hover, .role-btn.active { background: var(--teal); color: #fff; }
+  .roles-grid-bottom { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px; max-width: calc(66.666% + 8px); margin-left: auto; margin-right: auto; }
+  .card-footer { text-align: center; font-size: .75rem; color: var(--muted); line-height: 1.6; margin-top: 1rem; }
   .card-footer a { color: var(--teal); font-weight: 700; text-decoration: none; }
   .card-footer a:hover { text-decoration: underline; }
   @media (max-width: 760px) {
@@ -116,47 +119,72 @@
         <div class="card-mark"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="8.5" y="2" width="3" height="16" rx="1.5" fill="white"/><rect x="2" y="8.5" width="16" height="3" rx="1.5" fill="white"/></svg></div>
         <div class="card-name">e<span>Health</span></div>
       </div>
-      <div class="card-divider"></div>
-      <div class="version-badge"><span class="version-dot"></span>v2.4.0 — All systems operational</div>
-      <h2 class="card-heading">Welcome Back</h2>
-      <p class="card-sub">Sign in to continue to your dashboard</p>
+      <div class="welcome-block">
+        <h2 class="card-heading">Welcome to healthcare.</h2>
+        <p class="card-sub">Please sign in with your personal account information</p>
+      </div>
       <form onsubmit="doLogin(event)" novalidate>
         <div class="field">
-          <label class="field-lbl" for="email">Email Address</label>
           <div class="input-wrap">
-            <span class="input-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
-            <input type="email" id="email" name="email" value="Moses.semanda" autocomplete="email" placeholder="staff@facility.health" spellcheck="false">
+            <span class="input-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+            <div class="input-divider"></div>
+            <input type="email" id="email" name="email" value="Moses.semanda" autocomplete="email" placeholder="Enter Email" spellcheck="false">
           </div>
         </div>
         <div class="field">
-          <label class="field-lbl" for="password">Password</label>
-          <div class="input-wrap pw-wrap">
-            <span class="input-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-            <input type="password" id="password" name="password" value="ehealth2026" autocomplete="current-password">
-            <button type="button" class="pw-btn" onclick="togglePw(this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          <div class="input-wrap">
+            <span class="input-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+            <div class="input-divider"></div>
+            <input type="password" id="password" name="password" value="ehealth2026" autocomplete="current-password" placeholder="Enter Password">
+            <button type="button" class="pw-toggle" onclick="togglePw(this)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
         </div>
         <div class="form-row">
-          <label class="chk-label"><input type="checkbox" checked>Remember me</label>
-          <a href="#" class="forgot-lnk" onclick="return false;">Forgot password?</a>
+          <label class="chk-label"><input type="checkbox" checked>Remember Me</label>
+          <a href="#" class="forgot-lnk" onclick="return false;">Lost Your Password?</a>
         </div>
-        <button type="submit" class="btn-go" id="loginBtn">Sign In</button>
+        <button type="submit" class="btn-go" id="loginBtn">Login</button>
       </form>
+      <div class="roles-divider"><span>LOGIN AS</span></div>
+      <div class="roles-grid">
+        <button class="role-btn" onclick="selectRole('admin',this)">Admin</button>
+        <button class="role-btn" onclick="selectRole('hospital',this)">Hospital</button>
+        <button class="role-btn" onclick="selectRole('doctor',this)">Doctor</button>
+        <button class="role-btn" onclick="selectRole('nurse',this)">Nurse</button>
+        <button class="role-btn" onclick="selectRole('receptionist',this)">Receptionist</button>
+        <button class="role-btn" onclick="selectRole('pathologist',this)">Pathologist</button>
+      </div>
+      <div class="roles-grid-bottom">
+        <button class="role-btn" onclick="selectRole('collector',this)">Collector</button>
+        <button class="role-btn" onclick="selectRole('pharmacist',this)">Pharmacists</button>
+      </div>
       <p class="card-footer">Need access? <a href="#" onclick="return false;">Contact your System Administrator</a></p>
     </div>
   </div>
 </div>
 <script>
+var selectedRole = 'admin';
 function togglePw(btn) {
-  var inp = btn.closest('.pw-wrap').querySelector('input');
+  var inp = btn.closest('.input-wrap').querySelector('input');
   inp.type = inp.type === 'text' ? 'password' : 'text';
+}
+function selectRole(role, btn) {
+  selectedRole = role;
+  document.querySelectorAll('.role-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
 }
 function doLogin(e) {
   e.preventDefault();
   var btn = document.getElementById('loginBtn');
   btn.textContent = 'Signing in…'; btn.disabled = true; btn.style.opacity = '.72';
-  setTimeout(function() { window.location.href = 'index.html'; }, 1500);
+  sessionStorage.setItem('ehRole', selectedRole);
+  setTimeout(function() { window.location.href = 'index.html?role=' + selectedRole; }, 1200);
 }
+// Pre-select Admin on load
+document.addEventListener('DOMContentLoaded', function() {
+  var first = document.querySelector('.role-btn');
+  if (first) first.classList.add('active');
+});
 </script>
 </body>
 </html>
