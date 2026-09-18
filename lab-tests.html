@@ -5,41 +5,119 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lab Tests — eHealth System</title>
 <link rel="stylesheet" href="assets/css/admin.css">
+<style>
+/* Page tabs */
+.lt-tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:24px; }
+.lt-tab { background:none; border:none; padding:10px 20px; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:color .15s,border-color .15s; }
+.lt-tab.active { color:var(--teal); border-bottom-color:var(--teal); }
+.lt-tab-panel { display:none; }
+.lt-tab-panel.active { display:block; }
+
+/* Form sub-tabs (General / SEO / FAQ's) */
+.form-subtabs { display:flex; gap:4px; margin-bottom:24px; }
+.form-subtab { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border:1.5px solid var(--border); border-radius:8px; background:#fff; font-size:12px; font-weight:600; color:var(--muted); cursor:pointer; transition:.15s; }
+.form-subtab.active { border-color:var(--teal); color:var(--teal); background:#f0fefe; }
+.form-subtab svg { flex-shrink:0; }
+.form-sub-panel { display:none; }
+.form-sub-panel.active { display:block; }
+
+/* Form layout */
+.form-row { display:grid; grid-template-columns:160px 1fr; align-items:flex-start; gap:14px 24px; margin-bottom:20px; }
+.form-row label { font-size:13px; font-weight:600; color:var(--dark,#2d3748); padding-top:9px; }
+.form-row label span { color:var(--danger,#e53e3e); }
+.form-row input[type=text], .form-row input[type=number], .form-row textarea, .form-row select { width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit; box-sizing:border-box; }
+.form-row textarea { resize:vertical; min-height:90px; }
+.form-row input:focus, .form-row textarea:focus, .form-row select:focus { outline:none; border-color:var(--teal); box-shadow:0 0 0 3px rgba(13,167,167,.12); }
+
+/* Slug row */
+.slug-wrap { display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.slug-prefix { background:#f7f8fa; padding:9px 10px; font-size:11px; color:var(--muted); white-space:nowrap; border-right:1px solid var(--border); display:flex; align-items:center; }
+.slug-input { border:none; padding:9px 12px; font-size:13px; font-family:inherit; flex:1; min-width:0; }
+.slug-input:focus { outline:none; }
+.slug-wrap:focus-within { border-color:var(--teal); box-shadow:0 0 0 3px rgba(13,167,167,.12); }
+
+/* Image picker */
+.img-pick { width:80px; height:80px; border:2px dashed var(--border); border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; background:#fafafa; position:relative; }
+.img-pick:hover { border-color:var(--teal); background:#f0fefe; }
+.img-pick img { width:100%;height:100%;object-fit:cover;position:absolute;inset:0; }
+.img-pick .plus { color:var(--muted); font-size:20px; line-height:1; }
+.img-pick input[type=file] { position:absolute;inset:0;opacity:0;cursor:pointer; }
+
+/* Price row */
+.price-group { display:flex; gap:12px; }
+.price-field { flex:1; }
+.price-field label { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+.input-prefix-wrap { display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.input-prefix { background:#f7f8fa; padding:9px 10px; font-size:12px; color:var(--muted); border-right:1px solid var(--border); display:flex; align-items:center; }
+.input-prefix-wrap input { border:none; padding:9px 10px; font-size:13px; font-family:inherit; flex:1; min-width:0; }
+.input-prefix-wrap input:focus { outline:none; }
+.input-prefix-wrap:focus-within { border-color:var(--teal); box-shadow:0 0 0 3px rgba(13,167,167,.12); }
+.report-wrap { display:flex; gap:8px; align-items:center; }
+.report-wrap input { width:100px; }
+.report-wrap .unit { font-size:13px; color:var(--muted); }
+
+/* Multi-select tags */
+.multi-sel { border:1px solid var(--border); border-radius:8px; padding:6px 8px; min-height:42px; display:flex; flex-wrap:wrap; gap:4px; cursor:text; background:#fff; }
+.multi-sel:focus-within { border-color:var(--teal); box-shadow:0 0 0 3px rgba(13,167,167,.12); }
+.tag-chip { display:inline-flex; align-items:center; gap:4px; background:#e8f7f7; color:var(--teal); border-radius:5px; padding:3px 8px; font-size:12px; font-weight:500; }
+.tag-chip button { background:none; border:none; color:var(--teal); cursor:pointer; padding:0; font-size:14px; line-height:1; }
+.multi-dropdown { border:1px solid var(--border); border-radius:8px; margin-top:4px; background:#fff; max-height:160px; overflow-y:auto; }
+.multi-opt { padding:8px 12px; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:8px; }
+.multi-opt:hover { background:#f0fefe; }
+.multi-opt.selected { color:var(--teal); font-weight:600; }
+.multi-opt input[type=checkbox] { accent-color:var(--teal); }
+
+/* Toggle */
+.toggle-sw { position:relative;width:36px;height:20px;cursor:pointer;display:inline-block; }
+.toggle-sw input { opacity:0;width:0;height:0; }
+.toggle-sw .track { position:absolute;inset:0;background:#ccc;border-radius:20px;transition:.2s; }
+.toggle-sw input:checked + .track { background:var(--teal); }
+.toggle-sw .track::after { content:'';position:absolute;width:14px;height:14px;background:#fff;border-radius:50%;top:3px;left:3px;transition:.2s; }
+.toggle-sw input:checked + .track::after { left:19px; }
+
+/* Status segmented */
+.seg-btns { display:inline-flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.seg-btn { padding:7px 22px;font-size:13px;font-weight:500;border:none;background:#fff;cursor:pointer;transition:.15s;color:var(--muted); }
+.seg-btn.active { background:var(--teal);color:#fff; }
+.seg-btn:first-child { border-right:1px solid var(--border); }
+
+/* FAQ */
+.faq-item { border:1px solid var(--border); border-radius:8px; padding:14px 16px; margin-bottom:12px; position:relative; }
+.faq-item .remove-faq { position:absolute; top:10px; right:10px; background:none; border:none; color:var(--danger,#e53e3e); cursor:pointer; font-size:18px; line-height:1; }
+.faq-item label { display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:5px; }
+.faq-item input, .faq-item textarea { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:7px; font-size:13px; font-family:inherit; box-sizing:border-box; margin-bottom:10px; }
+.faq-item textarea { resize:vertical; min-height:70px; margin-bottom:0; }
+.faq-item input:focus, .faq-item textarea:focus { outline:none; border-color:var(--teal); }
+
+/* Table */
+.lt-img { width:38px; height:38px; border-radius:8px; object-fit:cover; background:#e8f5f5; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; overflow:hidden; }
+.lt-title-cell { display:flex; align-items:center; gap:10px; }
+.lt-actions { display:flex; gap:10px; font-size:12px; margin-top:3px; }
+.lt-actions a { color:var(--teal); text-decoration:none; font-weight:500; }
+.lt-actions a.trash { color:var(--danger,#e53e3e); }
+.lt-actions a.restore { color:var(--success,#38a169); }
+.lt-actions a:hover { text-decoration:underline; }
+.bulk-select { padding:6px 10px; border:1px solid var(--border); border-radius:8px; font-size:12px; font-family:inherit; }
+.bulk-bar { display:flex; align-items:center; gap:8px; }
+.trash-row td { opacity:.55; }
+.form-actions { display:flex; justify-content:flex-end; gap:8px; padding-top:8px; }
+.key-points-list { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+.kp-chip { background:#e8f7f7; color:var(--teal); border-radius:6px; padding:4px 10px; font-size:12px; display:inline-flex; align-items:center; gap:5px; }
+.kp-chip button { background:none; border:none; color:var(--teal); cursor:pointer; font-size:14px; line-height:1; padding:0; }
+.kp-add-row { display:flex; gap:8px; }
+.kp-add-row input { flex:1; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit; }
+.kp-add-row input:focus { outline:none; border-color:var(--teal); box-shadow:0 0 0 3px rgba(13,167,167,.12); }
+.kp-add-row button { padding:8px 14px; background:var(--teal); color:#fff; border:none; border-radius:8px; font-size:12px; cursor:pointer; white-space:nowrap; }
+</style>
 </head>
 <body>
 <div class="shell">
-  <nav class="sidebar">
-    <a class="sidebar-logo" href="index.html"><div class="logo-icon"><svg viewBox="0 0 24 24" fill="white"><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="4" y="10" width="16" height="4" rx="1"/></svg></div><div class="logo-text">eHealth<span>Hospital Management</span></div></a>
-    <div class="sidebar-search"><span class="s-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" placeholder="Search..."></div>
-    <div class="nav-section-label">Home</div>
-    <a class="nav-item" href="index.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</span></a>
-    <a class="nav-item" href="medical-services.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Medical Services</span></a>
-    <div class="nav-section-label">Appointment Management</div>
-    <a class="nav-item" href="appointments.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Appointments</span></a>
-    <a class="nav-item" href="ambulance-bookings.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="9" width="22" height="11" rx="1"/><circle cx="7" cy="20" r="2"/><circle cx="17" cy="20" r="2"/></svg>All Ambulance Bookings</span></a>
-    <div class="nav-section-label">Hospital Management</div>
-    <a class="nav-item" href="departments.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Departments</span></a>
-    <a class="nav-item" href="specialties.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2"/></svg>Specialties</span></a>
-    <div class="nav-item active" data-toggle="sub-lab">
-      <span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg>Lab Tests</span>
-      <svg class="nav-chevron open" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
-    </div>
-    <div class="nav-sub" id="sub-lab">
-      <a class="nav-sub-item active" href="lab-tests.html">All Lab Tests</a>
-      <a class="nav-sub-item" href="lab-tests.html">Lab Test Packages</a>
-    </div>
-    <div class="nav-section-label">User Management</div>
-    <a class="nav-item" href="doctors.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Doctors</span></a>
-    <a class="nav-item" href="patients.html"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Patients</span></a>
-    <div class="nav-section-label">Promotion Management</div>
-    <a class="nav-item" href="#"><span class="nav-left"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>Coupons</span></a>
-  </nav>
-
+  <nav id="sidebar-mount"></nav>
   <div class="main">
     <header class="header">
       <button class="btn-quick-links"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Links</button>
       <div class="header-right">
-        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
         <span class="lang-badge">EN</span>
         <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
         <div class="user-chip"><div class="user-avatar">M</div><div class="user-info"><div class="user-name">Moses Semanda</div><div class="user-role">Administrator</div></div></div>
@@ -48,96 +126,554 @@
     <div class="content">
       <div class="page-title-row">
         <h1 class="page-title">Lab Tests</h1>
-        <button class="btn btn-teal" onclick="ehOpenModal('modal-add-lab')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New</button>
+        <button class="btn btn-teal" onclick="switchTab('add')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New</button>
       </div>
-      <div class="card">
-        <div class="filter-bar">
-          <div class="filter-tabs">
-            <button class="filter-tab active" data-filter="all">All <span class="tab-count" id="lab-cnt-all"></span></button>
-            <button class="filter-tab" data-filter="active">Active <span class="tab-count" id="lab-cnt-active"></span></button>
-            <button class="filter-tab" data-filter="inactive">DeActive <span class="tab-count" id="lab-cnt-inactive"></span></button>
+
+      <!-- Page tabs -->
+      <div class="lt-tabs">
+        <button class="lt-tab active" data-tab="list" onclick="switchTab('list')">All Lab Tests</button>
+        <button class="lt-tab" data-tab="add" onclick="switchTab('add')" id="add-tab-btn">Add Lab Test</button>
+      </div>
+
+      <!-- ── List Panel ───────────────────────────────────── -->
+      <div class="lt-tab-panel active" id="panel-list">
+        <div class="card">
+          <div class="filter-bar">
+            <div class="filter-tabs">
+              <button class="filter-tab active" data-filter="all" onclick="setFilter(this,'all')">All <span class="tab-count" id="cnt-all"></span></button>
+              <button class="filter-tab" data-filter="active" onclick="setFilter(this,'active')">Active <span class="tab-count" id="cnt-active"></span></button>
+              <button class="filter-tab" data-filter="inactive" onclick="setFilter(this,'inactive')">DeActive <span class="tab-count" id="cnt-inactive"></span></button>
+              <button class="filter-tab" data-filter="trash" onclick="setFilter(this,'trash')">Trash <span class="tab-count" id="cnt-trash"></span></button>
+            </div>
+            <div class="filter-right">
+              <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" id="lt-search" placeholder="Search..." oninput="renderLabs()"></div>
+              <select class="per-page-select" id="per-page"><option>15</option><option>25</option><option>50</option></select>
+              <div class="bulk-bar">
+                <select class="bulk-select" id="bulk-action">
+                  <option value="">Bulk actions</option>
+                  <option value="activate">Set Active</option>
+                  <option value="deactivate">Set DeActive</option>
+                  <option value="trash">Move to Trash</option>
+                  <option value="restore">Restore</option>
+                  <option value="delete">Delete Permanently</option>
+                </select>
+                <button class="btn-apply" onclick="applyBulk()">Apply</button>
+              </div>
+            </div>
           </div>
-          <div class="filter-right">
-            <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" placeholder="Search..."></div>
-            <select class="per-page-select"><option>15</option><option>25</option></select>
-            <button class="btn-apply">Apply</button>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all" onchange="toggleAll(this)"></th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Pathologist</th>
+                <th>Status</th>
+                <th>Created At</th>
+              </tr></thead>
+              <tbody id="lt-tbody"></tbody>
+            </table>
           </div>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all"></th>
-              <th>Title &#9650;</th>
-              <th>Description &#9650;</th>
-              <th>Pathologist</th>
-              <th>Status &#9650;</th>
-              <th>Created At &#9650;</th>
-            </tr></thead>
-            <tbody id="lab-tbody"></tbody>
-            <tfoot><tr><td colspan="6" style="padding:12px 14px;font-size:12px;color:var(--muted);">Title &#9650;</td></tr></tfoot>
-          </table>
+      </div>
+
+      <!-- ── Add/Edit Panel ───────────────────────────────── -->
+      <div class="lt-tab-panel" id="panel-add">
+        <div class="card">
+          <h3 id="form-title" style="margin:0 0 20px;font-size:15px;font-weight:700;">Add Lab Test</h3>
+          <input type="hidden" id="edit-id">
+
+          <!-- Sub-tabs -->
+          <div class="form-subtabs">
+            <button class="form-subtab active" data-sub="general" onclick="switchSub('general')">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13" height="13"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>General
+            </button>
+            <button class="form-subtab" data-sub="seo" onclick="switchSub('seo')">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13" height="13"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>SEO
+            </button>
+            <button class="form-subtab" data-sub="faq" onclick="switchSub('faq')">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13" height="13"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>FAQ's
+            </button>
+          </div>
+
+          <!-- General sub-panel -->
+          <div class="form-sub-panel active" id="sub-general">
+            <div class="form-row">
+              <label>Lab Test Image <span>*</span></label>
+              <div>
+                <div class="img-pick" onclick="document.getElementById('lt-img-file').click()">
+                  <img id="lt-img-preview" src="" alt="" style="display:none">
+                  <span class="plus" id="lt-img-plus">+</span>
+                  <input type="file" id="lt-img-file" accept="image/*" onchange="previewImg(this,'lt-img-preview','lt-img-plus')" style="display:none">
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <label>Title <span>*</span></label>
+              <input type="text" id="lt-title" placeholder="Enter Title" oninput="autoSlug()">
+            </div>
+            <div class="form-row">
+              <label>Slug</label>
+              <div class="slug-wrap">
+                <span class="slug-prefix">ehealth/lab-test/</span>
+                <input type="text" class="slug-input" id="lt-slug" placeholder="Enter Slug">
+              </div>
+            </div>
+            <div class="form-row">
+              <label>Description (en)</label>
+              <textarea id="lt-desc" placeholder="Enter Description (en)"></textarea>
+            </div>
+            <div class="form-row">
+              <label>Pathologist <span>*</span></label>
+              <select id="lt-pathologist">
+                <option value="">Select Pathologist</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Categories</label>
+              <div>
+                <div class="multi-sel" id="cat-tags" onclick="document.getElementById('cat-dropdown').style.display='block'"></div>
+                <div class="multi-dropdown" id="cat-dropdown" style="display:none"></div>
+              </div>
+            </div>
+            <div class="form-row">
+              <label>Allow Home Visit</label>
+              <div style="display:flex;align-items:center;gap:10px;padding-top:2px">
+                <label class="toggle-sw"><input type="checkbox" id="lt-homevisit"><span class="track"></span></label>
+                <span id="homevisit-lbl" style="font-size:12px;color:var(--muted)">No</span>
+              </div>
+            </div>
+            <div class="form-row">
+              <label>Lab Price <span>*</span></label>
+              <div class="price-group">
+                <div class="price-field">
+                  <label>Price</label>
+                  <div class="input-prefix-wrap"><span class="input-prefix">UGX</span><input type="number" id="lt-price" placeholder="0" min="0" oninput="calcRate()"></div>
+                </div>
+                <div class="price-field">
+                  <label>At Lab Discount</label>
+                  <div class="input-prefix-wrap"><span class="input-prefix">%</span><input type="number" id="lt-discount" placeholder="0" min="0" max="100" oninput="calcRate()"></div>
+                </div>
+                <div class="price-field">
+                  <label>Lab Test Rate</label>
+                  <div class="input-prefix-wrap" style="background:#f7f8fa"><span class="input-prefix">UGX</span><input type="text" id="lt-rate" placeholder="0" readonly style="background:#f7f8fa;color:var(--muted)"></div>
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <label>Report Ready In <span>*</span></label>
+              <div class="report-wrap">
+                <input type="number" id="lt-report-hours" placeholder="24" min="1" style="width:110px">
+                <span class="unit">Hours</span>
+              </div>
+            </div>
+            <div class="form-row">
+              <label>Key Points</label>
+              <div>
+                <div class="key-points-list" id="kp-list"></div>
+                <div class="kp-add-row">
+                  <input type="text" id="kp-input" placeholder="Add a key point and press Enter" onkeydown="if(event.key==='Enter'){addKeyPoint();event.preventDefault();}">
+                  <button onclick="addKeyPoint()">+ Add</button>
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <label>Taxes <span>*</span></label>
+              <select id="lt-tax">
+                <option value="">Select Tax</option>
+                <option value="gst">GST</option>
+                <option value="vat">VAT</option>
+                <option value="none">None</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Status</label>
+              <div class="seg-btns">
+                <button class="seg-btn active" id="seg-active" onclick="setSeg('active')">Active</button>
+                <button class="seg-btn" id="seg-inactive" onclick="setSeg('inactive')">DeActive</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SEO sub-panel -->
+          <div class="form-sub-panel" id="sub-seo">
+            <div class="form-row">
+              <label>Meta Title</label>
+              <input type="text" id="lt-meta-title" placeholder="Enter Meta Title">
+            </div>
+            <div class="form-row">
+              <label>Meta Description</label>
+              <textarea id="lt-meta-desc" placeholder="Enter Meta Description"></textarea>
+            </div>
+            <div class="form-row">
+              <label>Meta Image</label>
+              <div>
+                <div class="img-pick" onclick="document.getElementById('seo-img-file').click()">
+                  <img id="seo-img-preview" src="" alt="" style="display:none">
+                  <span class="plus" id="seo-img-plus">+</span>
+                  <input type="file" id="seo-img-file" accept="image/*" onchange="previewImg(this,'seo-img-preview','seo-img-plus')" style="display:none">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FAQ's sub-panel -->
+          <div class="form-sub-panel" id="sub-faq">
+            <div id="faq-list"></div>
+            <button class="btn btn-secondary" onclick="addFaqItem()" style="margin-top:4px">+ Add FAQ</button>
+          </div>
+
+          <div class="form-actions" style="margin-top:24px;border-top:1px solid var(--border);padding-top:16px">
+            <button class="btn btn-secondary" onclick="cancelForm()">Cancel</button>
+            <button class="btn btn-teal" onclick="saveLab()">Save</button>
+          </div>
         </div>
       </div>
     </div>
     <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.78s</span></div></footer>
   </div>
 </div>
-<!-- Add Lab Test Modal -->
-<div id="modal-add-lab" class="eh-modal-overlay" onclick="if(event.target===this)ehCloseModal('modal-add-lab')">
-  <div class="eh-modal">
-    <div class="eh-modal-hd"><h3>Add Lab Test</h3><button class="eh-modal-close" onclick="ehCloseModal('modal-add-lab')">&#x2715;</button></div>
-    <div class="eh-modal-body">
-      <div class="mfield"><label>Test Name <span>*</span></label><input type="text" id="lab-name" placeholder="e.g. Complete Blood Count (CBC)"></div>
-      <div class="mfield"><label>Description</label><textarea id="lab-desc" placeholder="Brief description of this test" rows="2" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;resize:vertical;outline:none"></textarea></div>
-      <div class="mfield"><label>Pathologist</label><input type="text" id="lab-path" placeholder="e.g. Dr. Amelia Brooks"></div>
-      <div class="mfield"><label>Icon (emoji)</label><input type="text" id="lab-icon" placeholder="e.g. 🩺" maxlength="4"></div>
-    </div>
-    <div class="eh-modal-ft"><button class="btn btn-teal" onclick="submitAddLab()">Save Lab Test</button></div>
-  </div>
-</div>
+
 <script src="assets/js/data.js"></script>
 <script src="assets/js/auth.js"></script>
+<script src="assets/js/sidebar.js"></script>
 <script>
-var ACTIVE_PAGE='lab-tests';
-var labFilter='all';
-function renderLabs() {
-  var all = EH.getLabTests();
-  var filtered = all.filter(function(lt){ return labFilter==='all'||(labFilter==='active'&&lt.status==='active')||(labFilter==='inactive'&&lt.status!=='active'); });
-  var el=document.getElementById('lab-cnt-all'); if(el) el.textContent='('+all.length+')';
-  el=document.getElementById('lab-cnt-active'); if(el) el.textContent='('+all.filter(function(lt){return lt.status==='active';}).length+')';
-  el=document.getElementById('lab-cnt-inactive'); if(el) el.textContent='('+all.filter(function(lt){return lt.status!=='active';}).length+')';
-  var tb=document.getElementById('lab-tbody');
-  if(!filtered.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No lab tests found.</td></tr>';return;}
-  var lockIcon='<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-  tb.innerHTML=filtered.map(function(lt){
-    return '<tr><td><input type="checkbox" class="tbl-checkbox row-cb"></td>'
-      +'<td><div class="user-chip-small"><div class="lab-icon">'+lt.icon+'</div><span style="font-weight:600">'+lt.name+'</span></div></td>'
-      +'<td style="color:var(--teal);max-width:300px;font-size:12px">'+lt.description+'</td>'
-      +'<td style="font-size:12px;color:var(--muted)">'+lt.pathologist+'</td>'
-      +'<td>'+(lt.status==='active'?'<span style="color:var(--success);font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block"></span>Active</span>':'<span class="lock-icon">'+lockIcon+'</span>')+'</td>'
-      +'<td style="font-size:12px;color:var(--muted)">'+lt.createdAt+'</td></tr>';
-  }).join('');
+var ACTIVE_PAGE = 'lab-tests';
+var labFilter = 'all';
+var segStatus = 'active';
+var ltImgData = '';
+var seoImgData = '';
+var keyPoints = [];
+var selectedCats = [];
+
+/* ── Tab switching ──────────────────────────────────────── */
+function switchTab(tab) {
+  document.querySelectorAll('.lt-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.lt-tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelector('[data-tab="'+tab+'"]').classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+  if (tab === 'add' && !document.getElementById('edit-id').value) { resetForm(); }
 }
-document.querySelectorAll('.filter-tab[data-filter]').forEach(function(btn){
-  btn.addEventListener('click',function(){
-    document.querySelectorAll('.filter-tab').forEach(function(b){b.classList.remove('active');});
-    btn.classList.add('active'); labFilter=btn.dataset.filter; renderLabs();
+
+function switchSub(sub) {
+  document.querySelectorAll('.form-subtab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.form-sub-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelector('[data-sub="'+sub+'"]').classList.add('active');
+  document.getElementById('sub-'+sub).classList.add('active');
+}
+
+/* ── Image preview ──────────────────────────────────────── */
+function previewImg(input, previewId, plusId) {
+  var file = input.files[0]; if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var d = e.target.result;
+    if (previewId === 'lt-img-preview') ltImgData = d;
+    else seoImgData = d;
+    var prev = document.getElementById(previewId);
+    prev.src = d; prev.style.display = 'block';
+    document.getElementById(plusId).style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ── Auto slug ──────────────────────────────────────────── */
+function autoSlug() {
+  if (document.getElementById('edit-id').value) return;
+  var t = document.getElementById('lt-title').value;
+  document.getElementById('lt-slug').value = t.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+
+/* ── Rate calc ──────────────────────────────────────────── */
+function calcRate() {
+  var price = parseFloat(document.getElementById('lt-price').value) || 0;
+  var disc  = parseFloat(document.getElementById('lt-discount').value) || 0;
+  var rate  = price - (price * disc / 100);
+  document.getElementById('lt-rate').value = rate > 0 ? Math.round(rate) : '';
+}
+
+/* ── Status segmented ───────────────────────────────────── */
+function setSeg(val) {
+  segStatus = val;
+  document.getElementById('seg-active').classList.toggle('active', val === 'active');
+  document.getElementById('seg-inactive').classList.toggle('active', val === 'inactive');
+}
+
+/* ── Home visit toggle ──────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('lt-homevisit').addEventListener('change', function() {
+    document.getElementById('homevisit-lbl').textContent = this.checked ? 'Yes' : 'No';
   });
 });
-function submitAddLab() {
-  var name = document.getElementById('lab-name').value.trim();
-  var desc = document.getElementById('lab-desc').value.trim();
-  var path = document.getElementById('lab-path').value.trim();
-  var icon = document.getElementById('lab-icon').value.trim() || '🔬';
-  if (!name) { ehToast('Test name is required.', 'error'); return; }
-  EH.addLabTest({ name:name, description:desc, pathologist:path, icon:icon });
-  ehCloseModal('modal-add-lab');
-  ['lab-name','lab-desc','lab-path','lab-icon'].forEach(function(id){ document.getElementById(id).value=''; });
-  renderLabs();
-  ehToast('"'+name+'" added successfully.', 'success');
+
+/* ── Key Points ─────────────────────────────────────────── */
+function addKeyPoint() {
+  var val = document.getElementById('kp-input').value.trim();
+  if (!val) return;
+  keyPoints.push(val);
+  document.getElementById('kp-input').value = '';
+  renderKeyPoints();
 }
-document.addEventListener('DOMContentLoaded', function(){ EHAuth.init(); renderLabs(); });
+function removeKeyPoint(i) { keyPoints.splice(i,1); renderKeyPoints(); }
+function renderKeyPoints() {
+  document.getElementById('kp-list').innerHTML = keyPoints.map(function(kp, i) {
+    return '<span class="kp-chip">'+kp+'<button onclick="removeKeyPoint('+i+')">&#x2715;</button></span>';
+  }).join('');
+}
+
+/* ── Categories multi-select ────────────────────────────── */
+function buildCatDropdown() {
+  var cats = EH.getCategories();
+  var dd = document.getElementById('cat-dropdown');
+  dd.innerHTML = cats.map(function(c) {
+    var checked = selectedCats.indexOf(c.id) > -1;
+    return '<div class="multi-opt'+(checked?' selected':'')+'" onclick="toggleCat(\''+c.id+'\',\''+c.name+'\')">'
+      + '<input type="checkbox" '+(checked?'checked':'')+' onclick="event.stopPropagation();toggleCat(\''+c.id+'\',\''+c.name+'\')">'
+      + c.name + '</div>';
+  }).join('') || '<div class="multi-opt" style="color:var(--muted)">No categories yet.</div>';
+}
+function toggleCat(id, name) {
+  var idx = selectedCats.indexOf(id);
+  if (idx > -1) selectedCats.splice(idx, 1); else selectedCats.push(id);
+  renderCatTags(); buildCatDropdown();
+}
+function renderCatTags() {
+  var cats = EH.getCategories();
+  var el = document.getElementById('cat-tags');
+  el.innerHTML = selectedCats.map(function(id) {
+    var c = cats.find(function(x){return x.id===id;}) || { name:id };
+    return '<span class="tag-chip">'+c.name+'<button onclick="toggleCat(\''+id+'\',\'\');event.stopPropagation()">&#x2715;</button></span>';
+  }).join('');
+}
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('cat-dropdown');
+  if (dd && !dd.contains(e.target) && !document.getElementById('cat-tags').contains(e.target)) dd.style.display = 'none';
+});
+
+/* ── Pathologist dropdown ───────────────────────────────── */
+function populatePathologists() {
+  var users = EH.getUsers ? EH.getUsers(window.EH_TENANT) : [];
+  var paths = users.filter(function(u){ return u.role==='pathologist' || u.role==='doctor'; });
+  var sel = document.getElementById('lt-pathologist');
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">Select Pathologist</option>';
+  /* Always include some defaults */
+  var defaults = ['Dr. Amelia Brooks','Dr. Lucas Bennett','Dr. Ethan Collins','Dr. Grace Mitchell','Dr. Noah Richardson','Dr. Charlotte Hayes'];
+  var names = paths.map(function(u){return u.name;});
+  defaults.forEach(function(n){ if (names.indexOf(n) < 0) names.push(n); });
+  names.forEach(function(n) {
+    var o = document.createElement('option'); o.value = n; o.textContent = n;
+    if (n === cur) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+/* ── FAQ ────────────────────────────────────────────────── */
+var faqCount = 0;
+function addFaqItem(q, a) {
+  var id = ++faqCount;
+  var div = document.createElement('div');
+  div.className = 'faq-item'; div.id = 'faq-'+id;
+  div.innerHTML = '<button class="remove-faq" onclick="this.parentElement.remove()">&#x2715;</button>'
+    + '<label>Question</label><input type="text" id="faq-q-'+id+'" placeholder="Enter question" value="'+(q||'')+'">'
+    + '<label>Answer</label><textarea id="faq-a-'+id+'" placeholder="Enter answer">'+(a||'')+'</textarea>';
+  document.getElementById('faq-list').appendChild(div);
+}
+function getFaqs() {
+  var items = [];
+  document.querySelectorAll('.faq-item').forEach(function(div) {
+    var id = div.id.replace('faq-','');
+    var q = (document.getElementById('faq-q-'+id)||{}).value||'';
+    var a = (document.getElementById('faq-a-'+id)||{}).value||'';
+    if (q||a) items.push({q:q,a:a});
+  });
+  return items;
+}
+
+/* ── Reset form ─────────────────────────────────────────── */
+function resetForm() {
+  document.getElementById('edit-id').value = '';
+  ['lt-title','lt-slug','lt-desc','lt-meta-title','lt-meta-desc'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  ['lt-price','lt-discount','lt-rate','lt-report-hours'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('lt-tax').value = '';
+  document.getElementById('lt-homevisit').checked = false;
+  document.getElementById('homevisit-lbl').textContent = 'No';
+  ltImgData=''; seoImgData=''; keyPoints=[]; selectedCats=[]; faqCount=0;
+  ['lt-img-preview','seo-img-preview'].forEach(function(id){ var el=document.getElementById(id); if(el){el.style.display='none';el.src='';} });
+  ['lt-img-plus','seo-img-plus'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=''; });
+  document.getElementById('kp-list').innerHTML = '';
+  document.getElementById('faq-list').innerHTML = '';
+  renderCatTags(); buildCatDropdown();
+  setSeg('active');
+  switchSub('general');
+  document.getElementById('form-title').textContent = 'Add Lab Test';
+  document.getElementById('add-tab-btn').textContent = 'Add Lab Test';
+}
+
+function cancelForm() { resetForm(); switchTab('list'); }
+
+/* ── Save ───────────────────────────────────────────────── */
+function saveLab() {
+  var title = document.getElementById('lt-title').value.trim();
+  var path  = document.getElementById('lt-pathologist').value;
+  var price = document.getElementById('lt-price').value;
+  var repIn = document.getElementById('lt-report-hours').value;
+  var eid   = document.getElementById('edit-id').value;
+  if (!title) { ehToast('Title is required.','error'); switchSub('general'); return; }
+  if (!path)  { ehToast('Pathologist is required.','error'); switchSub('general'); return; }
+  if (!price) { ehToast('Lab price is required.','error'); switchSub('general'); return; }
+  if (!repIn) { ehToast('Report ready in (hours) is required.','error'); switchSub('general'); return; }
+  var payload = {
+    title: title,
+    slug: document.getElementById('lt-slug').value.trim(),
+    description: document.getElementById('lt-desc').value.trim(),
+    pathologist: path,
+    categories: selectedCats,
+    homeVisit: document.getElementById('lt-homevisit').checked,
+    price: parseFloat(price)||0,
+    discount: parseFloat(document.getElementById('lt-discount').value)||0,
+    reportIn: parseInt(repIn)||24,
+    keyPoints: keyPoints.slice(),
+    tax: document.getElementById('lt-tax').value,
+    status: segStatus,
+    image: ltImgData,
+    metaTitle: document.getElementById('lt-meta-title').value.trim(),
+    metaDesc: document.getElementById('lt-meta-desc').value.trim(),
+    seoImage: seoImgData,
+    faqs: getFaqs()
+  };
+  if (eid) {
+    EH.updateLabTest(eid, payload);
+    ehToast('"'+title+'" updated.','success');
+  } else {
+    EH.addLabTest(payload);
+    ehToast('"'+title+'" added.','success');
+  }
+  cancelForm();
+  renderLabs();
+}
+
+/* ── Edit ───────────────────────────────────────────────── */
+function editLab(id) {
+  var lt = EH.getLabTests().find(function(x){return x.id===id;});
+  if (!lt) return;
+  document.getElementById('edit-id').value = lt.id;
+  document.getElementById('lt-title').value = lt.title||'';
+  document.getElementById('lt-slug').value = lt.slug||'';
+  document.getElementById('lt-desc').value = lt.description||'';
+  document.getElementById('lt-meta-title').value = lt.metaTitle||'';
+  document.getElementById('lt-meta-desc').value = lt.metaDesc||'';
+  document.getElementById('lt-price').value = lt.price||'';
+  document.getElementById('lt-discount').value = lt.discount||'';
+  document.getElementById('lt-report-hours').value = lt.reportIn||'';
+  document.getElementById('lt-tax').value = lt.tax||'';
+  document.getElementById('lt-homevisit').checked = !!lt.homeVisit;
+  document.getElementById('homevisit-lbl').textContent = lt.homeVisit ? 'Yes' : 'No';
+  calcRate();
+  ltImgData = lt.image||''; seoImgData = lt.seoImage||'';
+  var prev = document.getElementById('lt-img-preview');
+  if (ltImgData) { prev.src=ltImgData; prev.style.display='block'; document.getElementById('lt-img-plus').style.display='none'; }
+  else { prev.style.display='none'; document.getElementById('lt-img-plus').style.display=''; }
+  keyPoints = (lt.keyPoints||[]).slice(); renderKeyPoints();
+  selectedCats = (lt.categories||[]).slice(); renderCatTags(); buildCatDropdown();
+  setSeg(lt.status === 'active' ? 'active' : 'inactive');
+  faqCount=0; document.getElementById('faq-list').innerHTML='';
+  (lt.faqs||[]).forEach(function(f){ addFaqItem(f.q,f.a); });
+  document.getElementById('form-title').textContent = 'Edit Lab Test';
+  document.getElementById('add-tab-btn').textContent = 'Edit Lab Test';
+  populatePathologists();
+  document.getElementById('lt-pathologist').value = lt.pathologist||'';
+  switchSub('general');
+  switchTab('add');
+}
+
+/* ── Trash / Restore / Delete ───────────────────────────── */
+function trashLab(id) { EH.updateLabTest(id,{status:'trash'}); renderLabs(); ehToast('Moved to trash.','success'); }
+function restoreLab(id) { EH.updateLabTest(id,{status:'active'}); renderLabs(); ehToast('Restored.','success'); }
+function permDeleteLab(id) {
+  if (!confirm('Permanently delete? Cannot be undone.')) return;
+  EH.deleteLabTest(id); renderLabs(); ehToast('Deleted.','success');
+}
+function toggleStatus(id, checked) { EH.updateLabTest(id,{status:checked?'active':'inactive'}); renderLabs(); }
+
+/* ── Filter / bulk ──────────────────────────────────────── */
+function setFilter(btn,f) {
+  document.querySelectorAll('.filter-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active'); labFilter=f; renderLabs();
+}
+function toggleAll(cb) { document.querySelectorAll('.row-cb').forEach(function(c){c.checked=cb.checked;}); }
+function getSelected() { var ids=[]; document.querySelectorAll('.row-cb:checked').forEach(function(c){ids.push(c.dataset.id);}); return ids; }
+function applyBulk() {
+  var action = document.getElementById('bulk-action').value;
+  var ids = getSelected();
+  if (!action) { ehToast('Select a bulk action.','error'); return; }
+  if (!ids.length) { ehToast('Select at least one row.','error'); return; }
+  ids.forEach(function(id){
+    if (action==='activate')   EH.updateLabTest(id,{status:'active'});
+    if (action==='deactivate') EH.updateLabTest(id,{status:'inactive'});
+    if (action==='trash')      EH.updateLabTest(id,{status:'trash'});
+    if (action==='restore')    EH.updateLabTest(id,{status:'active'});
+    if (action==='delete')     EH.deleteLabTest(id);
+  });
+  document.getElementById('sel-all').checked=false;
+  document.getElementById('bulk-action').value='';
+  renderLabs(); ehToast('Bulk action applied.','success');
+}
+
+/* ── Render list ────────────────────────────────────────── */
+function renderLabs() {
+  var all = EH.getLabTests();
+  var q = (document.getElementById('lt-search')||{}).value||''; q=q.toLowerCase();
+  var perPage = parseInt((document.getElementById('per-page')||{}).value||15);
+
+  var counts = {all:0,active:0,inactive:0,trash:0};
+  all.forEach(function(lt){ if(lt.status==='trash') counts.trash++; else{ counts.all++; if(lt.status==='active') counts.active++; else counts.inactive++; } });
+  function setCount(id,n){var el=document.getElementById(id);if(el)el.textContent='('+n+')';}
+  setCount('cnt-all',counts.all); setCount('cnt-active',counts.active);
+  setCount('cnt-inactive',counts.inactive); setCount('cnt-trash',counts.trash);
+
+  var filtered = all.filter(function(lt){
+    if (labFilter==='trash') return lt.status==='trash';
+    if (labFilter==='active') return lt.status==='active';
+    if (labFilter==='inactive') return lt.status==='inactive';
+    return lt.status!=='trash';
+  });
+  if (q) filtered=filtered.filter(function(lt){ return ((lt.title||lt.name)||'').toLowerCase().indexOf(q)>-1||(lt.description||'').toLowerCase().indexOf(q)>-1||((lt.pathologist||'')).toLowerCase().indexOf(q)>-1; });
+  filtered=filtered.slice(0,perPage);
+
+  var tb=document.getElementById('lt-tbody');
+  if (!filtered.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No lab tests found.</td></tr>';return;}
+
+  tb.innerHTML=filtered.map(function(lt){
+    var isTrash=lt.status==='trash';
+    var isActive=lt.status==='active';
+    var name=lt.title||lt.name||'—';
+    var imgCell = lt.image
+      ? '<div class="lt-img"><img src="'+lt.image+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px"></div>'
+      : '<div class="lt-img" style="font-size:18px">🔬</div>';
+    var titleBlock='<div class="lt-title-cell">'+imgCell+'<div><div style="font-size:13px;font-weight:600;color:var(--dark,#2d3748)">'+name+'</div></div></div>';
+    var actions=isTrash
+      ? '<div class="lt-actions"><a href="#" class="restore" onclick="restoreLab(\''+lt.id+'\');return false">Restore</a> | <a href="#" class="trash" onclick="permDeleteLab(\''+lt.id+'\');return false">Delete</a></div>'
+      : '<div class="lt-actions"><a href="#" onclick="editLab(\''+lt.id+'\');return false">Edit</a> | <a href="#" class="trash" onclick="trashLab(\''+lt.id+'\');return false">Move To Trash</a></div>';
+    var toggle=isTrash?''
+      :'<label class="toggle-sw"><input type="checkbox"'+(isActive?' checked':'')+' onchange="toggleStatus(\''+lt.id+'\',this.checked)"><span class="track"></span></label>';
+    return '<tr class="'+(isTrash?'trash-row':'')+'">'
+      +'<td><input type="checkbox" class="tbl-checkbox row-cb" data-id="'+lt.id+'"></td>'
+      +'<td>'+titleBlock+'<div style="margin-top:4px">'+actions+'</div></td>'
+      +'<td class="desc-cell" style="font-size:12px;color:var(--teal);max-width:320px">'+(lt.description||'—')+'</td>'
+      +'<td style="font-size:12px;color:var(--muted)">'+(lt.pathologist||'—')+'</td>'
+      +'<td style="white-space:nowrap">'+toggle+' <span style="font-size:11px;color:var(--muted)">'+(isTrash?'Trash':isActive?'Active':'DeActive')+'</span></td>'
+      +'<td style="font-size:12px;color:var(--muted);white-space:nowrap">'+(lt.createdAt||'—')+'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  EHAuth.init();
+  populatePathologists();
+  buildCatDropdown();
+  renderLabs();
+});
 </script>
-<script src="assets/js/sidebar.js"></script>
 </body>
 </html>

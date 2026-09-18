@@ -13,7 +13,15 @@
     appointments:     [],
     departments:      [],
     specialties:      [],
-    labTests:         [],
+    labTests: [
+      { id:'lt1', title:'Complete Blood Count (CBC)',    slug:'cbc',         description:'Comprehensive blood test used to evaluate overall health and detect infections or anemia.', pathologist:'Dr. Amelia Brooks',    categories:['cat1'], image:'', price:25000, discount:10, reportIn:24, status:'active', createdAt:'2026-01-01' },
+      { id:'lt2', title:'Liver Function Test (LFT)',     slug:'lft',         description:'Measures liver enzymes and proteins to assess liver health and detect liver diseases.',         pathologist:'Dr. Lucas Bennett',    categories:['cat4'], image:'', price:35000, discount:15, reportIn:48, status:'active', createdAt:'2026-01-01' },
+      { id:'lt3', title:'Lipid Profile Test',            slug:'lipid',       description:'Measures cholesterol and triglyceride levels to assess heart disease risk.',                   pathologist:'Dr. Ethan Collins',    categories:['cat7'], image:'', price:30000, discount:5,  reportIn:24, status:'active', createdAt:'2026-01-01' },
+      { id:'lt4', title:'Thyroid Function Test (TFT)',   slug:'tft',         description:'Detects thyroid hormone imbalances affecting metabolism and energy levels.',                    pathologist:'Dr. Grace Mitchell',   categories:['cat2'], image:'', price:28000, discount:10, reportIn:24, status:'active', createdAt:'2026-01-01' },
+      { id:'lt5', title:'Blood Sugar Test',              slug:'blood-sugar', description:'Measures glucose levels to diagnose and monitor diabetes conditions.',                          pathologist:'Dr. Grace Mitchell',   categories:['cat3'], image:'', price:15000, discount:0,  reportIn:12, status:'active', createdAt:'2026-01-01' },
+      { id:'lt6', title:'Vitamin D Test',                slug:'vitamin-d',   description:'Determines Vitamin D levels important for bone and immune health.',                            pathologist:'Dr. Noah Richardson',  categories:['cat8'], image:'', price:22000, discount:5,  reportIn:24, status:'active', createdAt:'2026-01-01' },
+      { id:'lt7', title:'Allergy Test',                  slug:'allergy',     description:'Identifies allergic reactions to specific substances.',                                         pathologist:'Dr. Charlotte Hayes',  categories:['cat9'], image:'', price:40000, discount:10, reportIn:48, status:'active', createdAt:'2026-01-01' }
+    ],
     ambulanceBookings:[],
     mediaFiles:       [],
     categories:       [
@@ -58,10 +66,10 @@
   };
 
   function seed() {
-    if (!g('seeded_v9')) {
-      ['seeded_v1','seeded_v2','seeded_v3','seeded_v4','seeded_v5','seeded_v6','seeded_v7','seeded_v8'].forEach(function(k){ try { localStorage.removeItem('eh_'+k); } catch(e){} });
+    if (!g('seeded_v10')) {
+      ['seeded_v1','seeded_v2','seeded_v3','seeded_v4','seeded_v5','seeded_v6','seeded_v7','seeded_v8','seeded_v9'].forEach(function(k){ try { localStorage.removeItem('eh_'+k); } catch(e){} });
       Object.keys(SEED).forEach(function(k) { s(k, SEED[k]); });
-      s('seeded_v9', true);
+      s('seeded_v10', true);
     }
   }
 
@@ -219,6 +227,12 @@
       var list = this.getLabTests();
       var lt = Object.assign({ id: nextId('lt'), status:'active', createdAt: nowStr() }, data);
       list.push(lt); s('labTests', list); return lt;
+    },
+    updateLabTest: function(id, data) {
+      var list = this.getLabTests();
+      var i = list.findIndex(function(lt){return lt.id===id;});
+      if (i > -1) { list[i] = Object.assign({}, list[i], data); s('labTests', list); return list[i]; }
+      return null;
     },
     deleteLabTest: function(id) { s('labTests', this.getLabTests().filter(function(lt){return lt.id!==id;})); },
 
