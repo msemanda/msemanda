@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Users — eHealth System</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+<style>
+/* Tabs */
+.page-tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:22px; }
+.page-tab { padding:10px 20px; font-size:13px; font-weight:700; color:var(--muted); background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; font-family:inherit; transition:color .15s,border-color .15s; }
+.page-tab.active { color:var(--teal); border-bottom-color:var(--teal); }
+
+/* Form layout */
+.user-form-wrap { background:#fff; border-radius:12px; border:1px solid var(--border); overflow:hidden; max-width:900px; }
+.user-form-hd { padding:18px 24px; border-bottom:1px solid var(--border); font-size:15px; font-weight:800; color:var(--ink); }
+.form-field-row { display:grid; grid-template-columns:180px 1fr; align-items:flex-start; gap:16px; padding:14px 24px; border-bottom:1px solid var(--border); }
+.form-field-row:last-child { border-bottom:none; }
+.ffl { font-size:13px; font-weight:700; color:var(--ink); padding-top:9px; }
+.ffl span { color:var(--danger); }
+.ffr { display:flex; flex-direction:column; gap:5px; }
+.ffr input, .ffr select { width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; color:var(--ink); background:#fff; outline:none; transition:border-color .15s; box-sizing:border-box; }
+.ffr input:focus, .ffr select:focus { border-color:var(--teal); }
+.ffr .hint { font-size:11.5px; color:var(--muted); }
+.ffr .hint a { color:var(--teal); font-weight:700; text-decoration:none; }
+.form-save-row { padding:16px 24px; display:flex; justify-content:flex-end; gap:8px; border-top:1px solid var(--border); }
+
+/* Phone */
+.phone-split { display:grid; grid-template-columns:130px 1fr; gap:8px; }
+
+/* Password eye */
+.pw-wrap-u { position:relative; }
+.pw-wrap-u input { padding-right:40px !important; }
+.pw-eye-u { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--muted); display:flex; align-items:center; }
+.pw-eye-u:hover { color:var(--teal); }
+
+/* Status segmented */
+.seg-status { display:inline-flex; border:1.5px solid var(--border); border-radius:8px; overflow:hidden; }
+.seg-status button { padding:9px 22px; border:none; background:#fff; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:background .15s,color .15s; color:var(--muted); }
+.seg-status button.active { background:var(--teal); color:#fff; }
+
+/* Notification checkbox */
+.notif-row { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-mid); }
+.notif-row input { width:15px; height:15px; accent-color:var(--teal); cursor:pointer; }
+
+/* Inline row actions */
+.row-actions { display:flex; gap:10px; font-size:12px; margin-top:3px; }
+.row-actions a { color:var(--teal); text-decoration:none; font-weight:500; }
+.row-actions a.trash-lnk { color:var(--danger,#e53e3e); }
+.row-actions a.restore-lnk { color:var(--success,#38a169); }
+.row-actions a:hover { text-decoration:underline; }
+
+/* Bulk bar */
+.bulk-bar { display:flex; align-items:center; gap:8px; }
+.bulk-select { padding:6px 10px; border:1px solid var(--border); border-radius:8px; font-size:12px; font-family:inherit; }
+.trash-row td { opacity:.55; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav id="sidebar-mount"></nav>
+  <div class="main">
+    <header class="header">
+      <button class="btn-quick-links"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Links</button>
+      <div class="header-right">
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
+        <span class="lang-badge">EN</span>
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+        <div class="user-chip"><div class="user-avatar">M</div><div class="user-info"><div class="user-name">Moses Semanda</div><div class="user-role">Administrator</div></div></div>
+      </div>
+    </header>
+    <div class="content">
+      <div class="page-title-row">
+        <h1 class="page-title">Users</h1>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary" onclick="exportUsers()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Export</button>
+          <button class="btn btn-secondary" onclick="importUsers()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Import</button>
+          <button class="btn btn-teal" onclick="showView('add')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New</button>
+        </div>
+      </div>
+
+      <div class="page-tabs">
+        <button class="page-tab active" id="tab-list" onclick="showView('list')">All Users</button>
+        <button class="page-tab" id="tab-add" onclick="showView('add')">Add User</button>
+      </div>
+
+      <!-- ── List ── -->
+      <div id="view-list">
+        <div class="card">
+          <div class="filter-bar">
+            <div class="filter-tabs">
+              <button class="filter-tab active" data-filter="all"      onclick="setFilter(this,'all')">All <span class="tab-count" id="cnt-all"></span></button>
+              <button class="filter-tab" data-filter="active"   onclick="setFilter(this,'active')">Active <span class="tab-count" id="cnt-active"></span></button>
+              <button class="filter-tab" data-filter="deactive" onclick="setFilter(this,'deactive')">Deactive <span class="tab-count" id="cnt-deactive"></span></button>
+              <button class="filter-tab" data-filter="trash"    onclick="setFilter(this,'trash')">Trash <span class="tab-count" id="cnt-trash"></span></button>
+            </div>
+            <div class="filter-right">
+              <div class="search-input-wrap"><span class="si"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><input type="text" id="user-search" placeholder="Search..." oninput="renderUsers()"></div>
+              <select class="per-page-select" id="per-page" onchange="renderUsers()"><option>15</option><option>25</option><option>50</option></select>
+              <div class="bulk-bar">
+                <select class="bulk-select" id="bulk-action">
+                  <option value="">Bulk actions</option>
+                  <option value="activate">Activate</option>
+                  <option value="deactivate">Deactivate</option>
+                  <option value="trash">Move to Trash</option>
+                  <option value="restore">Restore</option>
+                  <option value="delete">Delete Permanently</option>
+                </select>
+                <button class="btn-apply" onclick="applyBulk()">Apply</button>
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th class="cb-col"><input type="checkbox" class="tbl-checkbox" id="sel-all" onchange="toggleAll(this)"></th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Created At</th>
+              </tr></thead>
+              <tbody id="users-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Add / Edit ── -->
+      <div id="view-add" style="display:none">
+        <div class="user-form-wrap">
+          <div class="user-form-hd" id="form-title">Add User</div>
+
+          <div class="form-field-row">
+            <div class="ffl">Full Name <span>*</span></div>
+            <div class="ffr"><input type="text" id="u-name" placeholder="Enter Full Name"></div>
+          </div>
+
+          <div class="form-field-row">
+            <div class="ffl">Email <span>*</span></div>
+            <div class="ffr"><input type="email" id="u-email" placeholder="Enter Email"></div>
+          </div>
+
+          <div class="form-field-row">
+            <div class="ffl">Phone <span>*</span></div>
+            <div class="ffr">
+              <div class="phone-split">
+                <select id="u-country">
+                  <option value="+256">+256 🇺🇬</option>
+                  <option value="+1">+1 🇺🇸</option>
+                  <option value="+44">+44 🇬🇧</option>
+                  <option value="+91">+91 🇮🇳</option>
+                  <option value="+254">+254 🇰🇪</option>
+                  <option value="+255">+255 🇹🇿</option>
+                  <option value="+250">+250 🇷🇼</option>
+                  <option value="+27">+27 🇿🇦</option>
+                </select>
+                <input type="tel" id="u-phone" placeholder="Enter Phone">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-field-row">
+            <div class="ffl">Role <span>*</span></div>
+            <div class="ffr">
+              <select id="u-role"><option value="">Select Role</option></select>
+              <div class="hint">*To add new role, simply click <a href="roles.html">here</a></div>
+            </div>
+          </div>
+
+          <div class="form-field-row">
+            <div class="ffl">Password <span>*</span></div>
+            <div class="ffr">
+              <div class="pw-wrap-u">
+                <input type="password" id="u-password" placeholder="Enter Password">
+                <button type="button" class="pw-eye-u" onclick="togglePwU('u-password')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-field-row">
+            <div class="ffl">Confirm <span>*</span></div>
+            <div class="ffr">
+              <div class="pw-wrap-u">
+                <input type="password" id="u-confirm" placeholder="Enter Confirm Password">
+                <button type="button" class="pw-eye-u" onclick="togglePwU('u-confirm')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-field-row">
+            <div class="ffl">Notification</div>
+            <div class="ffr">
+              <label class="notif-row"><input type="checkbox" id="u-notify"> Send the new user an email about their account.</label>
+            </div>
+          </div>
+
+          <div class="form-field-row">
+            <div class="ffl">Status</div>
+            <div class="ffr">
+              <div class="seg-status">
+                <button type="button" id="seg-active"   class="active"  onclick="setStatus('active')">Active</button>
+                <button type="button" id="seg-deactive"                 onclick="setStatus('deactive')">Deactive</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-save-row">
+            <button class="btn btn-secondary" onclick="cancelForm()">Cancel</button>
+            <button class="btn btn-teal" onclick="saveUser()">Save</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.3s</span></div></footer>
+  </div>
+</div>
+
+<script src="assets/js/data-api.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/sidebar.js"></script>
+<script>
+var ACTIVE_PAGE = 'users';
+var editingId = null;
+var currentStatus = 'active';
+var currentFilter = 'all';
+var usersTenantId = null;
+var isSuperAdmin = false;
+
+function togglePwU(id) {
+  var inp = document.getElementById(id);
+  inp.type = inp.type === 'text' ? 'password' : 'text';
+}
+
+function setStatus(s) {
+  currentStatus = s;
+  document.getElementById('seg-active').classList.toggle('active', s === 'active');
+  document.getElementById('seg-deactive').classList.toggle('active', s === 'deactive');
+}
+
+function setFilter(btn, f) {
+  document.querySelectorAll('.filter-tab').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  currentFilter = f;
+  renderUsers();
+}
+
+function toggleAll(cb) {
+  document.querySelectorAll('.row-cb').forEach(function(c){ c.checked = cb.checked; });
+}
+
+function getSelected() {
+  var ids = [];
+  document.querySelectorAll('.row-cb:checked').forEach(function(c){ ids.push(c.dataset.id); });
+  return ids;
+}
+
+function applyBulk() {
+  var action = document.getElementById('bulk-action').value;
+  var ids = getSelected();
+  if (!action) { ehToast('Select a bulk action.', 'error'); return; }
+  if (!ids.length) { ehToast('Select at least one row.', 'error'); return; }
+  ids.forEach(function(id) {
+    if (action === 'activate')   EH.updateUser(id, { status:'active' });
+    if (action === 'deactivate') EH.updateUser(id, { status:'deactive' });
+    if (action === 'trash')      EH.updateUser(id, { status:'trash' });
+    if (action === 'restore')    EH.updateUser(id, { status:'active' });
+    if (action === 'delete')     EH.deleteUser(id);
+  });
+  document.getElementById('sel-all').checked = false;
+  document.getElementById('bulk-action').value = '';
+  renderUsers();
+  ehToast('Bulk action applied.', 'success');
+}
+
+function populateRoles() {
+  var sel = document.getElementById('u-role');
+  var roles = EH.getRoles();
+  sel.innerHTML = '<option value="">Select Role</option>';
+  roles.forEach(function(r) {
+    var o = document.createElement('option');
+    o.value = r.name.toLowerCase();
+    o.textContent = r.name;
+    sel.appendChild(o);
+  });
+}
+
+function renderUsers() {
+  var users = EH.getUsers(usersTenantId);
+  var q = (document.getElementById('user-search').value || '').toLowerCase();
+  var perPage = parseInt(document.getElementById('per-page').value || 15);
+
+  var all      = users.filter(function(u){ return u.status !== 'trash'; });
+  var active   = users.filter(function(u){ return u.status === 'active'; });
+  var deactive = users.filter(function(u){ return u.status === 'deactive' || u.status === 'inactive'; });
+  var trash    = users.filter(function(u){ return u.status === 'trash'; });
+
+  var el;
+  el = document.getElementById('cnt-all');      if(el) el.textContent = '('+all.length+')';
+  el = document.getElementById('cnt-active');   if(el) el.textContent = '('+active.length+')';
+  el = document.getElementById('cnt-deactive'); if(el) el.textContent = '('+deactive.length+')';
+  el = document.getElementById('cnt-trash');    if(el) el.textContent = '('+trash.length+')';
+
+  var filtered;
+  if (currentFilter === 'active')   filtered = active;
+  else if (currentFilter === 'deactive') filtered = deactive;
+  else if (currentFilter === 'trash')    filtered = trash;
+  else filtered = all;
+
+  if (q) filtered = filtered.filter(function(u){ return (u.name||'').toLowerCase().indexOf(q)>-1||(u.email||'').toLowerCase().indexOf(q)>-1; });
+  filtered = filtered.slice(0, perPage);
+
+  var tbody = document.getElementById('users-tbody');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted)">No users found.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(function(u) {
+    var isTrash = u.status === 'trash';
+    var letter = (u.name||'U').charAt(0).toUpperCase();
+    var isActive = u.status === 'active';
+
+    var avatar = u.avatar
+      ? '<img src="'+u.avatar+'" style="width:32px;height:32px;border-radius:8px;object-fit:cover">'
+      : '<div style="width:32px;height:32px;border-radius:8px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0">'+letter+'</div>';
+
+    var actions = isTrash
+      ? '<div class="row-actions"><a href="#" class="restore-lnk" onclick="restoreUser(\''+u.id+'\');return false">Restore</a> | <a href="#" class="trash-lnk" onclick="permDeleteUser(\''+u.id+'\');return false">Delete</a></div>'
+      : '<div class="row-actions"><a href="#" onclick="editUser(\''+u.id+'\');return false">Edit</a> | <a href="#" class="trash-lnk" onclick="trashUser(\''+u.id+'\');return false">Move To Trash</a></div>';
+
+    var toggleHtml = isTrash ? '' :
+      '<label class="sw"><input type="checkbox" '+(isActive?'checked':'')+' onchange="toggleStatus(\''+u.id+'\',this.checked)"><span class="sw-track"><span class="sw-thumb"></span></span></label>';
+
+    return '<tr class="'+(isTrash?'trash-row':'')+'">'
+      + '<td><input type="checkbox" class="tbl-checkbox row-cb" data-id="'+u.id+'"></td>'
+      + '<td><div style="display:flex;align-items:center;gap:10px">'+avatar
+        + '<div><div style="font-size:13px;font-weight:700;color:var(--dark,#2d3748)">'+u.name+'</div>'+actions+'</div></div></td>'
+      + '<td style="font-size:12px;color:var(--muted)">'+u.email+'</td>'
+      + '<td>'+toggleHtml+'</td>'
+      + '<td style="font-size:12px;color:var(--muted);white-space:nowrap">'+(u.createdAt||'—')+'</td>'
+      + '</tr>';
+  }).join('');
+}
+
+function toggleStatus(id, active) {
+  EH.updateUser(id, { status: active ? 'active' : 'deactive' });
+  ehToast('Status updated.', 'success');
+}
+
+function trashUser(id) {
+  EH.updateUser(id, { status:'trash' });
+  renderUsers();
+  ehToast('Moved to trash.', 'success');
+}
+
+function restoreUser(id) {
+  EH.updateUser(id, { status:'active' });
+  renderUsers();
+  ehToast('User restored.', 'success');
+}
+
+function permDeleteUser(id) {
+  if (!confirm('Permanently delete this user? This cannot be undone.')) return;
+  EH.deleteUser(id);
+  renderUsers();
+  ehToast('User deleted.', 'success');
+}
+
+function editUser(id) {
+  var users = EH.getUsers(usersTenantId);
+  var u = users.find(function(x){ return x.id === id; });
+  if (!u) return;
+  editingId = id;
+  document.getElementById('u-name').value    = u.name;
+  document.getElementById('u-email').value   = u.email;
+  document.getElementById('u-phone').value   = (u.phone||'').replace(/^\+\d+\s*/,'');
+  document.getElementById('u-role').value    = u.role||'';
+  document.getElementById('u-password').value= '';
+  document.getElementById('u-confirm').value = '';
+  setStatus(u.status === 'inactive' ? 'deactive' : (u.status || 'active'));
+  document.getElementById('form-title').textContent = 'Edit User';
+  document.getElementById('tab-add').textContent = 'Edit User';
+  showView('add');
+}
+
+function saveUser() {
+  var name     = document.getElementById('u-name').value.trim();
+  var email    = document.getElementById('u-email').value.trim();
+  var phone    = document.getElementById('u-country').value + ' ' + document.getElementById('u-phone').value.trim();
+  var role     = document.getElementById('u-role').value;
+  var password = document.getElementById('u-password').value;
+  var confirm  = document.getElementById('u-confirm').value;
+
+  if (!name)  { ehToast('Full Name is required.', 'error'); return; }
+  if (!email) { ehToast('Email is required.', 'error'); return; }
+  if (!role)  { ehToast('Please select a role.', 'error'); return; }
+  if (!editingId) {
+    if (!password)           { ehToast('Password is required.', 'error'); return; }
+    if (password !== confirm) { ehToast('Passwords do not match.', 'error'); return; }
+  }
+
+  var assignTenant = isSuperAdmin ? (usersTenantId || null) : usersTenantId;
+  var allUsers = EH.getUsers(null);
+
+  if (!editingId) {
+    var dup = allUsers.find(function(u){ return u.email.toLowerCase() === email.toLowerCase(); });
+    if (dup) { ehToast('A user with this email already exists.', 'error'); return; }
+    EH.addUser({ name:name, email:email, phone:phone, role:role, password:password, status:currentStatus, tenantId:assignTenant });
+    ehToast('"'+name+'" added.', 'success');
+  } else {
+    EH.updateUser(editingId, { name:name, email:email, phone:phone, role:role, status:currentStatus });
+    if (password && password === confirm) EH.updateUser(editingId, { password:password });
+    ehToast('"'+name+'" updated.', 'success');
+  }
+  cancelForm();
+}
+
+function cancelForm() {
+  editingId = null;
+  document.getElementById('u-name').value='';
+  document.getElementById('u-email').value='';
+  document.getElementById('u-phone').value='';
+  document.getElementById('u-role').value='';
+  document.getElementById('u-password').value='';
+  document.getElementById('u-confirm').value='';
+  document.getElementById('u-notify').checked=false;
+  setStatus('active');
+  document.getElementById('form-title').textContent = 'Add User';
+  document.getElementById('tab-add').textContent = 'Add User';
+  showView('list');
+}
+
+function showView(v) {
+  var isList = v === 'list';
+  document.getElementById('view-list').style.display = isList ? '' : 'none';
+  document.getElementById('view-add').style.display  = isList ? 'none' : '';
+  document.getElementById('tab-list').classList.toggle('active', isList);
+  document.getElementById('tab-add').classList.toggle('active', !isList);
+  if (isList) renderUsers();
+}
+
+function exportUsers() {
+  var users = EH.getUsers(usersTenantId);
+  var csv = 'Name,Email,Role,Status,Created At\n' + users.map(function(u){
+    return [u.name,u.email,u.role,u.status,u.createdAt||''].join(',');
+  }).join('\n');
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'users.csv';
+  a.click();
+}
+
+function importUsers() { ehToast('Import via CSV coming soon.', 'info'); }
+
+document.addEventListener('eh:ready', function() {
+  var sess = EHAuth.init(); if (!sess) return;
+  isSuperAdmin = EHAuth.isSuperAdmin();
+  usersTenantId = isSuperAdmin ? (window.EH_TENANT || null) : sess.tenantId;
+  populateRoles();
+  renderUsers();
+  if (window.location.search.indexOf('view=add') >= 0) showView('add');
+});
+
+window.addEventListener('eh:tenantchange', function(e) {
+  if (isSuperAdmin) { usersTenantId = e.detail.tenantId; renderUsers(); }
+});
+</script>
+</body>
+</html>

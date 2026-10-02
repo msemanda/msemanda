@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wards — eHealth System</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+<style>
+/* Tabs */
+.page-tabs { display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:22px; }
+.page-tab { padding:10px 20px;font-size:13px;font-weight:700;color:var(--muted);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:inherit;transition:color .15s,border-color .15s; }
+.page-tab.active { color:var(--teal);border-bottom-color:var(--teal); }
+
+/* Ward type cards */
+.ward-type-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:28px; }
+.ward-type-card { background:#fff;border:2px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:border-color .15s,box-shadow .15s;text-align:center; }
+.ward-type-card:hover,.ward-type-card.active { border-color:var(--teal);box-shadow:0 2px 12px rgba(13,167,167,.15); }
+.ward-type-card.active .wt-name { color:var(--teal); }
+.wt-img { width:100%;height:90px;border-radius:8px;object-fit:cover;margin-bottom:10px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:28px; }
+.wt-name { font-size:13px;font-weight:700;color:var(--ink); }
+.wt-stats { font-size:11.5px;color:var(--muted);margin-top:3px; }
+.wt-badge { display:inline-block;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:700;margin-top:6px; }
+.badge-avail { background:#d1fae5;color:#065f46; }
+.badge-full  { background:#fee2e2;color:#991b1b; }
+
+/* Bed grid */
+.bed-section-hd { font-size:14px;font-weight:800;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:10px; }
+.bed-legend { display:flex;gap:12px;margin-left:auto; }
+.bl-item { display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted); }
+.bl-dot { width:10px;height:10px;border-radius:3px; }
+.bl-avail { background:#d1fae5; }
+.bl-occ   { background:#fee2e2; }
+.bl-maint { background:#fef3c7; }
+
+.bed-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:8px;margin-bottom:28px; }
+.bed-cell { border-radius:8px;padding:8px 4px;text-align:center;cursor:pointer;transition:transform .1s,box-shadow .1s;position:relative; }
+.bed-cell:hover { transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.12); }
+.bed-cell.avail  { background:#d1fae5;border:1.5px solid #6ee7b7; }
+.bed-cell.occ    { background:#fee2e2;border:1.5px solid #fca5a5; }
+.bed-cell.maint  { background:#fef3c7;border:1.5px solid #fcd34d; }
+.bed-num { font-size:12px;font-weight:800;color:inherit; }
+.bed-cell.avail .bed-num  { color:#065f46; }
+.bed-cell.occ   .bed-num  { color:#991b1b; }
+.bed-cell.maint .bed-num  { color:#92400e; }
+.bed-label { font-size:9.5px;font-weight:600;color:inherit;opacity:.75; }
+
+/* Stats row */
+.ward-stats-row { display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px; }
+.ws-card { background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;text-align:center; }
+.ws-n { font-size:22px;font-weight:800;color:var(--teal); }
+.ws-l { font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700; }
+
+/* Bed detail popup */
+.bed-popup { position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:500;display:flex;align-items:center;justify-content:center; }
+.bed-popup-box { background:#fff;border-radius:14px;padding:28px;width:360px;max-width:94vw;box-shadow:0 12px 40px rgba(0,0,0,.2); }
+.bed-popup-hd { font-size:15px;font-weight:800;margin-bottom:18px; }
+.bp-row { display:grid;grid-template-columns:120px 1fr;gap:10px 16px;margin-bottom:14px;align-items:center; }
+.bp-row label { font-size:12px;font-weight:700;color:var(--dark,#2d3748); }
+.bp-row input,.bp-row select { width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:13px;outline:none; }
+.bp-row input:focus,.bp-row select:focus { border-color:var(--teal); }
+.popup-actions { display:flex;justify-content:flex-end;gap:8px;padding-top:6px; }
+
+/* Add Ward form */
+.row-actions { display:flex;gap:10px;font-size:12px;margin-top:3px; }
+.row-actions a { color:var(--teal);text-decoration:none;font-weight:500; }
+.row-actions a.trash-lnk { color:var(--danger,#e53e3e); }
+.row-actions a:hover { text-decoration:underline; }
+.fr { display:grid;grid-template-columns:180px 1fr;align-items:flex-start;gap:16px 24px;padding:14px 24px;border-bottom:1px solid var(--border); }
+.fr label { font-size:13px;font-weight:700;color:var(--dark,#2d3748);padding-top:9px; }
+.fr label span { color:var(--danger); }
+.fr input,.fr select,.fr textarea { width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--ink);background:#fff;outline:none;transition:border-color .15s;box-sizing:border-box; }
+.fr input:focus,.fr select:focus,.fr textarea:focus { border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,167,167,.1); }
+.seg { display:inline-flex;border:1.5px solid var(--border);border-radius:8px;overflow:hidden; }
+.seg button { padding:8px 20px;border:none;background:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;color:var(--muted);transition:background .15s,color .15s; }
+.seg button.active { background:var(--teal);color:#fff; }
+.form-footer { padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px; }
+.nf-card { background:#fff;border-radius:12px;border:1px solid var(--border);overflow:hidden;max-width:760px; }
+.nf-hd { padding:18px 24px;border-bottom:1px solid var(--border);font-size:15px;font-weight:800;color:var(--ink); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav id="sidebar-mount"></nav>
+  <div class="main">
+    <header class="header">
+      <button class="btn-quick-links"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Links</button>
+      <div class="header-right">
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/></svg></button>
+        <span class="lang-badge">EN</span>
+        <button class="header-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+        <div class="user-chip"><div class="user-avatar">M</div><div class="user-info"><div class="user-name">Moses Semanda</div><div class="user-role">Administrator</div></div></div>
+      </div>
+    </header>
+    <div class="content">
+      <div class="page-title-row">
+        <h1 class="page-title">Ward &amp; Bed Management</h1>
+        <button class="btn btn-teal" onclick="showView('add')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Ward</button>
+      </div>
+
+      <div class="page-tabs">
+        <button class="page-tab active" id="tab-list" onclick="showView('list')">Bed Management</button>
+        <button class="page-tab" id="tab-add" onclick="showView('add')">Add Ward</button>
+      </div>
+
+      <!-- ── Bed Management ── -->
+      <div id="view-list">
+
+        <!-- Summary stats -->
+        <div class="ward-stats-row" id="stats-row">
+          <div class="ws-card"><div class="ws-n" id="stat-total">0</div><div class="ws-l">Total Beds</div></div>
+          <div class="ws-card"><div class="ws-n" id="stat-avail" style="color:#059669">0</div><div class="ws-l">Available</div></div>
+          <div class="ws-card"><div class="ws-n" id="stat-occ" style="color:#dc2626">0</div><div class="ws-l">Occupied</div></div>
+          <div class="ws-card"><div class="ws-n" id="stat-maint" style="color:#d97706">0</div><div class="ws-l">Maintenance</div></div>
+        </div>
+
+        <!-- Ward type cards -->
+        <div class="ward-type-grid" id="ward-type-grid"></div>
+
+        <!-- Bed grid for selected ward -->
+        <div id="bed-panel" style="display:none">
+          <div class="bed-section-hd">
+            <span id="bed-panel-title">Beds</span>
+            <div class="bed-legend">
+              <div class="bl-item"><div class="bl-dot bl-avail"></div>Available</div>
+              <div class="bl-item"><div class="bl-dot bl-occ"></div>Occupied</div>
+              <div class="bl-item"><div class="bl-dot bl-maint"></div>Maintenance</div>
+            </div>
+          </div>
+          <div class="bed-grid" id="bed-grid"></div>
+        </div>
+
+      </div>
+
+      <!-- ── Add / Edit Ward ── -->
+      <div id="view-add" style="display:none">
+        <div class="nf-card">
+          <div class="nf-hd" id="form-heading">Add Ward</div>
+
+          <div class="fr">
+            <label>Ward Name <span>*</span></label>
+            <input type="text" id="w-name" placeholder="e.g. General Ward">
+          </div>
+
+          <div class="fr">
+            <label>Ward Type <span>*</span></label>
+            <select id="w-type">
+              <option value="">Select Ward Type</option>
+              <option>General Ward</option>
+              <option>Private Rooms</option>
+              <option>Maternity Ward</option>
+              <option>Emergency Ward</option>
+              <option>Isolation Ward</option>
+              <option>ICU</option>
+              <option>Pediatric Ward</option>
+            </select>
+          </div>
+
+          <div class="fr">
+            <label>Total Beds <span>*</span></label>
+            <input type="number" id="w-beds" placeholder="e.g. 20" min="1" max="200">
+          </div>
+
+          <div class="fr">
+            <label>Floor / Location</label>
+            <input type="text" id="w-floor" placeholder="e.g. Floor 2, Block A">
+          </div>
+
+          <div class="fr">
+            <label>Description</label>
+            <textarea id="w-desc" placeholder="Enter ward description" style="resize:vertical;min-height:80px"></textarea>
+          </div>
+
+          <div class="fr">
+            <label>Status</label>
+            <div class="seg">
+              <button type="button" id="seg-active" class="active" onclick="setStatus('active',this)">Active</button>
+              <button type="button" id="seg-deactive" onclick="setStatus('deactive',this)">DeActive</button>
+            </div>
+          </div>
+
+          <div class="form-footer">
+            <button class="btn btn-secondary" onclick="cancelForm()">Cancel</button>
+            <button class="btn btn-teal" onclick="saveWard()">Save Ward</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <footer class="footer"><span>Copyright 2026 &copy; <a href="#">eHealth System</a></span><div class="version-badge"><span class="vbadge">v2.4.0</span><span class="lbadge">Load time: 0.3s</span></div></footer>
+  </div>
+</div>
+
+<!-- Bed detail popup -->
+<div class="bed-popup" id="bed-popup" style="display:none" onclick="if(event.target===this)closeBedPopup()">
+  <div class="bed-popup-box">
+    <div class="bed-popup-hd" id="popup-hd">Bed 101</div>
+    <div class="bp-row">
+      <label>Status</label>
+      <select id="popup-status">
+        <option value="avail">Available</option>
+        <option value="occ">Occupied</option>
+        <option value="maint">Maintenance</option>
+      </select>
+    </div>
+    <div class="bp-row" id="popup-patient-row">
+      <label>Patient Name</label>
+      <input type="text" id="popup-patient" placeholder="Enter patient name">
+    </div>
+    <div class="bp-row">
+      <label>Notes</label>
+      <input type="text" id="popup-notes" placeholder="Optional notes">
+    </div>
+    <div class="popup-actions">
+      <button class="btn btn-secondary" onclick="closeBedPopup()">Cancel</button>
+      <button class="btn btn-teal" onclick="saveBed()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/data-api.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/sidebar.js"></script>
+<script>
+var ACTIVE_PAGE = 'wards';
+var editingId   = null;
+var selectedWardId = null;
+var editingBedIdx  = null;
+var currentStatus  = 'active';
+var tenantId = null;
+
+var WARD_ICONS = {
+  'General Ward':'🏥','Private Rooms':'🛏️','Maternity Ward':'🍼',
+  'Emergency Ward':'🚨','Isolation Ward':'🔒','ICU':'💉','Pediatric Ward':'👶'
+};
+
+function setStatus(s, btn) {
+  currentStatus = s;
+  document.getElementById('seg-active').classList.toggle('active', s==='active');
+  document.getElementById('seg-deactive').classList.toggle('active', s==='deactive');
+}
+
+/* ── Render ward type cards ─────────────────────────── */
+function renderWardCards() {
+  var wards = EH.getWards(tenantId);
+  var grid  = document.getElementById('ward-type-grid');
+
+  var totalBeds=0, totalAvail=0, totalOcc=0, totalMaint=0;
+  wards.forEach(function(w) {
+    var beds = w.beds || [];
+    totalBeds  += beds.length;
+    totalAvail += beds.filter(function(b){return b.status==='avail';}).length;
+    totalOcc   += beds.filter(function(b){return b.status==='occ';}).length;
+    totalMaint += beds.filter(function(b){return b.status==='maint';}).length;
+  });
+  document.getElementById('stat-total').textContent = totalBeds;
+  document.getElementById('stat-avail').textContent = totalAvail;
+  document.getElementById('stat-occ').textContent   = totalOcc;
+  document.getElementById('stat-maint').textContent = totalMaint;
+
+  if (!wards.length) {
+    grid.innerHTML = '<p style="color:var(--muted);padding:20px 0;grid-column:1/-1">No wards added yet. <a href="#" onclick="showView(\'add\');return false" style="color:var(--teal)">Add a ward</a>.</p>';
+    document.getElementById('bed-panel').style.display = 'none';
+    return;
+  }
+
+  grid.innerHTML = wards.map(function(w) {
+    var beds   = w.beds || [];
+    var avail  = beds.filter(function(b){return b.status==='avail';}).length;
+    var total  = beds.length;
+    var isFull = avail === 0 && total > 0;
+    var isActive = selectedWardId === w.id;
+    return '<div class="ward-type-card'+(isActive?' active':'')+'" onclick="selectWard(\''+w.id+'\')">'
+      + '<div class="wt-img" style="font-size:32px">'+(WARD_ICONS[w.wardType]||'🏥')+'</div>'
+      + '<div class="wt-name">'+w.name+'</div>'
+      + '<div class="wt-stats">'+avail+' / '+total+' beds free</div>'
+      + '<span class="wt-badge '+(isFull?'badge-full':'badge-avail')+'">'+(isFull?'Full':'Available')+'</span>'
+      + '<div style="margin-top:8px;display:flex;gap:6px;justify-content:center">'
+      + '<a href="#" style="font-size:11px;color:var(--teal);font-weight:600;text-decoration:none" onclick="editWard(\''+w.id+'\');event.stopPropagation();return false">Edit</a>'
+      + ' | <a href="#" style="font-size:11px;color:var(--danger,#e53e3e);font-weight:600;text-decoration:none" onclick="deleteWard(\''+w.id+'\');event.stopPropagation();return false">Delete</a>'
+      + '</div></div>';
+  }).join('');
+
+  if (selectedWardId) renderBedGrid(selectedWardId);
+}
+
+/* ── Select a ward and show bed grid ────────────────── */
+function selectWard(id) {
+  selectedWardId = id;
+  renderWardCards();
+  renderBedGrid(id);
+  document.getElementById('bed-panel').style.display = '';
+}
+
+function renderBedGrid(wardId) {
+  var ward = EH.getWards(null).find(function(w){return w.id===wardId;});
+  if (!ward) return;
+  document.getElementById('bed-panel-title').textContent = ward.name + ' — Beds';
+  var beds = ward.beds || [];
+  var grid = document.getElementById('bed-grid');
+  if (!beds.length) {
+    grid.innerHTML = '<p style="color:var(--muted);grid-column:1/-1;padding:20px 0">No beds configured. <a href="#" onclick="addBedsToWard(\''+wardId+'\');return false" style="color:var(--teal)">Set total beds first.</a></p>';
+    return;
+  }
+  grid.innerHTML = beds.map(function(b, i) {
+    return '<div class="bed-cell '+b.status+'" onclick="openBedPopup(\''+wardId+'\','+i+')" title="'+(b.patient||b.status)+'">'
+      +'<div class="bed-num">'+b.number+'</div>'
+      +'<div class="bed-label">'+(b.status==='avail'?'Free':b.status==='occ'?'Occupied':'Maint.')+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+/* ── Bed popup ──────────────────────────────────────── */
+function openBedPopup(wardId, bedIdx) {
+  selectedWardId = wardId;
+  editingBedIdx  = bedIdx;
+  var ward = EH.getWards(null).find(function(w){return w.id===wardId;});
+  var bed  = (ward && ward.beds) ? ward.beds[bedIdx] : null;
+  if (!bed) return;
+  document.getElementById('popup-hd').textContent = 'Bed ' + bed.number;
+  document.getElementById('popup-status').value   = bed.status || 'avail';
+  document.getElementById('popup-patient').value  = bed.patient || '';
+  document.getElementById('popup-notes').value    = bed.notes || '';
+  document.getElementById('bed-popup').style.display = 'flex';
+}
+function closeBedPopup() {
+  document.getElementById('bed-popup').style.display = 'none';
+  editingBedIdx = null;
+}
+function saveBed() {
+  var ward = EH.getWards(null).find(function(w){return w.id===selectedWardId;});
+  if (!ward || editingBedIdx === null) return;
+  var beds = JSON.parse(JSON.stringify(ward.beds || []));
+  beds[editingBedIdx].status  = document.getElementById('popup-status').value;
+  beds[editingBedIdx].patient = document.getElementById('popup-patient').value.trim();
+  beds[editingBedIdx].notes   = document.getElementById('popup-notes').value.trim();
+  EH.updateWard(selectedWardId, { beds: beds });
+  closeBedPopup();
+  renderWardCards();
+  ehToast('Bed updated.', 'success');
+}
+
+/* ── Build beds array from count ────────────────────── */
+function buildBeds(wardId, count) {
+  var ward  = EH.getWards(null).find(function(w){return w.id===wardId;});
+  var existing = (ward && ward.beds) ? ward.beds : [];
+  var beds  = [];
+  for (var i = 1; i <= count; i++) {
+    var ex = existing.find(function(b){ return b.number === String(i).padStart(3,'0'); });
+    beds.push(ex || { number: String(i).padStart(3,'0'), status:'avail', patient:'', notes:'' });
+  }
+  return beds;
+}
+
+/* ── Edit ward ──────────────────────────────────────── */
+function editWard(id) {
+  var w = EH.getWards(null).find(function(x){return x.id===id;});
+  if (!w) return;
+  editingId = id;
+  document.getElementById('w-name').value  = w.name||'';
+  document.getElementById('w-type').value  = w.wardType||'';
+  document.getElementById('w-beds').value  = (w.beds||[]).length||'';
+  document.getElementById('w-floor').value = w.floor||'';
+  document.getElementById('w-desc').value  = w.description||'';
+  currentStatus = w.status||'active';
+  document.getElementById('seg-active').classList.toggle('active', currentStatus==='active');
+  document.getElementById('seg-deactive').classList.toggle('active', currentStatus==='deactive');
+  document.getElementById('form-heading').textContent = 'Edit Ward';
+  document.getElementById('tab-add').textContent = 'Edit Ward';
+  showView('add');
+}
+
+/* ── Delete ward ─────────────────────────────────────  */
+function deleteWard(id) {
+  if (!confirm('Delete this ward? All bed data will be lost.')) return;
+  EH.deleteWard(id);
+  if (selectedWardId === id) { selectedWardId = null; document.getElementById('bed-panel').style.display='none'; }
+  renderWardCards();
+  ehToast('Ward deleted.', 'success');
+}
+
+/* ── Save ward ──────────────────────────────────────── */
+function saveWard() {
+  var name  = document.getElementById('w-name').value.trim();
+  var type  = document.getElementById('w-type').value;
+  var count = parseInt(document.getElementById('w-beds').value) || 0;
+  if (!name)  { ehToast('Ward name is required.', 'error'); return; }
+  if (!type)  { ehToast('Ward type is required.', 'error'); return; }
+  if (!count) { ehToast('Total beds must be at least 1.', 'error'); return; }
+
+  var data = { name:name, wardType:type, floor:document.getElementById('w-floor').value.trim(),
+               description:document.getElementById('w-desc').value.trim(), status:currentStatus };
+
+  if (editingId) {
+    data.beds = buildBeds(editingId, count);
+    EH.updateWard(editingId, data);
+    ehToast('"'+name+'" updated.', 'success');
+  } else {
+    var w = EH.addWard(data, tenantId);
+    EH.updateWard(w.id, { beds: buildBeds(w.id, count) });
+    ehToast('"'+name+'" added with '+count+' beds.', 'success');
+  }
+  cancelForm();
+}
+
+/* ── View switching ─────────────────────────────────── */
+function showView(v) {
+  var isList = v==='list';
+  document.getElementById('view-list').style.display = isList ? '' : 'none';
+  document.getElementById('view-add').style.display  = isList ? 'none' : '';
+  document.getElementById('tab-list').classList.toggle('active', isList);
+  document.getElementById('tab-add').classList.toggle('active', !isList);
+  if (isList) renderWardCards();
+}
+
+function cancelForm() {
+  editingId = null; currentStatus = 'active';
+  ['w-name','w-type','w-beds','w-floor','w-desc'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('seg-active').classList.add('active');
+  document.getElementById('seg-deactive').classList.remove('active');
+  document.getElementById('form-heading').textContent = 'Add Ward';
+  document.getElementById('tab-add').textContent = 'Add Ward';
+  showView('list');
+}
+
+document.addEventListener('eh:ready', function() {
+  var sess = EHAuth.init(); if (!sess) return;
+  tenantId = window.EH_TENANT || null;
+  renderWardCards();
+  if (window.location.search.indexOf('view=add') >= 0) showView('add');
+});
+
+window.addEventListener('eh:tenantchange', function(e) {
+  tenantId = e.detail.tenantId;
+  selectedWardId = null;
+  document.getElementById('bed-panel').style.display = 'none';
+  renderWardCards();
+});
+</script>
+</body>
+</html>

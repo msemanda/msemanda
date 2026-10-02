@@ -63,18 +63,35 @@
     store: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
   };
 
-  var apptOpen = ['appointments','add-appointment','checkin'].indexOf(p) >= 0;
-  var deptOpen = p === 'departments';
-  var specOpen = p === 'specialties';
-  var labOpen  = p === 'lab-tests';
-  var docOpen  = p === 'doctors';
-  var patOpen  = p === 'patients';
+  var apptOpen  = ['appointments','add-appointment','checkin'].indexOf(p) >= 0;
+  var deptOpen  = p === 'departments';
+  var specOpen  = p === 'specialties';
+  var labOpen   = p === 'lab-tests';
+  var docOpen   = p === 'doctors';
+  var patOpen   = p === 'patients';
+  var userOpen  = ['users','roles'].indexOf(p) >= 0;
+
+  // Build tenant context pill for super-admin
+  var tenantPill = '';
+  if (window.EHAuth && window.EH) {
+    var _sess = EHAuth.getSession();
+    if (_sess && _sess.role === 'admin' && !_sess.tenantId && _sess.email === 'semandamoses91@gmail.com') {
+      var _tenants = EH.getTenants();
+      var _activeCtx = _sess.activeContext || '';
+      var _activeName = _activeCtx ? (EH.getTenant(_activeCtx)||{}).name||'Unknown' : 'All Hospitals';
+      var _opts = '<option value="">All Hospitals</option>' + _tenants.map(function(t){
+        return '<option value="'+t.id+'"'+(t.id===_activeCtx?' selected':'')+'>'+t.name+'</option>';
+      }).join('');
+      tenantPill = '<div class="tenant-ctx-wrap"><div class="tenant-ctx-label"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/></svg>Hospital Context</div>'
+        + '<select class="tenant-ctx-sel" onchange="EHAuth.switchContext(this.value||null);location.reload()">'+_opts+'</select></div>';
+    }
+  }
 
   var html = '\
 <a class="sidebar-logo" href="index.html">\
   <div class="logo-icon"><svg viewBox="0 0 24 24" fill="white"><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="4" y="10" width="16" height="4" rx="1"/></svg></div>\
   <div class="logo-text">eHealth<span>Hospital Management</span></div>\
-</a>\
+</a>' + tenantPill + '\
 <div class="sidebar-search">\
   <span class="s-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>\
   <input type="text" placeholder="Search...">\
@@ -111,8 +128,15 @@
   + grp('sub-ambs', 'Ambulances', I.amb, '', sub('#', 'All Ambulances', ''), false)
   + a('#', 'Documents', I.doc, '')
   + '<div class="nav-section-label">User Management</div>'
-  + grp('sub-users', 'Users', I.users, '', sub('#', 'All Users', ''), false)
-  + grp('sub-hosp', 'Hospitals', I.hosp, '', sub('#', 'All Hospitals', ''), false)
+  + grp('sub-users', 'Users', I.users, 'users',
+      sub('users.html', 'All Users', 'users')
+      + sub('users.html?view=add', 'Add User', '')
+      + sub('roles.html', 'Role &amp; Permissions', 'roles'),
+    userOpen)
+  + grp('sub-hosp', 'Hospitals', I.hosp, 'hospitals',
+      sub('hospitals.html', 'All Hospitals', 'hospitals')
+      + sub('hospitals.html?view=add', 'Add Hospital', ''),
+    p === 'hospitals')
   + grp('sub-doc', 'Doctors', I.users, 'doctors',
       sub('doctors.html', 'All Doctors', 'doctors'),
     docOpen)
