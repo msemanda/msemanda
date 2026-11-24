@@ -1,0 +1,690 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { collection, getDocs, addDoc, query, where, serverTimestamp } from "firebase/firestore";
+import { tsMs } from "@/lib/ts";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
+import { notify, resolvePatientUid } from "@/lib/notify";
+import { generateReceiptNo } from "@/helpers/constants";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+    ClipboardList, Plus, FlaskConical, Scan, Pill, UtensilsCrossed,
+    Activity, CheckCircle2, Clock, CreditCard, AlertCircle,
+    Search, X, User, ListPlus, Trash2,
+} from "lucide-react";
+
+interface DrugStock {
+    id: string;
+    drugName: string;
+    genericName?: string;
+    category: string;
+    quantity: number;
+    unit: string;
+    unitPrice: number;
+    reorderLevel: number;
+}
+
+type OrderType = "MEDICATION" | "LAB" | "RADIOLOGY" | "NURSING" | "DIET" | "PROCEDURE";
+
+const ORDER_TYPES: { type: OrderType; label: string; icon: any; color: string; bg: string }[] = [
+    { type: "MEDICATION", label: "Medication", icon: Pill,            color: "text-blue-600",   bg: "bg-blue-50" },
+    { type: "LAB",        label: "Laboratory", icon: FlaskConical,    color: "text-amber-600",  bg: "bg-amber-50" },
+    { type: "RADIOLOGY",  label: "Radiology",  icon: Scan,            color: "text-purple-600", bg: "bg-purple-50" },
+    { type: "NURSING",    label: "Nursing",    icon: Activity,        color: "text-teal-600",   bg: "bg-teal-50" },
+    { type: "DIET",       label: "Dietary",    icon: UtensilsCrossed, color: "text-green-600",  bg: "bg-green-50" },
+    { type: "PROCEDURE",  label: "Procedure",  icon: ClipboardList,   color: "text-rose-600",   bg: "bg-rose-50" },
+];
+
+const ORDER_SUGGESTIONS: Record<OrderType, { text: string; amount: number }[]> = {
+    MEDICATION: [
+        { text: "Amoxicillin 500mg TDS x7d", amount: 15000 },
+        { text: "Metformin 500mg BD", amount: 8000 },
+        { text: "Amlodipine 5mg OD", amount: 10000 },
+        { text: "Paracetamol 1g PRN", amount: 5000 },
+        { text: "Omeprazole 20mg OD", amount: 12000 },
+        { text: "IV Crystalloids 1L", amount: 20000 },
+    ],
+    LAB: [
+        { text: "Full Blood Count (FBC)", amount: 25000 },
+        { text: "Comprehensive Metabolic Panel", amount: 45000 },
+        { text: "HbA1c", amount: 35000 },
+        { text: "Lipid Profile", amount: 30000 },
+        { text: "Thyroid Function Tests (TFTs)", amount: 40000 },
+        { text: "Blood Culture x2", amount: 50000 },
+        { text: "Urinalysis", amount: 15000 },
+        { text: "Malaria RDT", amount: 10000 },
+    ],
+    RADIOLOGY: [
+        { text: "Chest X-Ray PA", amount: 50000 },
+        { text: "Abdominal X-Ray", amount: 50000 },
+        { text: "CT Chest (with contrast)", amount: 300000 },
+        { text: "CT Brain", amount: 280000 },
+        { text: "MRI Brain", amount: 450000 },
+        { text: "Abdominal Ultrasound", amount: 80000 },
+        { text: "Echocardiogram", amount: 150000 },
+    ],
+    NURSING: [
+        { text: "4-hourly vital signs monitoring", amount: 5000 },
+        { text: "Strict intake and output monitoring", amount: 5000 },
+        { text: "Daily weight", amount: 2000 },
+        { text: "Wound dressing BD", amount: 20000 },
+        { text: "IV cannula insertion and care", amount: 15000 },
+        { text: "Patient fall risk assessment", amount: 2000 },
+        { text: "Catheter insertion and care", amount: 25000 },
+    ],
+    DIET: [
+        { text: "Low-salt DASH diet", amount: 15000 },
+        { text: "Diabetic diet 1800 kcal", amount: 15000 },
+        { text: "Soft diet", amount: 10000 },
+        { text: "Clear fluids only", amount: 8000 },
+        { text: "High-protein diet", amount: 20000 },
+        { text: "Nasogastric tube feeding", amount: 35000 },
+    ],
+    PROCEDURE: [
+        { text: "Suturing (minor wound)", amount: 40000 },
+        { text: "Wound debridement", amount: 60000 },
+        { text: "Pleural aspiration (thoracentesis)", amount: 120000 },
+        { text: "Lumbar puncture", amount: 100000 },
+        { text: "Blood transfusion", amount: 150000 },
+        { text: "Endoscopy (OGD)", amount: 200000 },
+    ],
+};
+
+const STATUS_COLOR: Record<string, string> = {
+    PENDING:     "bg-amber-50 text-amber-700 border-amber-100",
+    IN_PROGRESS: "bg-blue-50 text-blue-600 border-blue-100",
+    COMPLETED:   "bg-green-50 text-green-700 border-green-100",
+    DISPENSED:   "bg-green-50 text-green-700 border-green-100",
+    CANCELLED:   "bg-red-50 text-red-600 border-red-100",
+};
+
+interface CartItem {
+    key: string;
+    orderType: OrderType;
+    detail: string;
+    amount: number;
+    priority: "ROUTINE" | "URGENT" | "STAT";
+    notes: string;
+    drugId?: string;
+    quantity?: number;
+    unit?: string;
+    unitPrice?: number;
+}
+
+export default function CPOEPage() {
+    const { profile } = useAuth();
+    const [activeType, setActiveType] = useState<OrderType>("MEDICATION");
+    const [patients, setPatients]     = useState<any[]>([]);
+    const [selectedPatient, setSelectedPatient] = useState<any>(null);
+    const [patientSearch, setPatientSearch]     = useState("");
+    const [showDropdown, setShowDropdown]       = useState(false);
+    const comboRef = useRef<HTMLDivElement>(null);
+    const [priority, setPriority] = useState<"ROUTINE" | "URGENT" | "STAT">("ROUTINE");
+    const [detail, setDetail] = useState("");
+    const [amount, setAmount] = useState("0");
+    const [notes, setNotes] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
+    const [orders, setOrders] = useState<any[]>([]);
+    const [loadingOrders, setLoadingOrders] = useState(true);
+
+    // Medication order type sources its "detail" from real pharmacy stock
+    // instead of free text, so its price (and payment gate) are known
+    // up front — same as every other order type.
+    const [drugs, setDrugs] = useState<DrugStock[]>([]);
+    const [medSelectedDrug, setMedSelectedDrug] = useState<DrugStock | null>(null);
+    const [medDrugSearch, setMedDrugSearch] = useState("");
+    const [medDosage, setMedDosage] = useState("");
+    const [medQty, setMedQty] = useState("1");
+
+    // Orders staged for this visit — submitted together as one consolidated
+    // bill (shared visitRef) instead of one bill per order.
+    const [cart, setCart] = useState<CartItem[]>([]);
+
+    useEffect(() => { fetchPatients(); fetchMyOrders(); fetchDrugs(); }, [profile?.uid]);
+
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (comboRef.current && !comboRef.current.contains(e.target as Node))
+                setShowDropdown(false);
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, []);
+
+    const fetchPatients = async () => {
+        if (!profile?.uid) return;
+        try {
+            const today = new Date().toISOString().split("T")[0];
+            const [ipdSnap, apptSnap] = await Promise.all([
+                getDocs(query(collection(db, "ipdAdmissions"), where("status", "==", "ADMITTED"))),
+                getDocs(query(
+                    collection(db, "appointments"),
+                    where("doctorId", "==", profile.uid),
+                    where("date", "==", today),
+                )),
+            ]);
+
+            const inpatients = ipdSnap.docs.map(d => ({
+                id: d.id, ...d.data(), _source: "IPD",
+            })) as any[];
+
+            const outpatients = apptSnap.docs
+                .filter(d => !["COMPLETED", "CANCELLED", "PENDING_PAYMENT"].includes(d.data().status))
+                .map(d => ({
+                    id: d.id, ...d.data(),
+                    ward: "OPD", bedNumber: null, _source: "OPD",
+                })) as any[];
+
+            const all = [...inpatients, ...outpatients];
+            setPatients(all);
+        } catch(e) { console.error(e); }
+    };
+
+    const fetchMyOrders = async () => {
+        if (!profile?.uid) return;
+        setLoadingOrders(true);
+        try {
+            const snap = await getDocs(query(collection(db, "cpoeOrders"), where("orderedByUid", "==", profile.uid)));
+            const all = snap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+            setOrders(all.sort((a: any, b: any) => tsMs(b.createdAt) - tsMs(a.createdAt)).slice(0, 20));
+        } catch(e) { console.error(e); }
+        finally { setLoadingOrders(false); }
+    };
+
+    const fetchDrugs = async () => {
+        try {
+            const snap = await getDocs(collection(db, "pharmacyStock"));
+            setDrugs(snap.docs.map(d => ({ id: d.id, ...d.data() } as DrugStock)));
+        } catch(e) { console.error(e); }
+    };
+
+    const handleSuggestion = (s: { text: string; amount: number }) => {
+        setDetail(s.text);
+        setAmount(s.amount.toString());
+    };
+
+    const resetItemForm = () => {
+        setDetail("");
+        setAmount("0");
+        setNotes("");
+        setPriority("ROUTINE");
+        setMedSelectedDrug(null);
+        setMedDrugSearch("");
+        setMedDosage("");
+        setMedQty("1");
+    };
+
+    const filteredMedDrugs = drugs.filter(d =>
+        d.drugName.toLowerCase().includes(medDrugSearch.toLowerCase()) ||
+        (d.genericName || "").toLowerCase().includes(medDrugSearch.toLowerCase())
+    );
+
+    const addToCart = () => {
+        if (activeType === "MEDICATION") {
+            if (!medSelectedDrug) return;
+            const qty = parseInt(medQty) || 1;
+            setCart(prev => [...prev, {
+                key: `${Date.now()}-${prev.length}`,
+                orderType: "MEDICATION",
+                detail: `${medSelectedDrug.drugName}${medDosage ? ` — ${medDosage}` : ""}`,
+                amount: (medSelectedDrug.unitPrice ?? 0) * qty,
+                priority,
+                notes: notes.trim(),
+                drugId: medSelectedDrug.id,
+                quantity: qty,
+                unit: medSelectedDrug.unit,
+                unitPrice: medSelectedDrug.unitPrice,
+            }]);
+            resetItemForm();
+            return;
+        }
+        if (!detail.trim()) return;
+        setCart(prev => [...prev, {
+            key: `${Date.now()}-${prev.length}`,
+            orderType: activeType,
+            detail: detail.trim(),
+            amount: parseFloat(amount) || 0,
+            priority,
+            notes: notes.trim(),
+        }]);
+        resetItemForm();
+    };
+
+    const removeFromCart = (key: string) => setCart(prev => prev.filter(c => c.key !== key));
+
+    const handleSubmit = async () => {
+        // A doctor who fills the form but forgets to click "Add to Order" for a
+        // single-item visit shouldn't lose that item — fold it into the cart.
+        const pendingItem: CartItem | null = activeType === "MEDICATION"
+            ? (medSelectedDrug ? {
+                key: "pending", orderType: "MEDICATION",
+                detail: `${medSelectedDrug.drugName}${medDosage ? ` — ${medDosage}` : ""}`,
+                amount: (medSelectedDrug.unitPrice ?? 0) * (parseInt(medQty) || 1),
+                priority, notes: notes.trim(),
+                drugId: medSelectedDrug.id, quantity: parseInt(medQty) || 1,
+                unit: medSelectedDrug.unit, unitPrice: medSelectedDrug.unitPrice,
+              } : null)
+            : (detail.trim() ? { key: "pending", orderType: activeType, detail: detail.trim(), amount: parseFloat(amount) || 0, priority, notes: notes.trim() } : null);
+        const items = pendingItem ? [...cart, pendingItem] : cart;
+        if (items.length === 0 || !selectedPatient) return;
+        setSubmitting(true);
+        try {
+            // Multiple orders placed together share one bill reference, so
+            // Finance sees and approves them as a single consolidated bill
+            // instead of N disconnected ones.
+            const visitRef = items.length > 1 ? generateReceiptNo() : "";
+            const patientId = selectedPatient.patientId ?? selectedPatient.uid ?? null;
+
+            for (const item of items) {
+                const orderRef = await addDoc(collection(db, "cpoeOrders"), {
+                    patientName: selectedPatient.patientName,
+                    patientEmail: selectedPatient.patientEmail,
+                    patientId,
+                    ward: selectedPatient.ward,
+                    bedNumber: selectedPatient.bedNumber ?? null,
+                    orderType: item.orderType,
+                    detail: item.detail,
+                    amount: item.amount,
+                    // Medication now carries a real price from pharmacy stock
+                    // (chosen at prescribing time), so it's gated exactly like
+                    // every other order type: zero-amount orders have nothing
+                    // to collect, everything else is unpaid until Finance
+                    // confirms — STAT/URGENT orders bypass this gate.
+                    paymentStatus: item.amount <= 0 ? "PAID" : "UNPAID",
+                    visitRef,
+                    priority: item.priority,
+                    notes: item.notes,
+                    orderedBy: profile?.name,
+                    orderedByUid: profile?.uid,
+                    status: "PENDING",
+                    createdAt: serverTimestamp(),
+                    ...(item.drugId ? { drugId: item.drugId, quantity: item.quantity, unit: item.unit, unitPrice: item.unitPrice } : {}),
+                });
+
+                if (item.amount > 0) {
+                    await addDoc(collection(db, "patientBills"), {
+                        patientName: selectedPatient.patientName,
+                        patientEmail: selectedPatient.patientEmail,
+                        description: item.detail,
+                        billType: item.orderType,
+                        amount: item.amount,
+                        orderId: orderRef.id,
+                        visitRef,
+                        orderedBy: profile?.name,
+                        status: "PENDING_PAYMENT",
+                        ward: selectedPatient.ward,
+                        createdAt: serverTimestamp(),
+                    });
+                }
+            }
+
+            const billable = items.filter(i => i.amount > 0);
+            if (billable.length > 0) {
+                const total = billable.reduce((s, i) => s + i.amount, 0);
+                const summary = billable.map(i => i.detail).join(", ");
+                const patientUid = await resolvePatientUid(patientId, selectedPatient.patientEmail);
+                if (patientUid) {
+                    await notify({
+                        targetUid: patientUid,
+                        type: "billing",
+                        title: billable.length > 1 ? `New bill — ${billable.length} items` : "New bill",
+                        body: `${summary} — UGX ${total.toLocaleString()} awaiting payment confirmation.`,
+                        link: "/patient/records",
+                    });
+                }
+                await notify({
+                    targetRole: "CASHIER",
+                    type: "billing",
+                    title: `New bill — ${selectedPatient.patientName}`,
+                    body: `${summary} — UGX ${total.toLocaleString()}`,
+                    link: "/cashier/bills",
+                });
+            }
+
+            setSubmitted(true);
+            setCart([]);
+            resetItemForm();
+            setTimeout(() => setSubmitted(false), 3000);
+            fetchMyOrders();
+        } catch(e) { console.error(e); }
+        finally { setSubmitting(false); }
+    };
+
+    const activeTypeCfg = ORDER_TYPES.find(t => t.type === activeType)!;
+    const cartTotal = cart.reduce((s, c) => s + c.amount, 0);
+
+    return (
+        <div className="max-w-7xl mx-auto space-y-5">
+            <div>
+                <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+                    <ClipboardList className="h-6 w-6 text-blue-600" /> CPOE — Physician Order Entry
+                </h1>
+                <p className="text-sm text-gray-500 mt-0.5">Add every order for this visit, then submit once as a single bill</p>
+            </div>
+
+            <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                <AlertCircle className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                <p className="text-sm font-semibold text-blue-700">
+                    Orders reach the relevant department once Finance confirms payment — STAT/URGENT orders proceed immediately regardless of payment status.
+                </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-4">
+                    {/* Patient combobox */}
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Patient (Today's OPD + IPD)</label>
+                        <div ref={comboRef} className="relative">
+                            {selectedPatient ? (
+                                <div className="flex items-center gap-2 h-10 px-3 rounded-xl border border-blue-200 bg-blue-50">
+                                    <User className="h-4 w-4 text-blue-500 shrink-0" />
+                                    <span className="flex-1 text-sm font-bold text-blue-900 truncate">
+                                        {selectedPatient.patientName}
+                                        <span className="ml-1.5 text-[10px] font-semibold text-blue-500">
+                                            {selectedPatient._source === "IPD" ? `${selectedPatient.ward} Ward` : "OPD"}
+                                        </span>
+                                    </span>
+                                    <button onClick={() => { setSelectedPatient(null); setPatientSearch(""); setCart([]); }}
+                                        className="h-5 w-5 rounded-full bg-blue-200 hover:bg-blue-300 flex items-center justify-center text-blue-700 transition-colors shrink-0">
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                                    <input
+                                        value={patientSearch}
+                                        onChange={e => { setPatientSearch(e.target.value); setShowDropdown(true); }}
+                                        onFocus={() => setShowDropdown(true)}
+                                        placeholder={patients.length === 0 ? "No patients scheduled today…" : "Type patient name to search…"}
+                                        disabled={patients.length === 0}
+                                        className="w-full h-10 pl-9 pr-3 rounded-xl border border-gray-200 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none bg-gray-50 disabled:opacity-50"
+                                    />
+                                </>
+                            )}
+
+                            <AnimatePresence>
+                                {showDropdown && !selectedPatient && patients.length > 0 && (
+                                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                                        className="absolute z-20 top-full mt-1 left-0 right-0 bg-white border border-gray-100 rounded-xl shadow-lg overflow-hidden max-h-52 overflow-y-auto">
+                                        {patients
+                                            .filter(p => !patientSearch || p.patientName?.toLowerCase().includes(patientSearch.toLowerCase()))
+                                            .map(p => (
+                                                <button key={p.id} onMouseDown={() => { setSelectedPatient(p); setPatientSearch(""); setShowDropdown(false); }}
+                                                    className="w-full text-left px-4 py-2.5 hover:bg-blue-50 flex items-center gap-3 transition-colors border-b border-gray-50 last:border-0">
+                                                    <div className="h-7 w-7 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700 font-black text-xs shrink-0">
+                                                        {p.patientName?.charAt(0)}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-bold text-gray-900 truncate">{p.patientName}</p>
+                                                        <p className="text-[10px] text-gray-400">
+                                                            {p._source === "IPD" ? `${p.ward} Ward · Bed ${p.bedNumber}` : "OPD · Today"}
+                                                        </p>
+                                                    </div>
+                                                </button>
+                                            ))
+                                        }
+                                        {patients.filter(p => !patientSearch || p.patientName?.toLowerCase().includes(patientSearch.toLowerCase())).length === 0 && (
+                                            <p className="px-4 py-3 text-xs text-gray-400">No patients match "{patientSearch}"</p>
+                                        )}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                        {!selectedPatient && patients.length === 0 && (
+                            <p className="text-[11px] text-gray-400 mt-1.5">Book an appointment via Receptionist or admit a patient from IPD first.</p>
+                        )}
+                    </div>
+
+                    {/* Order type */}
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-3">Order Type</label>
+                        <div className="grid grid-cols-6 gap-2">
+                            {ORDER_TYPES.map(t => {
+                                const Icon = t.icon;
+                                return (
+                                    <button key={t.type} onClick={() => { setActiveType(t.type); resetItemForm(); }}
+                                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${
+                                            activeType === t.type ? `${t.bg} border-current ${t.color}` : "bg-gray-50 border-transparent text-gray-400 hover:bg-gray-100"
+                                        }`}>
+                                        <Icon className="h-5 w-5" />
+                                        <span className="text-[10px] font-black uppercase tracking-wider leading-none text-center">{t.label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Order detail */}
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-3">
+                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block">
+                            {activeType === "MEDICATION" ? "Medicine" : "Order Details"}
+                        </label>
+
+                        {activeType === "MEDICATION" ? (
+                            <>
+                                {medSelectedDrug ? (
+                                    <div className="flex items-center justify-between h-10 px-3 rounded-xl border border-blue-200 bg-blue-50">
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-bold text-blue-900 truncate">{medSelectedDrug.drugName}</p>
+                                            <p className="text-[10px] text-blue-500">
+                                                {medSelectedDrug.quantity} {medSelectedDrug.unit} in stock · UGX {medSelectedDrug.unitPrice?.toLocaleString()} each
+                                            </p>
+                                        </div>
+                                        <button onClick={() => { setMedSelectedDrug(null); setMedDrugSearch(""); }}
+                                            className="h-6 w-6 rounded-lg bg-blue-100 hover:bg-blue-200 flex items-center justify-center text-blue-700 transition-colors shrink-0">
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <input value={medDrugSearch} onChange={e => setMedDrugSearch(e.target.value)}
+                                            placeholder="Search pharmacy stock..."
+                                            className="w-full h-10 pl-9 pr-3 rounded-xl border border-gray-200 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none bg-gray-50" />
+                                        {medDrugSearch && (
+                                            <div className="absolute z-20 top-full mt-1 left-0 right-0 max-h-52 overflow-y-auto bg-white border border-gray-100 rounded-xl shadow-lg p-1">
+                                                {filteredMedDrugs.length === 0 ? (
+                                                    <p className="text-xs text-gray-400 text-center py-4">No matches in stock</p>
+                                                ) : filteredMedDrugs.map(d => (
+                                                    <button key={d.id} onClick={() => { setMedSelectedDrug(d); setMedDrugSearch(""); }}
+                                                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-blue-50 text-left transition-colors">
+                                                        <div className="min-w-0">
+                                                            <p className="text-xs font-bold text-gray-900 truncate">{d.drugName}</p>
+                                                            <p className="text-[10px] text-gray-400 truncate">{d.genericName || d.category}</p>
+                                                        </div>
+                                                        <span className={`text-[10px] font-bold shrink-0 ml-2 ${d.quantity === 0 ? "text-red-500" : d.quantity <= d.reorderLevel ? "text-amber-500" : "text-green-600"}`}>
+                                                            {d.quantity} {d.unit} · UGX {d.unitPrice?.toLocaleString()}
+                                                        </span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                {drugs.length === 0 && (
+                                    <p className="text-[10px] text-amber-600 font-semibold">No drugs found in pharmacy stock.</p>
+                                )}
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Dosage</label>
+                                        <input value={medDosage} onChange={e => setMedDosage(e.target.value)} placeholder="e.g. 500mg BID"
+                                            className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm text-gray-900 focus:border-blue-500 outline-none bg-gray-50" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">
+                                            Quantity{medSelectedDrug && (
+                                                <span className="ml-1 text-blue-600 normal-case font-semibold">
+                                                    (UGX {((parseInt(medQty) || 0) * (medSelectedDrug.unitPrice ?? 0)).toLocaleString()})
+                                                </span>
+                                            )}
+                                        </label>
+                                        <input type="number" min="1" max={medSelectedDrug?.quantity} value={medQty} onChange={e => setMedQty(e.target.value)}
+                                            className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-900 focus:border-blue-500 outline-none bg-gray-50" />
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {ORDER_SUGGESTIONS[activeType].map(s => (
+                                        <button key={s.text} onClick={() => handleSuggestion(s)}
+                                            className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors border border-blue-100">
+                                            {s.text}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <textarea rows={3} value={detail} onChange={e => setDetail(e.target.value)}
+                                    placeholder={`Enter ${activeType.toLowerCase()} order details or select a suggestion above...`}
+                                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all" />
+
+                                <div>
+                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Amount (UGX)</label>
+                                    <div className="relative">
+                                        <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <input type="number" min="0" value={amount} onChange={e => setAmount(e.target.value)}
+                                            className="w-full h-10 pl-9 pr-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-900 focus:border-blue-500 outline-none bg-gray-50" />
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        <div>
+                            <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Priority</label>
+                            <div className="flex gap-1.5">
+                                {(["ROUTINE", "URGENT", "STAT"] as const).map(p => (
+                                    <button key={p} onClick={() => setPriority(p)}
+                                        className={`flex-1 h-10 rounded-xl text-xs font-black border transition-colors ${
+                                            priority === p
+                                                ? p === "STAT" ? "bg-red-600 text-white border-red-600"
+                                                    : p === "URGENT" ? "bg-amber-500 text-white border-amber-500"
+                                                    : "bg-blue-600 text-white border-blue-600"
+                                                : "bg-gray-50 text-gray-500 border-gray-100 hover:bg-gray-100"
+                                        }`}>{p}</button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">
+                                {activeType === "MEDICATION" ? "Usage Directions (optional)" : "Notes (optional)"}
+                            </label>
+                            <input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Additional instructions..."
+                                className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm text-gray-900 focus:border-blue-500 outline-none bg-gray-50" />
+                        </div>
+
+                        <button onClick={addToCart} disabled={activeType === "MEDICATION" ? !medSelectedDrug : !detail.trim()}
+                            className="w-full h-9 rounded-xl bg-white border border-blue-200 text-blue-700 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                            <ListPlus className="h-3.5 w-3.5" /> Add to Visit
+                        </button>
+
+                        {/* Staged orders for this visit */}
+                        {cart.length > 0 && (
+                            <div className="rounded-xl border border-gray-100 overflow-hidden">
+                                <div className="divide-y divide-gray-50">
+                                    {cart.map(item => {
+                                        const cfg = ORDER_TYPES.find(t => t.type === item.orderType)!;
+                                        return (
+                                            <div key={item.key} className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+                                                <div className="min-w-0 flex items-center gap-2">
+                                                    <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.color} shrink-0`}>{cfg.label}</span>
+                                                    <p className="text-xs font-bold text-gray-900 truncate">{item.detail}</p>
+                                                </div>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    {item.amount > 0 && <span className="text-xs font-black text-blue-600">UGX {item.amount.toLocaleString()}</span>}
+                                                    <button type="button" onClick={() => removeFromCart(item.key)}
+                                                        className="h-6 w-6 rounded-lg flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <div className="flex items-center justify-between px-3.5 py-2.5 bg-blue-50 border-t border-blue-100">
+                                    <span className="text-xs font-black text-blue-800">Visit Total ({cart.length} order{cart.length !== 1 ? "s" : ""})</span>
+                                    <span className="text-sm font-black text-blue-700">UGX {cartTotal.toLocaleString()}</span>
+                                </div>
+                            </div>
+                        )}
+
+                        <AnimatePresence>
+                            {submitted && (
+                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                                    className="flex items-center gap-2 p-3 rounded-xl bg-green-50 border border-green-100 text-green-700 text-sm font-semibold">
+                                    <CheckCircle2 className="h-4 w-4" /> Orders submitted — one consolidated bill sent to Finance
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <button onClick={handleSubmit}
+                            disabled={(cart.length === 0 && (activeType === "MEDICATION" ? !medSelectedDrug : !detail.trim())) || submitting || !selectedPatient}
+                            className="w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors">
+                            {submitting
+                                ? <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full"/>
+                                : <><Plus className="h-4 w-4" /> Submit Visit{cart.length > 0 ? ` (${cart.length + ((activeType === "MEDICATION" ? medSelectedDrug : detail.trim()) ? 1 : 0)} orders)` : ""}</>}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Recent orders */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="px-4 py-3.5 border-b border-gray-50">
+                        <h3 className="font-bold text-gray-900 text-sm">Recent Orders</h3>
+                        <p className="text-[10px] text-gray-400 mt-0.5">Your submitted orders</p>
+                    </div>
+                    {loadingOrders ? (
+                        <div className="flex items-center justify-center py-14"><div className="animate-spin h-6 w-6 border-[3px] border-blue-100 border-t-blue-600 rounded-full"/></div>
+                    ) : orders.length === 0 ? (
+                        <div className="py-14 text-center">
+                            <ClipboardList className="h-8 w-8 text-gray-200 mx-auto mb-2"/>
+                            <p className="text-xs text-gray-400">No orders yet</p>
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-gray-50 max-h-[500px] overflow-y-auto">
+                            {orders.map(o => {
+                                const cfg = ORDER_TYPES.find(t => t.type === o.orderType);
+                                const Icon = cfg?.icon || ClipboardList;
+                                return (
+                                    <div key={o.id} className="p-4 hover:bg-gray-50 transition-colors">
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            <div className={`p-1.5 rounded-lg ${cfg?.bg || "bg-gray-50"}`}>
+                                                <Icon className={`h-3.5 w-3.5 ${cfg?.color || "text-gray-500"}`} />
+                                            </div>
+                                            <span className="text-xs font-bold text-gray-600 capitalize">{o.orderType}</span>
+                                            <span className={`ml-auto text-[10px] font-black px-1.5 py-0.5 rounded ${
+                                                o.priority === "STAT" ? "text-red-600 bg-red-50" :
+                                                o.priority === "URGENT" ? "text-amber-600 bg-amber-50" : "text-gray-400"
+                                            }`}>{o.priority}</span>
+                                        </div>
+                                        <p className="text-xs font-bold text-gray-900 mb-0.5 truncate">{o.patientName}</p>
+                                        <p className="text-xs text-gray-500 mb-2 line-clamp-2">{o.detail}</p>
+                                        <div className="flex items-center justify-between">
+                                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${STATUS_COLOR[o.status] || STATUS_COLOR["PENDING"]}`}>
+                                                {o.status.replace(/_/g, " ")}
+                                            </span>
+                                            {o.amount > 0 && (
+                                                <span className="flex items-center gap-1.5">
+                                                    {o.paymentStatus === "UNPAID" && (
+                                                        <span className="text-[9px] font-black text-amber-600 flex items-center gap-0.5">
+                                                            <Clock className="h-2.5 w-2.5" /> Unpaid
+                                                        </span>
+                                                    )}
+                                                    <span className="text-xs font-black text-gray-700">UGX {o.amount.toLocaleString()}</span>
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}

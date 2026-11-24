@@ -1,0 +1,100 @@
+export const COMPANY_NAME = "RHD Medical Services";
+// Possessive of a name already ending in "s" takes just an apostrophe ("Services'"),
+// not an extra "s" ("Services's") — computed once so every export surface agrees.
+export const COMPANY_POSSESSIVE = COMPANY_NAME.endsWith("s") ? `${COMPANY_NAME}'` : `${COMPANY_NAME}'s`;
+export const LOGO_PATH = "/imgs/logo-mark.png";
+
+// Exactly as printed on the logo (public/imgs/logo-mark.png) — English line plus its
+// translation directly beneath it on the seal. Kept verbatim, not re-cased or reworded.
+export const SLOGAN = "WE TREAT GOD HEALS";
+export const SLOGAN_TRANSLATION = "ንሕና ንሕክም ኣምላኹ ይምሕር";
+
+// Sampled from app/globals.css brand tokens (jsPDF/exceljs need raw hex/RGB, not CSS vars).
+export const BRAND_RED = "#cc141a";
+export const BRAND_RED_RGB: [number, number, number] = [204, 20, 26];
+export const BRAND_TEAL = "#40697d";
+export const BRAND_TEAL_RGB: [number, number, number] = [64, 105, 125];
+export const BRAND_GRAY_RGB: [number, number, number] = [107, 114, 128];
+
+let cachedLogoDataUrl: Promise<string | null> | null = null;
+
+/** Fetches the app logo and memoizes it as a base64 data URL for embedding in PDF/Excel exports. */
+export function getLogoDataUrl(): Promise<string | null> {
+    if (!cachedLogoDataUrl) {
+        cachedLogoDataUrl = fetch(LOGO_PATH)
+            .then((res) => {
+                if (!res.ok) throw new Error(`Logo fetch failed: ${res.status}`);
+                return res.blob();
+            })
+            .then(
+                (blob) =>
+                    new Promise<string>((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result as string);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    })
+            )
+            .catch((err) => {
+                console.error("Failed to load logo for report export:", err);
+                return null;
+            });
+    }
+    return cachedLogoDataUrl;
+}
+
+export function formatGeneratedAt(date: Date = new Date()): string {
+    return date.toLocaleString();
+}
+
+export function slugify(s: string): string {
+    return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "report";
+}
+
+export function triggerDownload(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+export const PRINT_STYLES = `
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; color: #111827; margin: 32px; }
+    .report-header { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; margin-bottom: 18px; border-bottom: 2px solid ${BRAND_RED}; }
+    .report-header img { height: 40px; width: 40px; border-radius: 9999px; object-fit: cover; }
+    .report-company { font-size: 11px; font-weight: 800; color: ${BRAND_RED}; text-transform: uppercase; letter-spacing: 0.06em; }
+    .report-slogan { font-size: 8px; font-weight: 700; color: #9ca3af; letter-spacing: 0.03em; margin-top: 2px; }
+    .report-slogan-translation { font-size: 8px; color: #b8bec7; margin-top: 1px; }
+    h1 { font-size: 20px; font-weight: 800; margin: 0 0 2px; }
+    p.subtitle { font-size: 12px; color: #6b7280; margin: 0 0 4px; }
+    p.meta { font-size: 11px; color: #9ca3af; margin: 0 0 20px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { text-align: left; text-transform: uppercase; letter-spacing: 0.04em; font-size: 10px; color: #6b7280; border-bottom: 1px solid #e5e7eb; padding: 8px 10px; }
+    td { padding: 8px 10px; border-bottom: 1px solid #f3f4f6; }
+    tr:nth-child(even) td { background: #fafafa; }
+    tr:last-child td { border-bottom: none; }
+    /* Segmented sections — each block of a document (billed-to, line items, payment, notes...)
+       gets its own bordered card, so a printed page reads as distinct zones rather than one
+       long unbroken list — the difference between "form letter" and "official document". */
+    .section-box { border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; background: #fafafa; }
+    .section-box table { background: #fff; border: 1px solid #f3f4f6; border-radius: 6px; overflow: hidden; }
+    .section-heading { font-size: 10px; font-weight: 800; margin: 0 0 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.08em; }
+    .kv-grid { display: flex; flex-direction: column; }
+    .kv-row { font-size: 12px; display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px dashed #e5e7eb; }
+    .kv-grid .kv-row:last-child { border-bottom: none; }
+    .kv-label { color: #6b7280; font-weight: 600; }
+    .kv-value { color: #111827; font-weight: 700; text-align: right; }
+    .section-text { font-size: 12px; white-space: pre-wrap; }
+    .report-footer { margin-top: 24px; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 10px; color: #9ca3af; text-align: center; }
+    .report-footer-disclaimer { font-size: 9px; color: #d1d5db; margin-top: 2px; font-style: italic; }
+    @media print {
+        body { margin: 12mm; }
+        .no-print { display: none !important; }
+        .section-box { break-inside: avoid; }
+    }
+`;

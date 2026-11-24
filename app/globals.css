@@ -1,0 +1,214 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+
+  /* Brand red (RHD Medical Services logo) */
+  --blue-50: #fef1f1;
+  --blue-100: #fcdfdf;
+  --blue-500: #e92027;
+  --blue-600: #cc141a;
+  --blue-700: #ac1116;
+
+  /* Clinical Green */
+  --green-50: #f0fdf4;
+  --green-100: #dcfce7;
+  --green-500: #22c55e;
+  --green-600: #16a34a;
+
+  /* Brand teal (logo ring accent) */
+  --cyan-50: #f5f8fa;
+  --cyan-100: #e7eff3;
+  --cyan-600: #4c7d94;
+  --cyan-700: #40697d;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* Brand palette, sampled from the RHD Medical Services logo */
+  --color-clinical-blue: #cc141a;
+  --color-clinical-blue-dark: #ac1116;
+  --color-clinical-green: #16a34a;
+  --color-clinical-green-light: #22c55e;
+
+  /* Primary action color (brand red) */
+  --color-cyan-primary: #cc141a;
+  --color-cyan-dark: #ac1116;
+  --color-teal-accent: #40697d;
+
+  /* Override Tailwind's built-in blue-* scale app-wide with brand red */
+  --color-blue-50: #fef1f1;
+  --color-blue-100: #fcdfdf;
+  --color-blue-200: #f8b9bb;
+  --color-blue-300: #f3868a;
+  --color-blue-400: #ee4f54;
+  --color-blue-500: #e92027;
+  --color-blue-600: #cc141a;
+  --color-blue-700: #ac1116;
+  --color-blue-800: #900e13;
+  --color-blue-900: #790c10;
+
+  /* Override Tailwind's built-in teal-* and cyan-* scales with the logo's ring teal */
+  --color-teal-50: #f5f8fa;
+  --color-teal-100: #e7eff3;
+  --color-teal-200: #cddde5;
+  --color-teal-300: #a7c4d2;
+  --color-teal-400: #7fa9bd;
+  --color-teal-500: #5d93ac;
+  --color-teal-600: #4c7d94;
+  --color-teal-700: #40697d;
+  --color-teal-800: #365868;
+  --color-teal-900: #2d4a58;
+
+  --color-cyan-50: #f5f8fa;
+  --color-cyan-100: #e7eff3;
+  --color-cyan-200: #cddde5;
+  --color-cyan-300: #a7c4d2;
+  --color-cyan-400: #7fa9bd;
+  --color-cyan-500: #5d93ac;
+  --color-cyan-600: #4c7d94;
+  --color-cyan-700: #40697d;
+  --color-cyan-800: #365868;
+  --color-cyan-900: #2d4a58;
+
+  --font-sans: "Outfit", var(--font-geist-sans), sans-serif;
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-slow: pulse-slow 8s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.1); }
+  }
+
+  @keyframes shimmer {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+}
+
+@layer utilities {
+  .bg-glass {
+    @apply bg-white/80 backdrop-blur-xl border border-white/60 shadow-sm;
+  }
+
+  .bg-glass-dark {
+    @apply bg-slate-900/80 backdrop-blur-2xl border border-slate-800/50;
+  }
+
+  .text-high-contrast {
+    @apply text-slate-900 font-semibold;
+  }
+
+  /* Clinical blue gradient text */
+  .text-gradient-blue {
+    @apply bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent;
+  }
+
+  /* Legacy gradient kept for compatibility */
+  .text-gradient-cyan {
+    @apply bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent;
+  }
+
+  .shadow-premium {
+    box-shadow: 0 4px 24px -4px rgba(204, 20, 26, 0.12), 0 2px 8px -2px rgba(0,0,0,0.06);
+  }
+
+  .bg-mesh {
+    background-color: #f8fafc;
+    background-image:
+      radial-gradient(at 0% 0%, hsla(217, 91%, 95%, 0.4) 0, transparent 50%),
+      radial-gradient(at 50% 0%, hsla(142, 76%, 95%, 0.3) 0, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(217, 91%, 96%, 0.3) 0, transparent 50%);
+  }
+
+  .bg-dot-grid {
+    background-image: radial-gradient(circle, rgba(15, 23, 42, 0.12) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Clinical sidebar */
+  .sidebar-clinical {
+    @apply bg-white border-r border-gray-100;
+  }
+
+  /* Role badge colours */
+  .badge-blue {
+    @apply bg-blue-50 text-blue-700 border border-blue-100;
+  }
+
+  .badge-green {
+    @apply bg-green-50 text-green-700 border border-green-100;
+  }
+
+  .badge-red {
+    @apply bg-red-50 text-red-700 border border-red-100;
+  }
+
+  .badge-yellow {
+    @apply bg-amber-50 text-amber-700 border border-amber-100;
+  }
+
+  .badge-purple {
+    @apply bg-purple-50 text-purple-700 border border-purple-100;
+  }
+
+  .badge-teal {
+    @apply bg-teal-50 text-teal-700 border border-teal-100;
+  }
+
+  /* Clinical stat card */
+  .stat-card {
+    @apply bg-white rounded-2xl p-6 border border-gray-100 shadow-sm transition-all duration-200;
+  }
+  .stat-card:hover {
+    box-shadow: 0 4px 24px -4px rgba(204, 20, 26, 0.12), 0 2px 8px -2px rgba(0,0,0,0.06);
+  }
+
+  /* Module section header */
+  .module-header {
+    @apply text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] px-3 mb-2 mt-5;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.mesh-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}

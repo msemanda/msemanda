@@ -1,0 +1,19 @@
+runConfig:
+  cpu: 1
+  memoryMiB: 512
+  concurrency: 80
+  minInstances: 0
+  maxInstances: 10
+
+env:
+  - variable: NODE_ENV
+    value: production
+
+  # ── Neon PostgreSQL ──────────────────────────────────────────────────────────
+  # Store the connection string in Firebase Secret Manager:
+  #   firebase apphosting:secrets:set database-url
+  #   (paste the full Neon connection string when prompted)
+  - variable: DATABASE_URL
+    secret: database-url
+    availability:
+      - RUNTIME

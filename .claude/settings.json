@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit -m ' *)",
+      "Bash(firebase --version)",
+      "Bash(firebase projects:list)",
+      "Bash(firebase use *)",
+      "Read(//d/Sema/Projects/Rhona/e-health-next/**)",
+      "Bash(mkdir -p \"d:/Sema/Projects/Rhona/e-health-next/app/api/db/[collection]\")",
+      "Bash(mkdir -p \"d:/Sema/Projects/Rhona/e-health-next/app/api/db/[collection]/[id]\")",
+      "PowerShell(psql -U postgres -c \"\\\\l\" 2>&1)",
+      "PowerShell(& \"psql\" -U postgres -c \"\\\\l\" ; Write-Host \"EXIT:$LASTEXITCODE\")",
+      "PowerShell($env:PGPASSWORD = \"sema\"; psql -U postgres -h localhost -c \"SELECT datname FROM pg_database;\" 2>&1)",
+      "PowerShell($env:PGPASSWORD = \"sema\"; psql -U postgres -h localhost -c \"CREATE DATABASE ehealth;\" 2>&1)",
+      "PowerShell($env:PGPASSWORD = \"sema\"; & psql -U postgres -h localhost -d ehealth -f \"d:\\\\Sema\\\\Projects\\\\Rhona\\\\e-health-next\\\\helpers\\\\schema.sql\")"
+    ],
+    "additionalDirectories": [
+      "d:\\Sema\\Projects\\Rhona\\e-health-next\\app\\api\\db",
+      "d:\\Sema\\Projects\\Rhona\\e-health-next\\app\\api\\db\\[collection]"
+    ]
+  }
+}

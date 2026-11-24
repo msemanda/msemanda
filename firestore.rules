@@ -1,0 +1,261 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      return isAuth() && request.auth.token.email == 'semandamoses91@gmail.com';
+    }
+
+    function isAdmin() {
+      return isSuperAdmin() || (
+        isAuth() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN'
+      );
+    }
+
+    function isOwner(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+
+    function hasRole(role) {
+      return isAuth() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    function isClinicalStaff() {
+      return hasRole('DOCTOR') || hasRole('NURSE') || hasRole('LAB_TECH') ||
+             hasRole('RADIOLOGY_TECH') || hasRole('PHYSIOTHERAPIST') ||
+             hasRole('DENTIST') || hasRole('DIETITIAN') || hasRole('EMERGENCY_STAFF') ||
+             hasRole('PHARMACY') || hasRole('RECEPTIONIST');
+    }
+
+    function isReceptionist() {
+      return hasRole('RECEPTIONIST');
+    }
+
+    // ── Users ────────────────────────────────────────────────────────────────
+    match /users/{uid} {
+      allow read:   if isOwner(uid) || isAdmin() || isClinicalStaff();
+      allow create: if isOwner(uid) || isAdmin();
+      allow update: if isOwner(uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Invitations ──────────────────────────────────────────────────────────
+    // Document ID is the invitee's email address.
+    // Receptionist can create patient invites only. Admin can create any invite.
+    match /invites/{email} {
+      allow read:   if true;
+      allow create: if isAdmin() || (
+        isReceptionist() &&
+        request.resource.data.role == 'PATIENT'
+      );
+      allow update: if isAdmin() || isReceptionist() || (
+        isAuth() &&
+        request.auth.token.email == email &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used', 'usedAt', 'uid'])
+      );
+      allow delete: if isAdmin() || isReceptionist();
+    }
+
+    // ── Patient admissions (walk-in tracking) ────────────────────────────────
+    match /admissions/{admissionId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || isReceptionist();
+    }
+
+    // ── System configuration ─────────────────────────────────────────────────
+    match /system/{docId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // ── Sessions (telemetry) ─────────────────────────────────────────────────
+    match /sessions/{sessionId} {
+      allow create: if isAuth();
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ── Bills / Finance ──────────────────────────────────────────────────────
+    match /bills/{billId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('CASHIER') || hasRole('PHARMACY') || isReceptionist();
+    }
+
+    // ── Consultation fees ────────────────────────────────────────────────────
+    match /consultationFees/{feeId} {
+      allow read:   if isAuth();
+      allow create: if isAdmin() || isReceptionist();
+      allow update: if isAdmin() || hasRole('CASHIER') || isReceptionist() || (
+        isAuth() &&
+        resource.data.patientEmail == request.auth.token.email &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'paymentMethod', 'paymentReference', 'patientPaidAt'])
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ── Diagnostics ──────────────────────────────────────────────────────────
+    match /diagnostics/{diagId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('DOCTOR') || hasRole('LAB_TECH') || hasRole('RADIOLOGY_TECH');
+    }
+
+    // ── Appointments ─────────────────────────────────────────────────────────
+    match /appointments/{apptId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('DOCTOR') || hasRole('NURSE') || isReceptionist();
+    }
+
+    // ── Lab orders ───────────────────────────────────────────────────────────
+    match /labOrders/{orderId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('DOCTOR') || hasRole('LAB_TECH');
+    }
+
+    // ── Radiology orders ─────────────────────────────────────────────────────
+    match /radiologyOrders/{orderId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('DOCTOR') || hasRole('RADIOLOGY_TECH');
+    }
+
+    // ── CPOE / Clinical orders ────────────────────────────────────────────────
+    match /orders/{orderId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('DOCTOR') || hasRole('NURSE');
+    }
+
+    // ── OT schedules ─────────────────────────────────────────────────────────
+    match /otSchedules/{scheduleId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('DOCTOR') || hasRole('NURSE');
+    }
+
+    // ── Blood bank ───────────────────────────────────────────────────────────
+    match /bloodBank/{recordId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('LAB_TECH');
+    }
+
+    // ── Financial transactions ───────────────────────────────────────────────
+    match /transactions/{txId} {
+      allow read:  if isAdmin() || hasRole('CASHIER');
+      allow write: if isAdmin() || hasRole('CASHIER');
+    }
+
+    // ── CPOE orders ──────────────────────────────────────────────────────────
+    match /cpoeOrders/{orderId} {
+      allow read:  if isAuth();
+      allow create: if isAdmin() || hasRole('DOCTOR');
+      allow update: if isAdmin() || hasRole('CASHIER') || hasRole('DOCTOR') ||
+                       hasRole('LAB_TECH') || hasRole('PHARMACY') || hasRole('RADIOLOGY_TECH');
+      allow delete: if isAdmin();
+    }
+
+    // ── Patient service bills (from doctor orders) ───────────────────────────
+    match /patientBills/{billId} {
+      allow read:  if isAuth();
+      allow create: if isAdmin() || hasRole('DOCTOR');
+      allow update: if isAdmin() || hasRole('CASHIER');
+      allow delete: if isAdmin();
+    }
+
+    // ── IPD Admissions ───────────────────────────────────────────────────────
+    match /ipdAdmissions/{admId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('DOCTOR') || hasRole('NURSE') || isReceptionist();
+    }
+
+    // ── IPD Transfers ────────────────────────────────────────────────────────
+    match /ipdTransfers/{transferId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('DOCTOR') || hasRole('NURSE');
+    }
+
+    // ── IPD Orders ───────────────────────────────────────────────────────────
+    match /ipdOrders/{orderId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('DOCTOR') || hasRole('NURSE');
+    }
+
+    // ── CSSD ────────────────────────────────────────────────────────────────
+    match /cssdItems/{itemId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('NURSE') || hasRole('DOCTOR');
+    }
+    match /cssdCycles/{cycleId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('NURSE');
+    }
+    match /cssdDispatch/{dispatchId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('NURSE');
+    }
+
+    // ── Housekeeping ─────────────────────────────────────────────────────────
+    match /hkTasks/{taskId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin();
+    }
+    match /hkSchedules/{schedId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // ── Maintenance ──────────────────────────────────────────────────────────
+    match /maintEquipment/{eqId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin();
+    }
+    match /maintRequests/{reqId} {
+      allow read:  if isAuth();
+      allow write: if isAuth();
+    }
+    match /maintAlerts/{alertId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // ── Fixed Assets ─────────────────────────────────────────────────────────
+    match /fixedAssets/{assetId} {
+      allow read:  if isAdmin() || hasRole('CASHIER');
+      allow write: if isAdmin() || hasRole('CASHIER');
+    }
+
+    // ── Quality & Audits ────────────────────────────────────────────────────
+    match /qualityAudits/{auditId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('DOCTOR') || hasRole('NURSE');
+    }
+    match /infectionIncidents/{incId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('DOCTOR') || hasRole('NURSE');
+    }
+
+    // ── Incidents ────────────────────────────────────────────────────────────
+    match /incidents/{incidentId} {
+      allow read:  if isAuth();
+      allow create: if isAuth();
+      allow update: if isAdmin() || hasRole('DOCTOR') || hasRole('NURSE');
+      allow delete: if isAdmin();
+    }
+
+    // ── Home care visits ─────────────────────────────────────────────────────
+    match /homeCareVisits/{visitId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('NURSE') || hasRole('DOCTOR');
+    }
+
+    // ── Emergency cases ──────────────────────────────────────────────────────
+    match /emergencyCases/{caseId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || hasRole('EMERGENCY_STAFF') || hasRole('DOCTOR') || hasRole('NURSE');
+    }
+  }
+}
